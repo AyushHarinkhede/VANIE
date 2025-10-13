@@ -8,18 +8,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg-primary: #f0f4f8;
-            --bg-secondary: #ffffff;
-            --bg-chat: #e7eff7;
-            --text-primary: #1a202c;
+--bg-primary: #f0f4f8;
+--bg-secondary: #ffffff;
+--bg-chat: #e7eff7;
+--text-primary: #1a202c;
             --text-secondary: #4a5568;
-            --accent: #2c5282;
+--accent: #2c5282;
             --user-msg: #dbeafe;
             --bot-msg: #ffffff;
-            --shadow-color: rgba(0, 0, 0, 0.1);
+--shadow-color: rgba(0, 0, 0, 0.1);
             --border-color: #e2e8f0;
             --hover-bg: #f7fafc;
-            --base-font-size: 14px;
+--base-font-size: 14px;
             --display-font: 'Orbitron', sans-serif;
             --body-font: 'Roboto Mono', monospace;
         }
@@ -46,10 +46,10 @@
         }
 
         body {
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            height: 100vh;
-            display: flex;
+background: var(--bg-primary);
+color: var(--text-primary);
+height: 100vh;
+display: flex;
             transition: all 0.5s ease-in-out;
             overflow: hidden;
             position: relative;
@@ -69,28 +69,28 @@
         }
 
         .moving-bg-element {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: var(--accent);
-            opacity: 0.05;
-            filter: blur(80px);
-            border-radius: 50%;
-            animation: moveElement 25s infinite alternate ease-in-out;
-            pointer-events: none;
-            z-index: 0;
+position: absolute;
+width: 300px;
+height: 300px;
+background: var(--accent);
+opacity: 0.05;
+filter: blur(80px);
+border-radius: 50%;
+animation: moveElement 25s infinite alternate ease-in-out;
+pointer-events: none;
+z-index: 0;
         }
 
-        .moving-bg-element:nth-child(1) { 
-            top: 10%; 
+.moving-bg-element:nth-child(1) { 
+top: 10%; 
             left: 10%; 
-            animation-delay: 0s; 
+animation-delay: 0s; 
         }
         
         .moving-bg-element:nth-child(2) { 
-            bottom: 5%; 
-            right: 15%; 
-            animation-delay: 5s; 
+bottom: 5%; 
+right: 15%; 
+animation-delay: 5s; 
         }
         
         .moving-bg-element:nth-child(3) { 
@@ -100,9 +100,9 @@
         }
         
         @keyframes moveElement {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(100px, 150px) scale(1.1); }
-            100% { transform: translate(-50px, -80px) scale(0.9); }
+0% { transform: translate(0, 0) scale(1); }
+50% { transform: translate(100px, 150px) scale(1.1); }
+100% { transform: translate(-50px, -80px) scale(0.9); }
         }
 
         .app-wrapper {
@@ -1534,3 +1534,4 @@
     </script>
 </body>
 </html>
+
