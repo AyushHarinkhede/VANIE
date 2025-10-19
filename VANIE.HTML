@@ -869,11 +869,8 @@ animation-delay: 5s;
                     <label for="fontSize">Font Size</label>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <input type="range" id="fontSize" min="12" max="18" value="14" step="1" class="settings-slider">
-                        <span id="fontSizeValue" class="settings-slider-value">14px</span>
-                    </div>
-                </div>
-            </div>
-            
+                        <span id="fontSizeValue" class="settings-slider-value">14px</span> </div>
+                </div>      </div>
             <div class="setting-group">
                 <h4><i class="fas fa-language"></i> Language</h4>
                 <div class="setting-item">
@@ -881,78 +878,62 @@ animation-delay: 5s;
                     <select id="languageSelect" class="settings-select">
                         <option value="hi">Hindi</option>
                         <option value="en">English</option>
-                        <option value="hi-en">Hinglish</option>
-                    </select>
-                </div>
-            </div>
-
+                        <option value="hi-en">Hinglish</option> </select>      </div>   </div>
             <div class="setting-group">
                 <h4><i class="fas fa-bell"></i> Notifications</h4>
                 <div class="setting-item">
                     <label for="soundToggle">Sound Effects</label>
                     <label class="switch">
-                        <input type="checkbox" id="soundToggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-
+             <input type="checkbox" id="soundToggle" checked>
+     <span class="slider"></span>   </label> </div> </div>
             <div class="setting-group">
                 <h4><i class="fas fa-download"></i> Data</h4>
-                <div class="setting-item">
-                    <label>Export Chat</label>
-                    <button class="settings-btn" id="exportChat">
-                        <i class="fas fa-file-export"></i> Export
-                    </button>
-                </div>
-                <div class="setting-item">
+        <div class="setting-item">
+     <label>Export Chat</label>
+     <button class="settings-btn" id="exportChat">
+          <i class="fas fa-file-export"></i> Export
+                    </button>  </div>
+       <div class="setting-item">
                     <label>Clear History</label>
                     <button class="settings-btn" id="clearHistory" style="background: #e53e3e;">
-                        <i class="fas fa-trash"></i> Clear
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+         <i class="fas fa-trash"></i> Clear
+                    </button> </div> </div>  </div> </div>
 
     <script>
         const VANIE = {
-            config: {
-                name: 'VANIE',
-                typingDelay: 1500,
-                theme: 'dark',
-                fontSize: 14,
-                language: 'hi',
-                soundEnabled: true
-            },
-            
-            state: {
-                messages: [],
-                isTyping: false,
-                conversationContext: [],
+     config: {
+      name: 'VANIE',
+typingDelay: 1500,
+theme: 'dark',
+fontSize: 14,
+language: 'hi',
+soundEnabled: true },
+state: {
+messages: [],
+isTyping: false,
+conversationContext: [],
                 isLoggedIn: false,
-                userName: 'Guest'
-            },
+                userName: 'Guest' },
 
-            knowledge: {
-                greetings: ['hello', 'hi', 'namaste', 'hey', 'hola', 'kaise ho', 'how are you'],
-                coding: ['code', 'program', 'algorithm', 'function', 'python', 'javascript', 'java', 'c++', 'c#', 'ruby', 'html', 'css'],
-                science: ['science', 'physics', 'chemistry', 'biology', 'quantum', 'relativity', 'evolution'],
-                history: ['history', 'war', 'empire', 'revolution', 'ancient', 'medieval', 'modern'],
-                general: ['what is', 'who is', 'explain', 'tell me about', 'define']
-            },      
+knowledge: {
+greetings: ['hello', 'hi', 'namaste', 'hey', 'hola', 'kaise ho', 'how are you'],
+  coding: ['code', 'program', 'algorithm', 'function', 'python', 'javascript', 'java', 'c++', 'c#', 'ruby', 'html', 'css'],
+ science: ['science', 'physics', 'chemistry', 'biology', 'quantum', 'relativity', 'evolution'],
+    history: ['history', 'war', 'empire', 'revolution', 'ancient', 'medieval', 'modern'],
+    general: ['what is', 'who is', 'explain', 'tell me about', 'define'] },      
 
-            init() {
-                this.cacheElements();
-                this.bindEvents();
-                this.loadSettings();
-                this.updateFontSize();
-                this.updateLanguage();
-                this.showWelcomeScreen();
-            },  knowledge: {
-                greetings: ['hello', 'hi', 'namaste', 'hey', 'hola', 'kaise ho', 'how are you'],
-                coding: ['code', 'program', 'algorithm', 'function', 'python', 'javascript', 'java', 'c++', 'debug', 'error'],
-                science: ['science', 'quantum', 'physics', 'chemistry', 'biology', 'space', 'atom', 'theory'],
+init() {
+this.cacheElements();
+this.bindEvents();
+this.loadSettings();
+ this.updateFontSize();
+this.updateLanguage();
+ this.showWelcomeScreen();
+            }, 
+    knowledge: {
+greetings: ['hello', 'hi', 'namaste', 'hey', 'hola', 'kaise ho', 'how are you'],
+coding: ['code', 'program', 'algorithm', 'function', 'python', 'javascript', 'java', 'c++', 'debug', 'error'],
+science: ['science', 'quantum', 'physics', 'chemistry', 'biology', 'space', 'atom', 'theory'],
                 history: ['history', 'empire', 'samrajya', 'king', 'raja', 'war', 'battle', 'ancient', 'itihas'],
                 math: ['math', 'calculate', 'equation', 'formula', 'solve', 'ganit'],
                 general: ['kya', 'kaise', 'kab', 'kahan', 'kaun', 'what', 'how', 'when', 'where', 'who']
@@ -1246,19 +1227,16 @@ animation-delay: 5s;
                 if (input.includes('vanie') || input.includes('aap kaun') || input.includes('tumhara naam')) {
                     return "Main VANIE hoon - Virtual Assistant of Neural Integrated Engine. Mujhe advanced algorithms ke saath train kiya gaya hai taaki main aapke sawaalon ka best possible answer de sakun. Main coding, science, history, math aur bahut kuch mein madad kar sakti hoon!";
                 }
-
                 if (input.includes('kya kar sakti') || input.includes('capabilities')) {
                     return "Main bahut kuch kar sakti hoon! 💪\n• Complex coding problems solve karna\n• Scientific concepts explain karna\n• Historical events discuss karna\n• Mathematical calculations\n• General knowledge questions\n• Aur bhi bahut kuch! Bas puchiye.";
                 }
-
                 if (input.includes('thank') || input.includes('thanks') || input.includes('dhanyavaad') || input.includes('shukriya')) {
                     return "Aapka swagat hai! 😊 Koi aur sawal ho toh zaroor puchiye.";
                 }
-
-                return this.getRandomResponse(this.responses.fallback);
+return this.getRandomResponse(this.responses.fallback);
             },
 
-            getQuickSortExample() {
+getQuickSortExample() {
                 return `QuickSort ek efficient sorting algorithm hai!\n\n<strong>Python Code:</strong>\n<pre><code>def quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)\n\n# Example usage\narr = [64, 34, 25, 12, 22, 11, 90]\nprint(quicksort(arr))</code></pre>\n\n<strong>Time Complexity:</strong> O(n log n) average case\n<strong>Space Complexity:</strong> O(log n)`;
             },
 
@@ -1291,7 +1269,6 @@ animation-delay: 5s;
             getBFSExample() {
                 return `BFS (Breadth First Search) level-wise traversal hai!\n\n<strong>Python Code:</strong>\n<pre><code>from collections import deque\n\ndef bfs(graph, start):\n    visited = set()\n    queue = deque([start])\n    visited.add(start)\n    \n    while queue:\n        node = queue.popleft()\n        print(node, end=' ')\n        \n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n    \n    return visited\n\n# Example graph\ngraph = {\n    'A': ['B', 'C'],\n    'B': ['D', 'E'],\n    'C': ['F'],\n    'D': [],\n    'E': ['F'],\n    'F': []\n}\n\nprint("BFS Traversal:")\nbfs(graph, 'A')\n# Output: A B C D E F</code></pre>\n\n<strong>Time Complexity:</strong> O(V + E)\n<strong>Use Case:</strong> Shortest path in unweighted graphs`;
             },
-
             getDijkstraExample() {
                 return `Dijkstra's Algorithm shortest path find karta hai!\n\n<strong>Python Code:</strong>\n<pre><code>import heapq\n\ndef dijkstra(graph, start):\n    distances = {node: float('inf') for node in graph}\n    distances[start] = 0\n    pq = [(0, start)]\n    visited = set()\n    \n    while pq:\n        current_dist, current_node = heapq.heappop(pq)\n        \n        if current_node in visited:\n            continue\n        \n        visited.add(current_node)\n        \n        for neighbor, weight in graph[current_node].items():\n            distance = current_dist + weight\n            \n            if distance < distances[neighbor]:\n                distances[neighbor] = distance\n                heapq.heappush(pq, (distance, neighbor))\n    \n    return distances\n\n# Example\ngraph = {\n    'A': {'B': 4, 'C': 2},\n    'B': {'C': 1, 'D': 5},\n    'C': {'D': 8, 'E': 10},\n    'D': {'E': 2},\n    'E': {}\n}\n\nprint(dijkstra(graph, 'A'))</code></pre>\n\n<strong>Time Complexity:</strong> O((V + E) log V) with heap\n<strong>Note:</strong> Works only with non-negative weights`;
             },
@@ -1513,5 +1490,6 @@ animation-delay: 5s;
     </script>
 </body>
 </html>
+
 
 
