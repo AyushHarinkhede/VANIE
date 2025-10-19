@@ -1028,8 +1028,7 @@ animation-delay: 5s;
                 if (saved) {
                     this.state.messages = JSON.parse(saved);
                     this.renderMessages();
-                }
-            },
+                } },
 
             saveChatHistory() {
                 localStorage.setItem('vanieChat', JSON.stringify(this.state.messages));
@@ -1045,9 +1044,7 @@ animation-delay: 5s;
                 } else {
                     modal.classList.remove('open');
                     overlay.classList.remove('open');
-                }
-            },
-            
+                } },
             setupEventListeners() {
                 const input = document.getElementById('messageInput');
                 const sendBtn = document.getElementById('sendBtn');
@@ -1106,7 +1103,6 @@ animation-delay: 5s;
                     document.body.setAttribute('data-theme', this.config.theme);
                     this.saveSettings();
                 });
-
                 document.getElementById('fontSize').addEventListener('input', (e) => {
                     this.config.fontSize = e.target.value;
                     document.documentElement.style.setProperty('--base-font-size', `${e.target.value}px`);
@@ -1247,7 +1243,6 @@ animation-delay: 5s;
                 if (this.matchKeywords(input, this.knowledge.math)) {
                     return this.responses.math + " Kya aap koi specific problem solve karna chahte hain?";
                 }
-
                 if (input.includes('vanie') || input.includes('aap kaun') || input.includes('tumhara naam')) {
                     return "Main VANIE hoon - Virtual Assistant of Neural Integrated Engine. Mujhe advanced algorithms ke saath train kiya gaya hai taaki main aapke sawaalon ka best possible answer de sakun. Main coding, science, history, math aur bahut kuch mein madad kar sakti hoon!";
                 }
@@ -1284,10 +1279,8 @@ animation-delay: 5s;
             },
 
             getStackExample() {
-                return `Stack ek LIFO (Last In First Out) data structure hai!\n\n<strong>Python Code:</strong>\n<pre><code>class Stack:\n    def __init__(self):\n        self.items = []\n    \n    def push(self, item):\n        self.items.append(item)\n    \n    def pop(self):\n        if not self.is_empty():\n            return self.items.pop()\n        return None\n    \n    def peek(self):\n        if not self.is_empty():\n            return self.items[-1]\n        return None\n    \n    def is_empty(self):\n        return len(self.items) == 0\n    \n    def size(self):\n        return len(self.items)\n\n# Example usage\nstack = Stack()\nstack.push(10)\nstack.push(20)\nstack.push(30)\nprint(stack.pop())  # Output: 30</code></pre>\n\n<strong>All operations:</strong> O(1) time complexity`;
-            },
-
-            getQueueExample() {
+                return `Stack ek LIFO (Last In First Out) data structure hai!\n\n<strong>Python Code:</strong>\n<pre><code>class Stack:\n    def __init__(self):\n        self.items = []\n    \n    def push(self, item):\n        self.items.append(item)\n    \n    def pop(self):\n        if not self.is_empty():\n            return self.items.pop()\n        return None\n    \n    def peek(self):\n        if not self.is_empty():\n            return self.items[-1]\n        return None\n    \n    def is_empty(self):\n        return len(self.items) == 0\n    \n    def size(self):\n        return len(self.items)\n\n# Example usage\nstack = Stack()\nstack.push(10)\nstack.push(20)\nstack.push(30)\nprint(stack.pop())  # Output: 30</code></pre>\n\n<strong>All operations:</strong> O(1) time complexity`; },
+ getQueueExample() {
                 return `Queue ek FIFO (First In First Out) data structure hai!\n\n<strong>Python Code:</strong>\n<pre><code>from collections import deque\n\nclass Queue:\n    def __init__(self):\n        self.items = deque()\n    \n    def enqueue(self, item):\n        self.items.append(item)\n    \n    def dequeue(self):\n        if not self.is_empty():\n            return self.items.popleft()\n        return None\n    \n    def front(self):\n        if not self.is_empty():\n            return self.items[0]\n        return None\n    \n    def is_empty(self):\n        return len(self.items) == 0\n    \n    def size(self):\n        return len(self.items)\n\n# Example\nqueue = Queue()\nqueue.enqueue(1)\nqueue.enqueue(2)\nqueue.enqueue(3)\nprint(queue.dequeue())  # Output: 1</code></pre>\n\n<strong>Operations:</strong> Enqueue & Dequeue - O(1)`;
             },
 
@@ -1322,8 +1315,7 @@ animation-delay: 5s;
                     document.getElementById('accountBtn').title = `Logged in as ${this.state.userName} (Click to Logout)`;
                     this.showNotification(`Welcome back, ${this.state.userName}! 👋`);
                     this.updateStatus('Online');
-                }
-            },
+                }   },
 
             logout() {
                 if (confirm('Are you sure you want to logout?')) {
@@ -1332,13 +1324,11 @@ animation-delay: 5s;
                     document.getElementById('accountBtn').title = 'Account / Login';
                     this.showNotification('Logged out successfully! 👋');
                     this.updateStatus('Online');
-                }
-            },
+                }  },
 
             updateStatus(status) {
                 document.getElementById('statusText').textContent = status;
             },
-
             showTyping() {
                 this.state.isTyping = true;
                 document.getElementById('typingWrapper').style.display = 'flex';
@@ -1347,21 +1337,18 @@ animation-delay: 5s;
 
                 this.typingTimeout = setTimeout(() => {
                     this.updateStatus('Typing...');
-                }, 800);
-            },
+                }, 800);  },
 
             hideTyping() {
                 this.state.isTyping = false;
                 document.getElementById('typingWrapper').style.display = 'none';
                 clearTimeout(this.typingTimeout);
-                this.updateStatus('Online');
-            },
-
+                this.updateStatus('Online');  },
             addMessage(text, sender) {
                 const message = {
                     text: text,
-                    sender: sender,
-                    timestamp: new Date().toLocaleTimeString('hi-IN', { 
+           sender: sender,
+      timestamp: new Date().toLocaleTimeString('hi-IN', { 
                         hour: '2-digit', 
                         minute: '2-digit' 
                     })
@@ -1375,12 +1362,9 @@ animation-delay: 5s;
 
             renderMessages() {
                 if (this.state.messages.length > 0) {
-                    document.getElementById('welcomeScreen').classList.add('hidden');
-                }
-
+                    document.getElementById('welcomeScreen').classList.add('hidden');  }
                 this.state.messages.forEach(msg => this.renderMessage(msg));
-                setTimeout(() => this.scrollToBottom(false), 100);
-            },
+                setTimeout(() => this.scrollToBottom(false), 100);  },
 
             renderMessage(message) {
                 const wrapper = document.createElement('div');
@@ -1412,9 +1396,7 @@ animation-delay: 5s;
                     container.scrollTo({
                         top: container.scrollHeight,
                         behavior: smooth ? 'smooth' : 'auto'
-                    });
-                }, 50);
-            },
+                    }); }, 50); },
 
             clearChat() {
                 this.state.messages = [];
@@ -1438,15 +1420,12 @@ animation-delay: 5s;
                         results.slice(0, 5).map(r => `• [${r.sender.toUpperCase()}] ${r.text.replace(/<[^>]*>/g, '').substring(0, 50)}${r.text.length > 50 ? '...' : ''}`).join('\n'));
                 } else {
                     alert(`"${query}" ke liye koi message nahi mila.`);
-                }
-            },
+                } },
 
             exportChat() {
                 if (this.state.messages.length === 0) {
                     alert('Export karne ke liye koi messages nahi hain!');
-                    return;
-                }
-
+                    return;  }
                 const chatText = this.state.messages.map(msg => 
                     `[${msg.timestamp}] ${msg.sender.toUpperCase()}: ${msg.text.replace(/<[^>]*>/g, '')}`
                 ).join('\n\n');
@@ -1534,4 +1513,5 @@ animation-delay: 5s;
     </script>
 </body>
 </html>
+
 
