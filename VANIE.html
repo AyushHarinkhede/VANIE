@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VANIE - Virtual Assistant of Neural Integrated Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: rgba(255, 255, 255, 0.05);
+            --bg-chat: rgba(255, 255, 255, 0.02);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --accent: rgba(255, 255, 255, 0.9); 
+            --user-msg: rgba(255, 255, 255, 0.1);
+            --bot-msg: rgba(255, 255, 255, 0.03);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --border-color: rgba(255, 255, 255, 0.1); 
+            --hover-bg: rgba(255, 255, 255, 0.08);
+            --base-font-size: 14px;
+            --display-font: 'Inter', system-ui, -apple-system, sans-serif;
+            --body-font: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #000000;
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            transition: all 0.5s ease-in-out;
+            overflow: hidden;
+            position: relative;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--body-font);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        ::-webkit-scrollbar { 
+            width: 4px; 
+        }
+        
+        ::-webkit-scrollbar-track { 
+            background: transparent; 
+        }
+        
+        ::-webkit-scrollbar-thumb { 
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 2px; 
+        }
+
+        .app-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .bot-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .bot-avatar:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .bot-info {
+            padding-left: 16px;
+            flex: 1;
+        }
+
+        .bot-info h2 {
+            font-family: var(--display-font);
+            font-weight: 600;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .bot-status {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 400;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+        
+        .icon-btn:active {
+            transform: scale(0.95);
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 32px;
+            background: transparent;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 80px 20px;
+            gap: 32px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .welcome-screen h1 {
+            font-family: var(--display-font);
+            font-weight: 300;
+            font-size: 28px;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .welcome-screen p {
+            color: var(--text-secondary);
+            max-width: 400px;
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .welcome-screen.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            color: var(--text-primary);
+            opacity: 0.8;
+            margin-bottom: 16px;
+        }
+
+        .message-wrapper {
+            display: flex;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .message-wrapper.user { 
+            justify-content: flex-end; 
+        }
+
+        .message { 
+            max-width: 70%; 
+        }
+
+        .message-content {
+            padding: 16px 20px;
+            border-radius: 16px;
+            line-height: 1.5;
+            font-size: var(--base-font-size);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .message-content:hover {
+            transform: translateY(-2px);
+        }
+
+        .message.bot .message-content {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-top-left-radius: 4px;
+        }
+
+        .message.user .message-content {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-top-right-radius: 4px;
+        }
+
+        .message-content pre {
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+        }
+
+        .message-content code {
+            font-size: calc(var(--base-font-size) - 1px);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 32px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .suggestion-card {
+            text-align: left;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .suggestion-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .input-container {
+            padding: 16px 32px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .input-wrapper:focus-within {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .interim-text {
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+            font-size: calc(var(--base-font-size) - 1px);
+            min-height: 20px;
+            margin-top: 4px;
+        }
+
+        .input-wrapper.recording {
+            border-color: rgba(255, 59, 48, 0.3);
+            background: rgba(255, 59, 48, 0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.recording {
+            background: rgba(255, 59, 48, 0.1);
+            border-color: rgba(255, 59, 48, 0.3);
+            animation: pulse 1.5s infinite;
+        }
+
+        .action-btn.recording::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 10px;
+            background: rgba(255, 59, 48, 0.2);
+            animation: pulseRing 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes pulseRing {
+            0% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.05); opacity: 0.1; }
+            100% { transform: scale(1); opacity: 0.3; }
+        }
+
+        .send-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .send-btn:disabled { 
+            opacity: 0.3; 
+            cursor: not-allowed; 
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Authentication Modal Styles */
+        .auth-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 420px;
+            max-width: 90vw;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .auth-modal.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .auth-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-header h3 {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .auth-content {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            display: none;
+        }
+
+        .password-strength.show {
+            display: block;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-bottom: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .strength-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: var(--strength-width, 0%);
+            background: var(--strength-color, rgba(255, 255, 255, 0.3));
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .strength-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkmark {
+            width: 16px;
+            height: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-label input[type="checkbox"]:checked + .checkmark {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+            content: '✓';
+            color: var(--text-primary);
+            font-size: 10px;
+        }
+
+        .forgot-link {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-link:hover {
+            color: var(--text-primary);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            margin-bottom: 16px;
+        }
+
+        .auth-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-switch {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        /* Terms Modal Styles */
+        .terms-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 600px;
+            max-width: 90vw;
+            max-height: 80vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            z-index: 250;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .terms-modal.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .terms-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terms-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .terms-content {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .terms-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .terms-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .terms-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        #messageInput {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: var(--base-font-size);
+            resize: none;
+            max-height: 80px;
+            font-family: var(--body-font);
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+        
+        #messageInput::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .interim-text {
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+            font-size: calc(var(--base-font-size) - 2px);
+            min-height: 16px;
+            margin-top: 2px;
+        }
+
+        .scroll-btn {
+            position: fixed;
+            right: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .scroll-btn.show { 
+            display: flex; 
+        }
+        
+        .scroll-btn:hover { 
+            transform: translateY(-2px); 
+            background: rgba(255, 255, 255, 0.1); 
+        }
+
+        #scrollBottomBtn { 
+            bottom: 100px; 
+        }
+        
+        #scrollTopBtn { 
+            bottom: 150px; 
+        }
+
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 360px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(30px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.4s ease;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .settings-modal.open {
+            transform: translateX(0);
+        }
+
+        .settings-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .settings-content {
+            padding: 24px;
+        }
+
+        .setting-group {
+            margin-bottom: 32px;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .setting-group h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+        }
+
+        .setting-item label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .3s ease;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 3px;
+            background-color: rgba(255, 255, 255, 0.6);
+            transition: .3s ease;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .settings-select, 
+        .settings-slider {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--body-font);
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .settings-select:hover, 
+        .settings-slider:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .settings-slider-value {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            font-family: var(--body-font);
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 99;
+            display: none;
+        }
+        
+        .modal-overlay.open {
+            display: block;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 16px 20px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { 
+            animation-delay: 0.2s; 
+        }
+        
+        .typing-dot:nth-child(3) { 
+            animation-delay: 0.4s; 
+        }
+
+        @keyframes typing { 
+            0%, 60%, 100% { 
+                transform: scale(0.8); 
+                opacity: 0.4; 
+            } 
+            30% { 
+                transform: scale(1.1); 
+                opacity: 0.8; 
+            } 
+        }
+
+        @media (max-width: 768px) {
+            .settings-modal { 
+                width: 100%; 
+            }
+            
+            .chat-container { 
+                padding: 20px; 
+            }
+            
+            .message { 
+                max-width: 80%; 
+            }
+            
+            .scroll-btn { 
+                right: 20px; 
+                width: 36px; 
+                height: 36px; 
+            }
+            
+            #scrollBottomBtn { 
+                bottom: 90px; 
+            }
+            
+            #scrollTopBtn { 
+                bottom: 135px; 
+            }
+
+            .bot-info h2 {
+                font-size: 18px;
+            }
+
+            .suggestions {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 16px 20px;
+            }
+
+            .input-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper" id="appWrapper">
+        <div class="header">
+            <div class="header-left">
+                <div class="bot-avatar">
+                    <i class="fas fa-brain"></i>   </div>
+                <div class="bot-info">
+                    <h2>VANIE</h2>
+              <div class="bot-status">
+                        <span class="status-dot"></span>
+                        <span id="statusText">Online</span>
+         </div>  </div> </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="accountBtn" title="Account / Login">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <button class="icon-btn" id="searchBtn" title="Search Chat">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="icon-btn" id="settingsBtn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="icon-btn" id="clearChat" title="Clear Chat">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h1>Namaste! Main VANIE hoon</h1>
+                <p style="color: var(--text-secondary); max-width: 500px;">
+                    Main Virtual Assistant of Neural Integrated Engine hoon. Aapki har tarah ki madad karne ke liye taiyar hoon.
+                </p>
+                <div class="suggestions">
+                    <div class="message-content bot suggestion-card" data-text="Quantum Computing ko simple language mein explain karo">
+                        <span style="font-weight: 600; color: var(--accent);">
+                            <i class="fas fa-flask"></i> Science
+                        </span><br>
+                        Quantum Computing kya hai?
+                    </div>
+                    <div class="message-content bot suggestion-card" data-text="Python mein QuickSort algorithm ka code likho">
+                        <span style="font-weight: 600; color: var(--accent);">
+                            <i class="fas fa-code"></i> Coding
+                        </span><br>
+                        QuickSort ka Python code
+                    </div>
+                    <div class="message-content bot suggestion-card" data-text="Gupta Samrajya ka itihas detail mein batao">
+                        <span style="font-weight: 600; color: var(--accent);">
+                            <i class="fas fa-book"></i> History
+                        </span><br>
+                        Gupta Samrajya ka itihas
+                    </div>  </div> </div>
+
+            <div class="message-wrapper bot" id="typingWrapper" style="display: none;">
+                <div class="message bot">
+                    <div class="message-content">
+                        <div class="typing-indicator">
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="scroll-btn" id="scrollTopBtn" title="Scroll to Top">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+        <button class="scroll-btn" id="scrollBottomBtn" title="Scroll to Bottom">
+            <i class="fas fa-arrow-down"></i>
+        </button>
+
+        <div class="input-container">
+            <div class="input-wrapper" id="inputWrapper">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="VANIE se baat karein..." 
+                    rows="1"
+                ></textarea>
+                <div class="interim-text" id="interimText"></div>
+            </div>
+            <div class="action-buttons">
+                <input type="file" id="fileInput" accept="image/*,.pdf,.txt,.doc,.docx" multiple>
+                <button class="action-btn" id="uploadBtn" title="Upload File">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <button class="action-btn" id="voiceBtn" title="Voice Input">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="send-btn" id="sendBtn" disabled title="Send Message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modalOverlay"></div>
+    
+    <!-- Authentication Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-header">
+            <h3 id="authTitle">Welcome Back</h3>
+            <button class="icon-btn" id="closeAuthBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="auth-content">
+            <!-- Login Form -->
+            <div class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+                </div>
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-link">Forgot password?</a>
+                </div>
+                <button class="auth-btn" id="loginBtn">Sign In</button>
+                <div class="auth-switch">
+                    Don't have an account? <a href="#" id="showSignup">Sign up</a>
+                </div>
+            </div>
+            
+            <!-- Signup Form -->
+            <div class="auth-form" id="signupForm" style="display: none;">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" class="form-input" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" class="form-input" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" class="form-input" placeholder="Create a strong password" required>
+                    <div class="password-strength" id="passwordStrength">
+                        <div class="strength-bar"></div>
+                        <span class="strength-text">Password strength</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm your password" required>
+                </div>
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <span class="checkmark"></span>
+                        I agree to the <a href="#" id="showTerms">Terms of Service</a> and <a href="#" id="showPrivacy">Privacy Policy</a>
+                    </label>
+                </div>
+                <button class="auth-btn" id="signupBtn">Create Account</button>
+                <div class="auth-switch">
+                    Already have an account? <a href="#" id="showLogin">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Terms & Privacy Modal -->
+    <div class="terms-modal" id="termsModal">
+        <div class="terms-header">
+            <h3 id="termsTitle">Terms of Service</h3>
+            <button class="icon-btn" id="closeTermsBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="terms-content">
+            <div id="termsContent"></div>
+        </div>
+    </div>
+    
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-header">
+            <h3>
+                <i class="fas fa-cog"></i> Settings
+            </h3>
+            <button class="icon-btn" id="closeSettingsBtn">
+                <i class="fas fa-times"></i>
+            </button>  </div>
+        <div class="settings-content">
+            <div class="setting-group">
+                <h4><i class="fas fa-palette"></i> Appearance</h4>
+                <div class="setting-item">
+                    <label for="themeToggle">Dark Mode</label>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="fontSize">Font Size</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="range" id="fontSize" min="12" max="18" value="14" step="1" class="settings-slider">
+                        <span id="fontSizeValue" class="settings-slider-value">14px</span>
+                    </div> </div> </div>
+            
+            <div class="setting-group">
+                <h4><i class="fas fa-language"></i> Language</h4>
+                <div class="setting-item">
+                    <label for="languageSelect">Interface Language</label>
+                    <select id="languageSelect" class="settings-select">
+                        <option value="hi">Hindi</option>
+                        <option value="en">English</option>
+                        <option value="hi-en">Hinglish</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="voiceLanguageSelect">Voice Language</label>
+                    <select id="voiceLanguageSelect" class="settings-select">
+                        <option value="hi-IN">Hindi</option>
+                        <option value="en-US">English (US)</option>
+                        <option value="en-IN">English (India)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h4><i class="fas fa-bell"></i> Notifications</h4>
+                <div class="setting-item">
+                    <label for="soundToggle">Sound Effects</label>
+                    <label class="switch">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <span class="slider"></span>
+                    </label>    </div> </div>
+
+            <div class="setting-group">
+                <h4><i class="fas fa-download"></i> Data</h4>
+                <div class="setting-item">
+                    <label>Export Chat</label>
+                    <button class="settings-btn" id="exportChat">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                </div>
+                <div class="setting-item">
+                    <label>Clear History</label>
+                    <button class="settings-btn" id="clearHistory" style="background: #e53e3e;">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+            </div>    </div>  </div>
+
+    <script>
+        const VANIE = {
+            config: {
+                name: 'VANIE',
+                typingDelay: 1500,
+                theme: 'dark',
+                fontSize: 14,
+                language: 'hi',
+                soundEnabled: true
+            },
+            
+            state: {
+                messages: [],
+                isTyping: false,
+                conversationContext: [],
+                isLoggedIn: false,
+                userName: 'Guest',
+                userEmail: '',
+                userId: null,
+                isRecording: false,
+                recognition: null,
+                interimTranscript: '',
+                currentUser: null
+            },
+
+            knowledge: {
+                greetings: ['hello', 'hi', 'namaste', 'hey', 'hola', 'kaise ho', 'how are you'],
+                coding: ['code', 'program', 'algorithm', 'function', 'python', 'javascript', 'java', 'c++', 'c#', 'ruby', 'html', 'css'],
+                science: ['science', 'physics', 'chemistry', 'biology', 'quantum', 'relativity', 'evolution'],
+                history: ['history', 'war', 'empire', 'revolution', 'ancient', 'medieval', 'modern'],
+                general: ['what is', 'who is', 'explain', 'tell me about', 'define']
+            },      
+
+            init() {
+                this.cacheElements();
+                this.bindEvents();
+                this.loadSettings();
+                this.updateFontSize();
+                this.updateLanguage();
+                this.showWelcomeScreen();
+                this.initVoiceRecognition();
+                this.checkExistingSession();
+            },  knowledge: {
+                greetings: ['hello', 'hi', 'namaste', 'hey', 'hola', 'kaise ho', 'how are you'],
+                coding: ['code', 'program', 'algorithm', 'function', 'python', 'javascript', 'java', 'c++', 'debug', 'error'],
+                science: ['science', 'quantum', 'physics', 'chemistry', 'biology', 'space', 'atom', 'theory'],
+                history: ['history', 'empire', 'samrajya', 'king', 'raja', 'war', 'battle', 'ancient', 'itihas'],
+                math: ['math', 'calculate', 'equation', 'formula', 'solve', 'ganit'],
+                general: ['kya', 'kaise', 'kab', 'kahan', 'kaun', 'what', 'how', 'when', 'where', 'who']
+            },
+
+            responses: {
+                greeting: [
+                    "Namaste! Main VANIE hoon. Aapki kya madad kar sakti hoon?",
+                    "Hello! VANIE yahaan haazir hai. Aapka sawal kya hai?",
+                    "Namaste ji! Main aapki seva mein kaise madad kar sakti hoon?"
+                ],
+                
+                coding: {
+                    general: "Main coding mein aapki madad kar sakti hoon! Kripya apna specific sawal ya problem detail mein batayein.",
+                    python: "Python ek powerful language hai! Aap mujhse koi bhi Python concept, algorithm ya code example maang sakte hain.",
+                    algorithm: "Algorithms computer science ki backbone hain. Sorting, searching, ya koi specific algorithm ke baare mein janiye."
+                },
+                
+                science: {
+                    general: "Science fascinating hai! Physics, Chemistry, Biology - kis topic par janakari chahiye?",
+                    quantum: "Quantum mechanics atoms aur subatomic particles ka study hai. Ye classical physics se bilkul alag hai.",
+                    space: "Space exploration humanity ki sabse badi achievements mein se ek hai. Mars missions se leke black holes tak!"
+                },
+                
+                history: {
+                    general: "Itihas humein apne past se sikhata hai. Ancient civilizations se leke modern era tak, kya janana chahte hain?",
+                    india: "Bharat ka itihas bahut samriddh hai - Indus Valley Civilization se leke modern India tak!",
+                    gupta: "Gupta Samrajya (320-550 CE) India ka Golden Age tha. Science, math, art sabhi mein pragati hui."
+                },
+                
+                math: "Mathematics logic aur patterns ka study hai. Addition se leke calculus tak, kya solve karna hai?",
+                
+                fallback: [
+                    "Interesting sawal hai! Kya aap thoda aur detail de sakte hain?",
+                    "Main samajh rahi hoon. Kripya apne sawal ko thoda elaborate karein.",
+                    "Achha topic hai! Specific kya janana chahte hain iske baare mein?"
+                ]
+            },
+
+            init() {
+                this.loadSettings();
+                this.loadChatHistory();
+                this.setupEventListeners();
+                this.sendInitialMessage();
+            },
+
+            loadSettings() {
+                const saved = localStorage.getItem('vanieSettings');
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    this.config = {...this.config, ...settings};
+                }
+                this.applySettings();
+            },
+
+            applySettings() {
+                document.body.setAttribute('data-theme', this.config.theme);
+                document.documentElement.style.setProperty('--base-font-size', `${this.config.fontSize}px`);
+                
+                document.getElementById('themeToggle').checked = this.config.theme === 'dark';
+                document.getElementById('fontSize').value = this.config.fontSize;
+                document.getElementById('fontSizeValue').textContent = `${this.config.fontSize}px`;
+                document.getElementById('languageSelect').value = this.config.language;
+                document.getElementById('soundToggle').checked = this.config.soundEnabled;
+                
+                // Set voice language if recognition is available
+                if (this.state.recognition) {
+                    const voiceLang = localStorage.getItem('vanieVoiceLanguage') || 'hi-IN';
+                    this.state.recognition.lang = voiceLang;
+                    document.getElementById('voiceLanguageSelect').value = voiceLang;
+                }
+            },
+
+            saveSettings() {
+                localStorage.setItem('vanieSettings', JSON.stringify(this.config));
+            },
+
+            loadChatHistory() {
+                if (this.state.isLoggedIn) {
+                    this.loadUserChatHistory();
+                } else {
+                    const saved = localStorage.getItem('vanieChat');
+                    if (saved) {
+                        this.state.messages = JSON.parse(saved);
+                        this.renderMessages();
+                    }
+                }
+            },
+
+            saveChatHistory() {
+                this.saveUserChatHistory();
+            },
+
+            toggleSettingsModal(open) {
+                const modal = document.getElementById('settingsModal');
+                const overlay = document.getElementById('modalOverlay');
+                
+                if (open) {
+                    modal.classList.add('open');
+                    overlay.classList.add('open');
+                } else {
+                    modal.classList.remove('open');
+                    overlay.classList.remove('open');
+                }
+            },
+            
+            setupEventListeners() {
+                const input = document.getElementById('messageInput');
+                const sendBtn = document.getElementById('sendBtn');
+                
+                input.addEventListener('input', (e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
+                    sendBtn.disabled = e.target.value.trim() === '';
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                sendBtn.addEventListener('click', () => this.sendMessage());
+
+                document.getElementById('uploadBtn').addEventListener('click', () => {
+                    document.getElementById('fileInput').click();
+                });
+
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    this.handleFileUpload(e.target.files);
+                });
+
+                document.getElementById('voiceBtn').addEventListener('click', () => {
+                    this.toggleVoiceRecording();
+                });
+
+                document.getElementById('settingsBtn').addEventListener('click', () => this.toggleSettingsModal(true));
+                document.getElementById('closeSettingsBtn').addEventListener('click', () => this.toggleSettingsModal(false));
+                document.getElementById('modalOverlay').addEventListener('click', () => this.toggleSettingsModal(false));
+
+                document.getElementById('accountBtn').addEventListener('click', () => {
+                    if (this.state.isLoggedIn) {
+                        this.showUserMenu();
+                    } else {
+                        this.showAuthModal('login');
+                    }
+                });
+
+                // Authentication modal events
+                document.getElementById('closeAuthBtn').addEventListener('click', () => {
+                    this.hideAuthModal();
+                });
+
+                document.getElementById('showSignup').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showAuthModal('signup');
+                });
+
+                document.getElementById('showLogin').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showAuthModal('login');
+                });
+
+                document.getElementById('loginBtn').addEventListener('click', () => {
+                    this.handleLogin();
+                });
+
+                document.getElementById('signupBtn').addEventListener('click', () => {
+                    this.handleSignup();
+                });
+
+                document.getElementById('showTerms').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showTermsModal('terms');
+                });
+
+                document.getElementById('showPrivacy').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showTermsModal('privacy');
+                });
+
+                document.getElementById('closeTermsBtn').addEventListener('click', () => {
+                    this.hideTermsModal();
+                });
+
+                // Password strength indicator
+                document.getElementById('signupPassword').addEventListener('input', (e) => {
+                    this.checkPasswordStrength(e.target.value);
+                });
+
+                // Form validation
+                document.getElementById('confirmPassword').addEventListener('input', (e) => {
+                    this.validatePasswordConfirmation();
+                });
+                
+                document.getElementById('clearChat').addEventListener('click', () => {
+                    if (confirm('Kya aap sach mein puri chat clear karna chahte hain?')) {
+                        this.clearChat();
+                    }
+                });
+
+                document.getElementById('clearHistory').addEventListener('click', () => {
+                    if (confirm('Chat history permanently delete ho jayegi. Continue?')) {
+                        this.clearChat();
+                        this.toggleSettingsModal(false);
+                    }
+                });
+
+                document.getElementById('searchBtn').addEventListener('click', () => {
+                    const query = prompt('Chat mein kya search karna hai?');
+                    if (query) this.searchChat(query);
+                });
+
+                document.getElementById('exportChat').addEventListener('click', () => {
+                    this.exportChat();
+                });
+
+                document.getElementById('themeToggle').addEventListener('change', (e) => {
+                    this.config.theme = e.target.checked ? 'dark' : 'light';
+                    document.body.setAttribute('data-theme', this.config.theme);
+                    this.saveSettings();
+                });
+
+                document.getElementById('fontSize').addEventListener('input', (e) => {
+                    this.config.fontSize = e.target.value;
+                    document.documentElement.style.setProperty('--base-font-size', `${e.target.value}px`);
+                    document.getElementById('fontSizeValue').textContent = `${e.target.value}px`;
+                    this.saveSettings();
+                });
+
+                document.getElementById('languageSelect').addEventListener('change', (e) => {
+                    this.config.language = e.target.value;
+                    this.saveSettings();
+                });
+
+                document.getElementById('voiceLanguageSelect').addEventListener('change', (e) => {
+                    this.changeVoiceLanguage(e.target.value);
+                });
+
+                document.getElementById('soundToggle').addEventListener('change', (e) => {
+                    this.config.soundEnabled = e.target.checked;
+                    this.saveSettings();
+                });
+
+                document.getElementById('scrollTopBtn').addEventListener('click', () => {
+                    document.getElementById('chatContainer').scrollTo({ top: 0, behavior: 'smooth' });
+                });
+
+                document.getElementById('scrollBottomBtn').addEventListener('click', () => {
+                    this.scrollToBottom();
+                });
+
+                document.getElementById('chatContainer').addEventListener('scroll', this.handleScroll.bind(this));
+
+                document.querySelectorAll('.suggestion-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const text = card.getAttribute('data-text');
+                        document.getElementById('messageInput').value = text;
+                        document.getElementById('messageInput').dispatchEvent(new Event('input'));
+                        this.sendMessage();
+                    });
+                });
+            },
+
+            handleScroll() {
+                const container = document.getElementById('chatContainer');
+                const scrollTop = container.scrollTop;
+                const scrollHeight = container.scrollHeight;
+                const clientHeight = container.clientHeight;
+                
+                if (scrollHeight - scrollTop - clientHeight > 100) {
+                    document.getElementById('scrollBottomBtn').classList.add('show');
+                } else {
+                    document.getElementById('scrollBottomBtn').classList.remove('show');
+                }
+                
+                if (scrollTop > 200) {
+                    document.getElementById('scrollTopBtn').classList.add('show');
+                } else {
+                    document.getElementById('scrollTopBtn').classList.remove('show');
+                }
+            },
+
+            sendInitialMessage() {
+                if (this.state.messages.length === 0) {
+                    document.getElementById('welcomeScreen').classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        const msg = "Namaste! 🙏 Main VANIE hoon - Virtual Assistant of Neural Integrated Engine. Main aapki har prakar ki madad ke liye haazir hoon. Coding, Science, History, Math - kuch bhi puchiye!";
+                        this.addMessage(msg, 'bot');
+                    }, 1000);
+                } else {
+                    document.getElementById('welcomeScreen').classList.add('hidden');
+                }
+            },
+
+            async sendMessage() {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                
+                if (!text || this.state.isTyping) return;
+
+                document.getElementById('welcomeScreen').classList.add('hidden');
+
+                this.addMessage(text, 'user');
+                this.state.conversationContext.push({role: 'user', text: text});
+
+                input.value = '';
+                input.style.height = 'auto';
+                document.getElementById('sendBtn').disabled = true;
+
+                this.showTyping();
+
+                const response = await this.generateResponse(text);
+                
+                this.hideTyping();
+                this.addMessage(response, 'bot');
+                this.state.conversationContext.push({role: 'bot', text: response});
+
+                if (this.state.conversationContext.length > 10) {
+                    this.state.conversationContext = this.state.conversationContext.slice(-10);
+                }
+            },
+
+            async generateResponse(userInput) {
+                await new Promise(resolve => setTimeout(resolve, this.config.typingDelay));
+
+                const input = userInput.toLowerCase();
+                
+                if (this.matchKeywords(input, this.knowledge.greetings)) {
+                    return this.getRandomResponse(this.responses.greeting);
+                }
+
+                if (this.matchKeywords(input, this.knowledge.coding)) {
+                    if (input.includes('python')) {
+                        return this.responses.coding.python + " Kya aap koi specific Python code chahte hain?";
+                    } else if (input.includes('algorithm')) {
+                        return this.responses.coding.algorithm + " Kaunsa algorithm samajhna hai?";
+                    } else if (input.includes('quicksort')) {
+                        return this.getQuickSortExample();
+                    } else if (input.includes('debug') || input.includes('error')) {
+                        return "Debugging ka matlab hai code mein errors dhundhna. Apna error message batayein, main help karungi!";
+                    }
+                    return this.responses.coding.general;
+                }
+
+                if (this.matchKeywords(input, this.knowledge.science)) {
+                    if (input.includes('quantum')) {
+                        return this.responses.science.quantum + " Quantum computers normal computers se exponentially fast hain certain tasks ke liye.";
+                    } else if (input.includes('space') || input.includes('mars')) {
+                        return this.responses.science.space + " Recent mein NASA ne Mars par successfully rovers bheje hain.";
+                    }
+                    return this.responses.science.general;
+                }
+
+                if (this.matchKeywords(input, this.knowledge.history)) {
+                    if (input.includes('gupta')) {
+                        return this.responses.history.gupta + " Aryabhata aur Kalidasa jaise mahan scholars is era mein the.";
+                    } else if (input.includes('india') || input.includes('bharat')) {
+                        return this.responses.history.india + " Kaunsi period ke baare mein detail chahiye?";
+                    }
+                    return this.responses.history.general;
+                }
+
+                if (this.matchKeywords(input, this.knowledge.math)) {
+                    return this.responses.math + " Kya aap koi specific problem solve karna chahte hain?";
+                }
+
+                if (input.includes('vanie') || input.includes('aap kaun') || input.includes('tumhara naam')) {
+                    return "Main VANIE hoon - Virtual Assistant of Neural Integrated Engine. Mujhe advanced algorithms ke saath train kiya gaya hai taaki main aapke sawaalon ka best possible answer de sakun. Main coding, science, history, math aur bahut kuch mein madad kar sakti hoon!";
+                }
+
+                if (input.includes('kya kar sakti') || input.includes('capabilities')) {
+                    return "Main bahut kuch kar sakti hoon! 💪\n• Complex coding problems solve karna\n• Scientific concepts explain karna\n• Historical events discuss karna\n• Mathematical calculations\n• General knowledge questions\n• Aur bhi bahut kuch! Bas puchiye.";
+                }
+
+                if (input.includes('thank') || input.includes('thanks') || input.includes('dhanyavaad') || input.includes('shukriya')) {
+                    return "Aapka swagat hai! 😊 Koi aur sawal ho toh zaroor puchiye.";
+                }
+
+                return this.getRandomResponse(this.responses.fallback);
+            },
+
+            getQuickSortExample() {
+                return `QuickSort ek efficient sorting algorithm hai!\n\n<strong>Python Code:</strong>\n<pre><code>def quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)\n\n# Example usage\narr = [64, 34, 25, 12, 22, 11, 90]\nprint(quicksort(arr))</code></pre>\n\n<strong>Time Complexity:</strong> O(n log n) average case\n<strong>Space Complexity:</strong> O(log n)`;
+            },
+
+            getBubbleSortExample() {
+                return `Bubble Sort ek simple sorting algorithm hai!\n\n<strong>Python Code:</strong>\n<pre><code>def bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr\n\n# Example\narr = [64, 34, 25, 12, 22, 11, 90]\nprint(bubble_sort(arr))</code></pre>\n\n<strong>Time Complexity:</strong> O(n²)\n<strong>Best Case:</strong> O(n) when already sorted`;
+            },
+
+            getMergeSortExample() {
+                return `Merge Sort ek efficient divide-and-conquer algorithm hai!\n\n<strong>Python Code:</strong>\n<pre><code>def merge_sort(arr):\n    if len(arr) <= 1:\n        return arr\n    \n    mid = len(arr) // 2\n    left = merge_sort(arr[:mid])\n    right = merge_sort(arr[mid:])\n    \n    return merge(left, right)\n\ndef merge(left, right):\n    result = []\n    i = j = 0\n    \n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    \n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result</code></pre>\n\n<strong>Time Complexity:</strong> O(n log n) - consistent\n<strong>Space Complexity:</strong> O(n)`;
+            },
+
+            getBinarySearchExample() {
+                return `Binary Search ek efficient searching algorithm hai sorted arrays ke liye!\n\n<strong>Python Code:</strong>\n<pre><code>def binary_search(arr, target):\n    left, right = 0, len(arr) - 1\n    \n    while left <= right:\n        mid = (left + right) // 2\n        \n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    \n    return -1  # Not found\n\n# Example\narr = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]\nresult = binary_search(arr, 23)\nprint(f"Element found at index: {result}")</code></pre>\n\n<strong>Time Complexity:</strong> O(log n)\n<strong>Prerequisite:</strong> Array must be sorted`;
+            },
+
+            getLinkedListExample() {
+                return `Linked List ek fundamental data structure hai!\n\n<strong>Python Code:</strong>\n<pre><code>class Node:\n    def __init__(self, data):\n        self.data = data\n        self.next = None\n\nclass LinkedList:\n    def __init__(self):\n        self.head = None\n    \n    def insert_at_beginning(self, data):\n        new_node = Node(data)\n        new_node.next = self.head\n        self.head = new_node\n    \n    def insert_at_end(self, data):\n        new_node = Node(data)\n        if not self.head:\n            self.head = new_node\n            return\n        \n        current = self.head\n        while current.next:\n            current = current.next\n        current.next = new_node\n    \n    def display(self):\n        current = self.head\n        while current:\n            print(current.data, end=" -> ")\n            current = current.next\n        print("None")</code></pre>\n\n<strong>Operations:</strong> Insert: O(1) at head, O(n) at tail`;
+            },
+
+            getStackExample() {
+                return `Stack ek LIFO (Last In First Out) data structure hai!\n\n<strong>Python Code:</strong>\n<pre><code>class Stack:\n    def __init__(self):\n        self.items = []\n    \n    def push(self, item):\n        self.items.append(item)\n    \n    def pop(self):\n        if not self.is_empty():\n            return self.items.pop()\n        return None\n    \n    def peek(self):\n        if not self.is_empty():\n            return self.items[-1]\n        return None\n    \n    def is_empty(self):\n        return len(self.items) == 0\n    \n    def size(self):\n        return len(self.items)\n\n# Example usage\nstack = Stack()\nstack.push(10)\nstack.push(20)\nstack.push(30)\nprint(stack.pop())  # Output: 30</code></pre>\n\n<strong>All operations:</strong> O(1) time complexity`;
+            },
+
+            getQueueExample() {
+                return `Queue ek FIFO (First In First Out) data structure hai!\n\n<strong>Python Code:</strong>\n<pre><code>from collections import deque\n\nclass Queue:\n    def __init__(self):\n        self.items = deque()\n    \n    def enqueue(self, item):\n        self.items.append(item)\n    \n    def dequeue(self):\n        if not self.is_empty():\n            return self.items.popleft()\n        return None\n    \n    def front(self):\n        if not self.is_empty():\n            return self.items[0]\n        return None\n    \n    def is_empty(self):\n        return len(self.items) == 0\n    \n    def size(self):\n        return len(self.items)\n\n# Example\nqueue = Queue()\nqueue.enqueue(1)\nqueue.enqueue(2)\nqueue.enqueue(3)\nprint(queue.dequeue())  # Output: 1</code></pre>\n\n<strong>Operations:</strong> Enqueue & Dequeue - O(1)`;
+            },
+
+            getDFSExample() {
+                return `DFS (Depth First Search) ek graph traversal algorithm hai!\n\n<strong>Python Code:</strong>\n<pre><code>def dfs_recursive(graph, node, visited=None):\n    if visited is None:\n        visited = set()\n    \n    visited.add(node)\n    print(node, end=' ')\n    \n    for neighbor in graph[node]:\n        if neighbor not in visited:\n            dfs_recursive(graph, neighbor, visited)\n    \n    return visited\n\ndef dfs_iterative(graph, start):\n    visited = set()\n    stack = [start]\n    \n    while stack:\n        node = stack.pop()\n        if node not in visited:\n            visited.add(node)\n            print(node, end=' ')\n            stack.extend(reversed(graph[node]))\n    \n    return visited\n\n# Example graph\ngraph = {\n    'A': ['B', 'C'],\n    'B': ['D', 'E'],\n    'C': ['F'],\n    'D': [],\n    'E': ['F'],\n    'F': []\n}\n\nprint("DFS Recursive:")\ndfs_recursive(graph, 'A')</code></pre>\n\n<strong>Time Complexity:</strong> O(V + E)\n<strong>Space Complexity:</strong> O(V)`;
+            },
+
+            getBFSExample() {
+                return `BFS (Breadth First Search) level-wise traversal hai!\n\n<strong>Python Code:</strong>\n<pre><code>from collections import deque\n\ndef bfs(graph, start):\n    visited = set()\n    queue = deque([start])\n    visited.add(start)\n    \n    while queue:\n        node = queue.popleft()\n        print(node, end=' ')\n        \n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n    \n    return visited\n\n# Example graph\ngraph = {\n    'A': ['B', 'C'],\n    'B': ['D', 'E'],\n    'C': ['F'],\n    'D': [],\n    'E': ['F'],\n    'F': []\n}\n\nprint("BFS Traversal:")\nbfs(graph, 'A')\n# Output: A B C D E F</code></pre>\n\n<strong>Time Complexity:</strong> O(V + E)\n<strong>Use Case:</strong> Shortest path in unweighted graphs`;
+            },
+
+            getDijkstraExample() {
+                return `Dijkstra's Algorithm shortest path find karta hai!\n\n<strong>Python Code:</strong>\n<pre><code>import heapq\n\ndef dijkstra(graph, start):\n    distances = {node: float('inf') for node in graph}\n    distances[start] = 0\n    pq = [(0, start)]\n    visited = set()\n    \n    while pq:\n        current_dist, current_node = heapq.heappop(pq)\n        \n        if current_node in visited:\n            continue\n        \n        visited.add(current_node)\n        \n        for neighbor, weight in graph[current_node].items():\n            distance = current_dist + weight\n            \n            if distance < distances[neighbor]:\n                distances[neighbor] = distance\n                heapq.heappush(pq, (distance, neighbor))\n    \n    return distances\n\n# Example\ngraph = {\n    'A': {'B': 4, 'C': 2},\n    'B': {'C': 1, 'D': 5},\n    'C': {'D': 8, 'E': 10},\n    'D': {'E': 2},\n    'E': {}\n}\n\nprint(dijkstra(graph, 'A'))</code></pre>\n\n<strong>Time Complexity:</strong> O((V + E) log V) with heap\n<strong>Note:</strong> Works only with non-negative weights`;
+            },
+
+            matchKeywords(input, keywords) {
+                return keywords.some(keyword => input.includes(keyword));
+            },
+
+            getRandomResponse(responses) {
+                if (Array.isArray(responses)) {
+                    return responses[Math.floor(Math.random() * responses.length)];
+                }
+                return responses;
+            },
+
+            login() {
+                const username = prompt('Enter your username:');
+                if (username && username.trim()) {
+                    this.state.isLoggedIn = true;
+                    this.state.userName = username.trim();
+                    document.getElementById('accountBtn').title = `Logged in as ${this.state.userName} (Click to Logout)`;
+                    this.showNotification(`Welcome back, ${this.state.userName}! 👋`);
+                    this.updateStatus('Online');
+                }
+            },
+
+            logout() {
+                if (confirm('Are you sure you want to logout?')) {
+                    this.state.isLoggedIn = false;
+                    this.state.userName = 'Guest';
+                    document.getElementById('accountBtn').title = 'Account / Login';
+                    this.showNotification('Logged out successfully! 👋');
+                    this.updateStatus('Online');
+                }
+            },
+
+            updateStatus(status) {
+                document.getElementById('statusText').textContent = status;
+            },
+
+            showTyping() {
+                this.state.isTyping = true;
+                document.getElementById('typingWrapper').style.display = 'flex';
+                this.updateStatus('Thinking...');
+                this.scrollToBottom();
+
+                this.typingTimeout = setTimeout(() => {
+                    this.updateStatus('Typing...');
+                }, 800);
+            },
+
+            hideTyping() {
+                this.state.isTyping = false;
+                document.getElementById('typingWrapper').style.display = 'none';
+                clearTimeout(this.typingTimeout);
+                this.updateStatus('Online');
+            },
+
+            addMessage(text, sender) {
+                const message = {
+                    text: text,
+                    sender: sender,
+                    timestamp: new Date().toLocaleTimeString('hi-IN', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    })
+                };
+
+                this.state.messages.push(message);
+                this.saveChatHistory();
+                this.renderMessage(message);
+                this.scrollToBottom();
+            },
+
+            renderMessages() {
+                if (this.state.messages.length > 0) {
+                    document.getElementById('welcomeScreen').classList.add('hidden');
+                }
+
+                this.state.messages.forEach(msg => this.renderMessage(msg));
+                setTimeout(() => this.scrollToBottom(false), 100);
+            },
+
+            renderMessage(message) {
+                const wrapper = document.createElement('div');
+                wrapper.className = `message-wrapper ${message.sender}`;
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${message.sender}`;
+
+                const content = document.createElement('div');
+                content.className = 'message-content';
+                content.innerHTML = message.text;
+                content.title = `Time: ${message.timestamp} | Double-click to copy`;
+
+                content.addEventListener('dblclick', () => {
+                    this.copyToClipboard(message.text.replace(/<[^>]*>/g, ''));
+                });
+
+                messageDiv.appendChild(content);
+                wrapper.appendChild(messageDiv);
+
+                const container = document.getElementById('chatContainer');
+                const typing = document.getElementById('typingWrapper');
+                container.insertBefore(wrapper, typing);
+            },
+
+            scrollToBottom(smooth = true) {
+                setTimeout(() => {
+                    const container = document.getElementById('chatContainer');
+                    container.scrollTo({
+                        top: container.scrollHeight,
+                        behavior: smooth ? 'smooth' : 'auto'
+                    });
+                }, 50);
+            },
+
+            clearChat() {
+                this.state.messages = [];
+                this.state.conversationContext = [];
+                localStorage.removeItem('vanieChat');
+                
+                const messages = document.querySelectorAll('.chat-container > .message-wrapper');
+                messages.forEach(msg => msg.remove());
+                
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+                this.sendInitialMessage();
+            },
+
+            searchChat(query) {
+                const results = this.state.messages.filter(msg => 
+                    msg.text.toLowerCase().includes(query.toLowerCase())
+                );
+                
+                if (results.length > 0) {
+                    alert(`${results.length} messages mile "${query}" ke saath:\n\n` + 
+                        results.slice(0, 5).map(r => `• [${r.sender.toUpperCase()}] ${r.text.replace(/<[^>]*>/g, '').substring(0, 50)}${r.text.length > 50 ? '...' : ''}`).join('\n'));
+                } else {
+                    alert(`"${query}" ke liye koi message nahi mila.`);
+                }
+            },
+
+            exportChat() {
+                if (this.state.messages.length === 0) {
+                    alert('Export karne ke liye koi messages nahi hain!');
+                    return;
+                }
+
+                const chatText = this.state.messages.map(msg => 
+                    `[${msg.timestamp}] ${msg.sender.toUpperCase()}: ${msg.text.replace(/<[^>]*>/g, '')}`
+                ).join('\n\n');
+
+                const blob = new Blob([chatText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `VANIE_Chat_${new Date().toISOString().split('T')[0]}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                this.showNotification('Chat successfully export ho gayi! ✓');
+            },
+
+            copyToClipboard(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    this.showNotification('Message copied! ✓');
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                }
+                
+                document.body.removeChild(textarea);
+            },
+
+            showNotification(message) {
+                if (document.querySelector('#globalNotification')) return;
+                
+                const notification = document.createElement('div');
+                notification.id = 'globalNotification';
+                notification.textContent = message;
+                notification.style.cssText = `
+                    position: fixed;
+                    bottom: 120px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(255, 255, 255, 0.1);
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    backdrop-filter: blur(10px);
+                    z-index: 1000;
+                    font-size: 14px;
+                    animation: slideUp 0.3s ease-out;
+                `;
+
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.animation = 'slideDown 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 2000);
+
+                if (!document.getElementById('notificationStyles')) {
+                    const style = document.createElement('style');
+                    style.id = 'notificationStyles';
+                    style.textContent = `
+                        @keyframes slideUp {
+                            from { opacity: 0; transform: translate(-50%, 20px); }
+                            to { opacity: 1; transform: translate(-50%, 0); }
+                        }
+                        @keyframes slideDown {
+                            from { opacity: 1; transform: translate(-50%, 0); }
+                            to { opacity: 0; transform: translate(-50%, 20px); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            },
+
+            initVoiceRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.state.recognition = new SpeechRecognition();
+                    this.state.recognition.continuous = true;
+                    this.state.recognition.interimResults = true;
+                    this.state.recognition.maxAlternatives = 1;
+                    this.state.recognition.lang = 'hi-IN';
+
+                    this.state.recognition.onstart = () => {
+                        this.state.isRecording = true;
+                        this.state.interimTranscript = '';
+                        document.getElementById('voiceBtn').classList.add('recording');
+                        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop"></i>';
+                        document.getElementById('inputWrapper').classList.add('recording');
+                        this.updateStatus('Listening...');
+                        this.playSound('start');
+                    };
+
+                    this.state.recognition.onresult = (event) => {
+                        let interimTranscript = '';
+                        let finalTranscript = '';
+
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript;
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+
+                        // Update interim text display
+                        if (interimTranscript) {
+                            document.getElementById('interimText').textContent = interimTranscript;
+                            this.state.interimTranscript = interimTranscript;
+                        }
+
+                        // Handle final result
+                        if (finalTranscript) {
+                            const input = document.getElementById('messageInput');
+                            const currentValue = input.value;
+                            input.value = currentValue + (currentValue ? ' ' : '') + finalTranscript;
+                            input.dispatchEvent(new Event('input'));
+                            document.getElementById('interimText').textContent = '';
+                            this.state.interimTranscript = '';
+                            
+                            // Auto-stop after getting final result
+                            setTimeout(() => {
+                                if (this.state.isRecording) {
+                                    this.stopVoiceRecording();
+                                    this.showNotification('Voice input completed! 🎤');
+                                }
+                            }, 1000);
+                        }
+                    };
+
+                    this.state.recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        let errorMessage = 'Voice recording failed. Please try again.';
+                        
+                        switch (event.error) {
+                            case 'no-speech':
+                                errorMessage = 'No speech detected. Try speaking louder.';
+                                break;
+                            case 'audio-capture':
+                                errorMessage = 'Microphone not available. Check permissions.';
+                                break;
+                            case 'not-allowed':
+                                errorMessage = 'Microphone permission denied. Allow access to use voice input.';
+                                break;
+                            case 'network':
+                                errorMessage = 'Network error. Check your connection.';
+                                break;
+                            case 'service-not-allowed':
+                                errorMessage = 'Voice recognition service not available.';
+                                break;
+                        }
+                        
+                        this.showNotification(errorMessage);
+                        this.playSound('error');
+                        this.stopVoiceRecording();
+                    };
+
+                    this.state.recognition.onend = () => {
+                        if (this.state.isRecording) {
+                            this.stopVoiceRecording();
+                        }
+                    };
+
+                    // Request microphone permission
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(() => {
+                            console.log('Microphone access granted');
+                        })
+                        .catch((error) => {
+                            console.error('Microphone access denied:', error);
+                            this.showNotification('Microphone access required for voice input.');
+                            document.getElementById('voiceBtn').disabled = true;
+                        });
+
+                } else {
+                    this.showNotification('Voice recognition not supported in your browser. Try Chrome or Edge.');
+                    document.getElementById('voiceBtn').disabled = true;
+                    document.getElementById('voiceBtn').title = 'Voice recognition not supported';
+                }
+            },
+
+            toggleVoiceRecording() {
+                if (this.state.isRecording) {
+                    this.stopVoiceRecording();
+                } else {
+                    this.startVoiceRecording();
+                }
+            },
+
+            startVoiceRecording() {
+                if (this.state.recognition) {
+                    try {
+                        this.state.recognition.start();
+                    } catch (error) {
+                        console.error('Failed to start recognition:', error);
+                        this.showNotification('Failed to start voice recording.');
+                    }
+                }
+            },
+
+            stopVoiceRecording() {
+                if (this.state.recognition && this.state.isRecording) {
+                    this.state.recognition.stop();
+                }
+                this.state.isRecording = false;
+                this.state.interimTranscript = '';
+                document.getElementById('voiceBtn').classList.remove('recording');
+                document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i>';
+                document.getElementById('inputWrapper').classList.remove('recording');
+                document.getElementById('interimText').textContent = '';
+                this.updateStatus('Online');
+                this.playSound('stop');
+            },
+
+            playSound(type) {
+                if (!this.config.soundEnabled) return;
+                
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    switch (type) {
+                        case 'start':
+                            oscillator.frequency.value = 800;
+                            gainNode.gain.value = 0.1;
+                            oscillator.start();
+                            oscillator.stop(audioContext.currentTime + 0.1);
+                            break;
+                        case 'stop':
+                            oscillator.frequency.value = 600;
+                            gainNode.gain.value = 0.1;
+                            oscillator.start();
+                            oscillator.stop(audioContext.currentTime + 0.15);
+                            break;
+                        case 'error':
+                            oscillator.frequency.value = 300;
+                            gainNode.gain.value = 0.1;
+                            oscillator.start();
+                            oscillator.stop(audioContext.currentTime + 0.2);
+                            break;
+                    }
+                } catch (error) {
+                    console.log('Sound effect failed:', error);
+                }
+            },
+
+            changeVoiceLanguage(language) {
+                if (this.state.recognition) {
+                    this.state.recognition.lang = language;
+                    localStorage.setItem('vanieVoiceLanguage', language);
+                    const langNames = {
+                        'hi-IN': 'Hindi',
+                        'en-US': 'English',
+                        'en-IN': 'English (India)'
+                    };
+                    this.showNotification(`Voice language changed to ${langNames[language] || language}`);
+                }
+            },
+
+            handleFileUpload(files) {
+                if (files.length === 0) return;
+
+                Array.from(files).forEach(file => {
+                    const fileType = file.type.split('/')[0];
+                    let messageContent = '';
+
+                    if (fileType === 'image') {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            messageContent = `📷 Image: ${file.name}\n\n<img src="${e.target.result}" alt="${file.name}" style="max-width: 100%; border-radius: 8px;">`;
+                            this.addMessage(messageContent, 'user');
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        messageContent = `📎 File: ${file.name} (${(file.size / 1024).toFixed(1)} KB)\n\nType: ${file.type}`;
+                        this.addMessage(messageContent, 'user');
+                    }
+                });
+
+                // Clear file input
+                document.getElementById('fileInput').value = '';
+                
+                // Show processing message
+                this.showNotification('File uploaded successfully! ✓');
+            },
+
+            // Authentication Functions
+            showAuthModal(type) {
+                const modal = document.getElementById('authModal');
+                const overlay = document.getElementById('modalOverlay');
+                const loginForm = document.getElementById('loginForm');
+                const signupForm = document.getElementById('signupForm');
+                const authTitle = document.getElementById('authTitle');
+
+                if (type === 'signup') {
+                    loginForm.style.display = 'none';
+                    signupForm.style.display = 'block';
+                    authTitle.textContent = 'Create Account';
+                } else {
+                    loginForm.style.display = 'block';
+                    signupForm.style.display = 'none';
+                    authTitle.textContent = 'Welcome Back';
+                }
+
+                modal.classList.add('open');
+                overlay.classList.add('open');
+                this.resetAuthForms();
+            },
+
+            hideAuthModal() {
+                const modal = document.getElementById('authModal');
+                const overlay = document.getElementById('modalOverlay');
+                
+                modal.classList.remove('open');
+                overlay.classList.remove('open');
+                this.resetAuthForms();
+            },
+
+            resetAuthForms() {
+                // Clear all form fields
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('signupName').value = '';
+                document.getElementById('signupEmail').value = '';
+                document.getElementById('signupPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                document.getElementById('rememberMe').checked = false;
+                document.getElementById('agreeTerms').checked = false;
+                
+                // Reset password strength
+                this.resetPasswordStrength();
+                
+                // Enable buttons
+                document.getElementById('loginBtn').disabled = false;
+                document.getElementById('signupBtn').disabled = false;
+            },
+
+            async handleLogin() {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const rememberMe = document.getElementById('rememberMe').checked;
+
+                // Validation
+                if (!this.validateEmail(email)) {
+                    this.showNotification('Please enter a valid email address');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    this.showNotification('Password must be at least 6 characters');
+                    return;
+                }
+
+                // Disable button during processing
+                const loginBtn = document.getElementById('loginBtn');
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Signing in...';
+
+                try {
+                    // Simulate API call (replace with actual authentication)
+                    await this.simulateAuthCall(email, password);
+                    
+                    // Check if user exists in localStorage
+                    const users = JSON.parse(localStorage.getItem('vanieUsers') || '[]');
+                    const user = users.find(u => u.email === email && u.password === this.hashPassword(password));
+
+                    if (user) {
+                        // Successful login
+                        this.state.isLoggedIn = true;
+                        this.state.currentUser = user;
+                        this.state.userName = user.name;
+                        this.state.userEmail = user.email;
+                        this.state.userId = user.id;
+
+                        // Save session
+                        if (rememberMe) {
+                            localStorage.setItem('vanieSession', JSON.stringify({
+                                userId: user.id,
+                                email: user.email,
+                                name: user.name,
+                                timestamp: Date.now()
+                            }));
+                        }
+
+                        this.updateAccountButton();
+                        this.hideAuthModal();
+                        this.showNotification(`Welcome back, ${user.name}! 👋`);
+                        this.updateStatus('Online');
+                        
+                        // Load user's chat history
+                        this.loadUserChatHistory();
+                    } else {
+                        this.showNotification('Invalid email or password');
+                    }
+                } catch (error) {
+                    this.showNotification('Login failed. Please try again.');
+                } finally {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Sign In';
+                }
+            },
+
+            async handleSignup() {
+                const name = document.getElementById('signupName').value.trim();
+                const email = document.getElementById('signupEmail').value.trim();
+                const password = document.getElementById('signupPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const agreeTerms = document.getElementById('agreeTerms').checked;
+
+                // Validation
+                if (name.length < 2) {
+                    this.showNotification('Name must be at least 2 characters');
+                    return;
+                }
+
+                if (!this.validateEmail(email)) {
+                    this.showNotification('Please enter a valid email address');
+                    return;
+                }
+
+                if (password.length < 8) {
+                    this.showNotification('Password must be at least 8 characters');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    this.showNotification('Passwords do not match');
+                    return;
+                }
+
+                if (!agreeTerms) {
+                    this.showNotification('Please agree to the Terms of Service and Privacy Policy');
+                    return;
+                }
+
+                // Check password strength
+                const strength = this.calculatePasswordStrength(password);
+                if (strength.score < 2) {
+                    this.showNotification('Password is too weak. Please include uppercase, lowercase, numbers, and special characters');
+                    return;
+                }
+
+                // Disable button during processing
+                const signupBtn = document.getElementById('signupBtn');
+                signupBtn.disabled = true;
+                signupBtn.textContent = 'Creating account...';
+
+                try {
+                    // Check if user already exists
+                    const users = JSON.parse(localStorage.getItem('vanieUsers') || '[]');
+                    if (users.find(u => u.email === email)) {
+                        this.showNotification('An account with this email already exists');
+                        return;
+                    }
+
+                    // Create new user
+                    const newUser = {
+                        id: this.generateUserId(),
+                        name: name,
+                        email: email,
+                        password: this.hashPassword(password),
+                        createdAt: new Date().toISOString(),
+                        lastLogin: new Date().toISOString(),
+                        preferences: {
+                            theme: 'dark',
+                            fontSize: 14,
+                            language: 'hi'
+                        }
+                    };
+
+                    // Save user
+                    users.push(newUser);
+                    localStorage.setItem('vanieUsers', JSON.stringify(users));
+
+                    // Auto-login
+                    this.state.isLoggedIn = true;
+                    this.state.currentUser = newUser;
+                    this.state.userName = newUser.name;
+                    this.state.userEmail = newUser.email;
+                    this.state.userId = newUser.id;
+
+                    // Save session
+                    localStorage.setItem('vanieSession', JSON.stringify({
+                        userId: newUser.id,
+                        email: newUser.email,
+                        name: newUser.name,
+                        timestamp: Date.now()
+                    }));
+
+                    this.updateAccountButton();
+                    this.hideAuthModal();
+                    this.showNotification(`Account created successfully! Welcome, ${name}! 🎉`);
+                    this.updateStatus('Online');
+
+                } catch (error) {
+                    this.showNotification('Account creation failed. Please try again.');
+                } finally {
+                    signupBtn.disabled = false;
+                    signupBtn.textContent = 'Create Account';
+                }
+            },
+
+            logout() {
+                if (confirm('Are you sure you want to logout?')) {
+                    // Clear session
+                    localStorage.removeItem('vanieSession');
+                    
+                    // Reset state
+                    this.state.isLoggedIn = false;
+                    this.state.currentUser = null;
+                    this.state.userName = 'Guest';
+                    this.state.userEmail = '';
+                    this.state.userId = null;
+
+                    this.updateAccountButton();
+                    this.showNotification('Logged out successfully! 👋');
+                    this.updateStatus('Online');
+                    
+                    // Load guest chat history
+                    this.loadChatHistory();
+                }
+            },
+
+            showUserMenu() {
+                // Create user menu options
+                const options = [
+                    `Profile: ${this.state.userName}`,
+                    'Settings',
+                    'Export Chat',
+                    'Logout'
+                ];
+
+                const choice = prompt(`Choose an option:\n${options.map((opt, i) => `${i + 1}. ${opt}`).join('\n')}`);
+
+                switch (choice) {
+                    case '1':
+                        this.showProfile();
+                        break;
+                    case '2':
+                        this.toggleSettingsModal(true);
+                        break;
+                    case '3':
+                        this.exportChat();
+                        break;
+                    case '4':
+                        this.logout();
+                        break;
+                }
+            },
+
+            showProfile() {
+                const user = this.state.currentUser;
+                const profileInfo = `
+Name: ${user.name}
+Email: ${user.email}
+Member since: ${new Date(user.createdAt).toLocaleDateString()}
+Last login: ${new Date(user.lastLogin).toLocaleDateString()}
+                `;
+                alert(profileInfo);
+            },
+
+            updateAccountButton() {
+                const accountBtn = document.getElementById('accountBtn');
+                if (this.state.isLoggedIn) {
+                    accountBtn.title = `Logged in as ${this.state.userName} (Click for options)`;
+                    accountBtn.innerHTML = '<i class="fas fa-user-check"></i>';
+                } else {
+                    accountBtn.title = 'Account / Login';
+                    accountBtn.innerHTML = '<i class="fas fa-user-circle"></i>';
+                }
+            },
+
+            loadUserChatHistory() {
+                const saved = localStorage.getItem(`vanieChat_${this.state.userId}`);
+                if (saved) {
+                    this.state.messages = JSON.parse(saved);
+                    this.renderMessages();
+                }
+            },
+
+            saveUserChatHistory() {
+                if (this.state.isLoggedIn) {
+                    localStorage.setItem(`vanieChat_${this.state.userId}`, JSON.stringify(this.state.messages));
+                } else {
+                    localStorage.setItem('vanieChat', JSON.stringify(this.state.messages));
+                }
+            },
+
+            // Validation Functions
+            validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            },
+
+            validatePasswordConfirmation() {
+                const password = document.getElementById('signupPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const confirmInput = document.getElementById('confirmPassword');
+
+                if (confirmPassword && password !== confirmPassword) {
+                    confirmInput.style.borderColor = 'rgba(255, 59, 48, 0.5)';
+                } else {
+                    confirmInput.style.borderColor = '';
+                }
+            },
+
+            checkPasswordStrength(password) {
+                const strength = this.calculatePasswordStrength(password);
+                const strengthBar = document.querySelector('.strength-bar::after');
+                const strengthText = document.querySelector('.strength-text');
+                const strengthContainer = document.getElementById('passwordStrength');
+
+                if (password.length > 0) {
+                    strengthContainer.classList.add('show');
+                    
+                    // Update strength bar
+                    const strengthBarElement = document.querySelector('.strength-bar');
+                    if (strengthBarElement) {
+                        strengthBarElement.style.setProperty('--strength-width', `${strength.percentage}%`);
+                        strengthBarElement.style.setProperty('--strength-color', strength.color);
+                    }
+
+                    // Update strength text
+                    if (strengthText) {
+                        strengthText.textContent = strength.text;
+                        strengthText.style.color = strength.color;
+                    }
+                } else {
+                    this.resetPasswordStrength();
+                }
+            },
+
+            calculatePasswordStrength(password) {
+                let score = 0;
+                let feedback = '';
+
+                // Length check
+                if (password.length >= 8) score++;
+                if (password.length >= 12) score++;
+
+                // Character variety checks
+                if (/[a-z]/.test(password)) score++;
+                if (/[A-Z]/.test(password)) score++;
+                if (/[0-9]/.test(password)) score++;
+                if (/[^A-Za-z0-9]/.test(password)) score++;
+
+                // Calculate strength
+                const strengthLevels = [
+                    { score: 0, text: 'Very Weak', color: 'rgba(255, 59, 48, 0.8)', percentage: 20 },
+                    { score: 1, text: 'Weak', color: 'rgba(255, 149, 0, 0.8)', percentage: 40 },
+                    { score: 2, text: 'Fair', color: 'rgba(255, 204, 0, 0.8)', percentage: 60 },
+                    { score: 3, text: 'Good', color: 'rgba(52, 199, 89, 0.8)', percentage: 80 },
+                    { score: 4, text: 'Strong', color: 'rgba(48, 209, 88, 0.8)', percentage: 100 }
+                ];
+
+                return strengthLevels[Math.min(score, 4)];
+            },
+
+            resetPasswordStrength() {
+                const strengthContainer = document.getElementById('passwordStrength');
+                strengthContainer.classList.remove('show');
+            },
+
+            // Security Functions
+            hashPassword(password) {
+                // Simple hashing (in production, use proper hashing like bcrypt)
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    const char = password.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32-bit integer
+                }
+                return hash.toString();
+            },
+
+            generateUserId() {
+                return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            },
+
+            simulateAuthCall(email, password) {
+                // Simulate network delay
+                return new Promise(resolve => setTimeout(resolve, 1000));
+            },
+
+            // Terms and Privacy
+            showTermsModal(type) {
+                const modal = document.getElementById('termsModal');
+                const overlay = document.getElementById('modalOverlay');
+                const title = document.getElementById('termsTitle');
+                const content = document.getElementById('termsContent');
+
+                if (type === 'terms') {
+                    title.textContent = 'Terms of Service';
+                    content.innerHTML = this.getTermsContent();
+                } else {
+                    title.textContent = 'Privacy Policy';
+                    content.innerHTML = this.getPrivacyContent();
+                }
+
+                modal.classList.add('open');
+                overlay.classList.add('open');
+            },
+
+            hideTermsModal() {
+                const modal = document.getElementById('termsModal');
+                const overlay = document.getElementById('modalOverlay');
+                
+                modal.classList.remove('open');
+                overlay.classList.remove('open');
+            },
+
+            getTermsContent() {
+                return `
+                    <h4>Terms of Service for VANIE</h4>
+                    <p><strong>Last updated:</strong> ${new Date().toLocaleDateString()}</p>
+                    
+                    <h5>1. Acceptance of Terms</h5>
+                    <p>By accessing and using VANIE, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h5>2. Privacy Policy</h5>
+                    <p>Your use of VANIE is also governed by our Privacy Policy, which is incorporated into these Terms of Service.</p>
+                    
+                    <h5>3. User Accounts</h5>
+                    <p>You are responsible for safeguarding the password and for all activities that occur under your account.</p>
+                    
+                    <h5>4. Acceptable Use</h5>
+                    <p>You may not use VANIE for any illegal or unauthorized purpose. You must not transmit any harmful or offensive content.</p>
+                    
+                    <h5>5. Intellectual Property</h5>
+                    <p>All content included in VANIE is the property of VANIE or its content suppliers and protected by intellectual property laws.</p>
+                    
+                    <h5>6. Disclaimer</h5>
+                    <p>The information on this website is provided on an "as is" basis. To the fullest extent permitted by law, VANIE excludes all representations.</p>
+                    
+                    <h5>7. Limitation of Liability</h5>
+                    <p>In no event shall VANIE be liable for any indirect, special, incidental, or consequential damages.</p>
+                    
+                    <h5>8. Termination</h5>
+                    <p>VANIE may terminate or suspend your account and bar access to the service immediately, without prior notice or liability.</p>
+                    
+                    <h5>9. Changes to Terms</h5>
+                    <p>VANIE reserves the right to modify these terms at any time. Your continued use of the service constitutes acceptance of any changes.</p>
+                `;
+            },
+
+            getPrivacyContent() {
+                return `
+                    <h4>Privacy Policy for VANIE</h4>
+                    <p><strong>Last updated:</strong> ${new Date().toLocaleDateString()}</p>
+                    
+                    <h5>1. Information We Collect</h5>
+                    <p>We collect information you provide directly to us, such as when you create an account, use our services, or contact us.</p>
+                    
+                    <h5>2. How We Use Your Information</h5>
+                    <p>We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.</p>
+                    
+                    <h5>3. Information Sharing</h5>
+                    <p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent.</p>
+                    
+                    <h5>4. Data Security</h5>
+                    <p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access.</p>
+                    
+                    <h5>5. Data Retention</h5>
+                    <p>We retain your personal information for as long as necessary to provide the services and fulfill the transactions you request.</p>
+                    
+                    <h5>6. Your Rights</h5>
+                    <p>You have the right to access, update, or delete your personal information at any time.</p>
+                    
+                    <h5>7. Cookies</h5>
+                    <p>We use cookies and similar tracking technologies to track activity on our service and hold certain information.</p>
+                    
+                    <h5>8. Children's Privacy</h5>
+                    <p>Our service is not intended for use by children under the age of 13. We do not knowingly collect personal information from children.</p>
+                    
+                    <h5>9. Changes to This Policy</h5>
+                    <p>We may update our privacy policy from time to time. We will notify you of any changes by posting the new policy on this page.</p>
+                `;
+            },
+
+            // Session Management
+            checkExistingSession() {
+                const session = localStorage.getItem('vanieSession');
+                if (session) {
+                    try {
+                        const sessionData = JSON.parse(session);
+                        const users = JSON.parse(localStorage.getItem('vanieUsers') || '[]');
+                        const user = users.find(u => u.id === sessionData.userId);
+
+                        if (user && (Date.now() - sessionData.timestamp) < 7 * 24 * 60 * 60 * 1000) { // 7 days
+                            // Restore session
+                            this.state.isLoggedIn = true;
+                            this.state.currentUser = user;
+                            this.state.userName = user.name;
+                            this.state.userEmail = user.email;
+                            this.state.userId = user.id;
+
+                            this.updateAccountButton();
+                            this.loadUserChatHistory();
+                            this.showNotification(`Welcome back, ${user.name}! 👋`);
+                        } else {
+                            // Session expired
+                            localStorage.removeItem('vanieSession');
+                        }
+                    } catch (error) {
+                        localStorage.removeItem('vanieSession');
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            VANIE.init();
+        });
+    </script>
+</body>
+</html>
