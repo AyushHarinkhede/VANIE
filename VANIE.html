@@ -157,6 +157,193 @@
         .header-actions {
             display: flex;
             gap: 4px;
+            align-items: center;
+        }
+
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .search-container #searchBtn {
+            position: relative;
+            z-index: 101;
+        }
+
+        .search-bar {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .search-bar.expanded {
+            width: 300px;
+            opacity: 1;
+            transform: translateY(-50%) scale(1.02);
+        }
+
+        .search-bar:focus-within {
+            width: 350px;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 14px;
+            padding: 8px 12px;
+            font-family: var(--body-font);
+            z-index: 1;
+            position: relative;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(10px);
+            position: relative;
+            z-index: 102;
+        }
+
+        .search-bar.expanded .search-close-btn {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .search-close-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-actions .icon-btn:not(:first-child) {
+            transition: all 0.3s ease;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .header-actions.search-expanded .icon-btn:not(:first-child) {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 350px;
+            max-height: 400px;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin-top: 8px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .search-suggestions.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .suggestion-category {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .suggestion-category:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-category h4 {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 16px 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .suggestion-category h4 i {
+            font-size: 10px;
+        }
+
+        .suggestion-items {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .suggestion-item {
+            padding: 10px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 2px solid transparent;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-left-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .suggestion-item.active {
+            background: rgba(255, 255, 255, 0.08);
+            border-left-color: var(--accent);
+        }
+
+        .suggestion-item i {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            width: 16px;
+            text-align: center;
+        }
+
+        .suggestion-highlight {
+            color: var(--accent);
+            font-weight: 500;
         }
 
         .icon-btn {
@@ -415,29 +602,67 @@
         }
 
         .action-btn.recording {
-            background: rgba(255, 59, 48, 0.1);
-            border-color: rgba(255, 59, 48, 0.3);
-            animation: pulse 1.5s infinite;
+            background: rgba(255, 59, 48, 0.15);
+            border-color: rgba(255, 59, 48, 0.5);
+            animation: pulse 1.2s infinite;
+            box-shadow: 0 0 20px rgba(255, 59, 48, 0.3);
         }
 
         .action-btn.recording::before {
             content: '';
             position: absolute;
-            inset: -4px;
-            border-radius: 10px;
-            background: rgba(255, 59, 48, 0.2);
-            animation: pulseRing 1.5s infinite;
+            inset: -6px;
+            border-radius: 12px;
+            background: rgba(255, 59, 48, 0.1);
+            animation: pulseRing 1.2s infinite;
+            z-index: -1;
+        }
+
+        .action-btn.recording i {
+            color: rgba(255, 59, 48, 0.9);
+        }
+
+        .voice-status-indicator {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: rgba(255, 59, 48, 0.8);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-weight: 500;
+        }
+
+        .action-btn.recording .voice-status-indicator {
+            opacity: 1;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(1.05);
+            }
         }
 
         @keyframes pulseRing {
-            0% { transform: scale(1); opacity: 0.3; }
-            50% { transform: scale(1.05); opacity: 0.1; }
-            100% { transform: scale(1); opacity: 0.3; }
+            0% { 
+                transform: scale(1); 
+                opacity: 0.4; 
+            }
+            50% { 
+                transform: scale(1.1); 
+                opacity: 0.15; 
+            }
+            100% { 
+                transform: scale(1); 
+                opacity: 0.4; 
+            }
         }
 
         .send-btn {
@@ -968,6 +1193,188 @@
             transform: translateY(-1px);
         }
 
+        /* Confirmation Modal Styles */
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .confirmation-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .confirmation-content {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 600px;
+            width: 98%;
+            min-height: 350px;
+            text-align: center;
+            transform: scale(0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .confirmation-modal.show .confirmation-content {
+            animation: bounceIn 0.6s ease forwards;
+        }
+
+        .confirmation-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 59, 48, 0.1);
+            border: 2px solid rgba(255, 59, 48, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 28px;
+            color: rgba(255, 59, 48, 0.8);
+            animation: pulseBounce 2s infinite;
+        }
+
+        .confirmation-content h3 {
+            font-family: var(--display-font);
+            font-weight: 600;
+            font-size: 22px;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .confirmation-content p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .confirmation-btn {
+            padding: 16px 32px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .confirmation-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .confirmation-btn:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            animation: bounce 0.5s ease;
+        }
+
+        .confirm-btn:hover {
+            background: rgba(255, 59, 48, 0.2);
+            border-color: rgba(255, 59, 48, 0.4);
+            transform: translateY(-2px);
+            animation: shake 0.5s ease;
+        }
+
+        .confirmation-btn:active {
+            transform: scale(0.95);
+            animation: pulseBounce 0.3s ease;
+        }
+
+        .confirmation-btn i {
+            font-size: 16px;
+        }
+
+        .cancel-btn i {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .confirm-btn i {
+            color: rgba(255, 59, 48, 0.8);
+        }
+
+        /* Responsive styles for confirmation modal */
+        @media (max-width: 600px) {
+            .confirmation-content {
+                margin: 15px;
+                padding: 40px 25px;
+                max-width: calc(100% - 30px);
+                min-height: 300px;
+            }
+            
+            .confirmation-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            
+            .confirmation-content h3 {
+                font-size: 20px;
+                margin-bottom: 14px;
+            }
+            
+            .confirmation-content p {
+                font-size: 15px;
+                margin-bottom: 28px;
+            }
+            
+            .confirmation-buttons {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .confirmation-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 16px 24px;
+                font-size: 15px;
+            }
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -1057,6 +1464,14 @@
                 padding: 16px 20px;
             }
 
+            .search-bar.expanded {
+                width: 250px;
+            }
+
+            .search-bar:focus-within {
+                width: 280px;
+            }
+
             .input-container {
                 padding: 20px;
             }
@@ -1076,11 +1491,45 @@
                         <span id="statusText">Online</span>
          </div>  </div> </div>
             <div class="header-actions">
+                <div class="search-container" id="searchContainer">
+                    <button class="icon-btn" id="searchBtn" title="Search Chat">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <div class="search-bar" id="searchBar">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search chat history...">
+                        <button class="search-close-btn" id="searchCloseBtn" title="Close Search">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="search-suggestions" id="searchSuggestions">
+                        <div class="suggestion-category">
+                            <h4><i class="fas fa-comments"></i> Chats</h4>
+                            <div class="suggestion-items" id="chatSuggestions"></div>
+                        </div>
+                        <div class="suggestion-category">
+                            <h4><i class="fas fa-cog"></i> Settings</h4>
+                            <div class="suggestion-items" id="settingsSuggestions"></div>
+                        </div>
+                        <div class="suggestion-category">
+                            <h4><i class="fas fa-sliders-h"></i> Options</h4>
+                            <div class="suggestion-items" id="optionsSuggestions"></div>
+                        </div>
+                        <div class="suggestion-category">
+                            <h4><i class="fas fa-star"></i> Features</h4>
+                            <div class="suggestion-items" id="featuresSuggestions"></div>
+                        </div>
+                        <div class="suggestion-category">
+                            <h4><i class="fas fa-terminal"></i> Commands</h4>
+                            <div class="suggestion-items" id="commandsSuggestions"></div>
+                        </div>
+                        <div class="suggestion-category">
+                            <h4><i class="fas fa-keyboard"></i> Shortcuts</h4>
+                            <div class="suggestion-items" id="shortcutsSuggestions"></div>
+                        </div>
+                    </div>
+                </div>
                 <button class="icon-btn" id="accountBtn" title="Account / Login">
-                    <i class="fas fa-user-circle"></i>
-                </button>
-                <button class="icon-btn" id="searchBtn" title="Search Chat">
-                    <i class="fas fa-search"></i>
+                    <i class="fas fa-user"></i>
                 </button>
                 <button class="icon-btn" id="settingsBtn" title="Settings">
                     <i class="fas fa-cog"></i>
@@ -1154,11 +1603,33 @@
                 <button class="action-btn" id="uploadBtn" title="Upload File">
                     <i class="fas fa-paperclip"></i>
                 </button>
-                <button class="action-btn" id="voiceBtn" title="Voice Input">
+                <button class="action-btn" id="voiceBtn" title="Voice Input (Ctrl+M)">
                     <i class="fas fa-microphone"></i>
+                    <span class="voice-status-indicator">Listening...</span>
                 </button>
                 <button class="send-btn" id="sendBtn" disabled title="Send Message">
                     <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clear Chat Confirmation Modal -->
+    <div class="confirmation-modal" id="clearChatModal">
+        <div class="confirmation-content">
+            <div class="confirmation-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3>Clear Chat History?</h3>
+            <p>Are you sure you want to clear all chat history? This action cannot be undone.</p>
+            <div class="confirmation-buttons">
+                <button class="confirmation-btn cancel-btn" id="cancelClearBtn">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button class="confirmation-btn confirm-btn" id="confirmClearBtn">
+                    <i class="fas fa-trash"></i>
+                    Clear Chat
                 </button>
             </div>
         </div>
@@ -1342,7 +1813,78 @@
                 isRecording: false,
                 recognition: null,
                 interimTranscript: '',
-                currentUser: null
+                currentUser: null,
+                searchSuggestionsVisible: false,
+                selectedSuggestionIndex: -1
+            },
+
+            searchSuggestionsData: {
+                chats: [
+                    { text: 'hello', icon: 'fas fa-comment', action: 'search' },
+                    { text: 'namaste', icon: 'fas fa-comment', action: 'search' },
+                    { text: 'how are you', icon: 'fas fa-comment', action: 'search' },
+                    { text: 'what is vanie', icon: 'fas fa-comment', action: 'search' },
+                    { text: 'coding help', icon: 'fas fa-code', action: 'search' },
+                    { text: 'python tutorial', icon: 'fas fa-code', action: 'search' },
+                    { text: 'javascript help', icon: 'fas fa-code', action: 'search' },
+                    { text: 'quantum physics', icon: 'fas fa-atom', action: 'search' },
+                    { text: 'math problem', icon: 'fas fa-calculator', action: 'search' },
+                    { text: 'history question', icon: 'fas fa-book', action: 'search' },
+                    { text: 'science explanation', icon: 'fas fa-flask', action: 'search' },
+                    { text: 'algorithm help', icon: 'fas fa-project-diagram', action: 'search' }
+                ],
+                settings: [
+                    { text: 'dark mode', icon: 'fas fa-moon', action: 'setting' },
+                    { text: 'light mode', icon: 'fas fa-sun', action: 'setting' },
+                    { text: 'font size', icon: 'fas fa-text-height', action: 'setting' },
+                    { text: 'language', icon: 'fas fa-language', action: 'setting' },
+                    { text: 'voice settings', icon: 'fas fa-microphone', action: 'setting' },
+                    { text: 'sound effects', icon: 'fas fa-volume-up', action: 'setting' },
+                    { text: 'notifications', icon: 'fas fa-bell', action: 'setting' },
+                    { text: 'theme settings', icon: 'fas fa-palette', action: 'setting' },
+                    { text: 'voice language', icon: 'fas fa-globe', action: 'setting' }
+                ],
+                options: [
+                    { text: 'export chat', icon: 'fas fa-download', action: 'option' },
+                    { text: 'clear history', icon: 'fas fa-trash', action: 'option' },
+                    { text: 'search chat', icon: 'fas fa-search', action: 'option' },
+                    { text: 'voice input', icon: 'fas fa-microphone', action: 'option' },
+                    { text: 'file upload', icon: 'fas fa-paperclip', action: 'option' },
+                    { text: 'user account', icon: 'fas fa-user', action: 'option' },
+                    { text: 'logout', icon: 'fas fa-sign-out-alt', action: 'option' },
+                    { text: 'login', icon: 'fas fa-sign-in-alt', action: 'option' },
+                    { text: 'signup', icon: 'fas fa-user-plus', action: 'option' }
+                ],
+                features: [
+                    { text: 'voice typing', icon: 'fas fa-microphone', action: 'feature' },
+                    { text: 'file sharing', icon: 'fas fa-file', action: 'feature' },
+                    { text: 'authentication', icon: 'fas fa-user-lock', action: 'feature' },
+                    { text: 'chat history', icon: 'fas fa-history', action: 'feature' },
+                    { text: 'smart suggestions', icon: 'fas fa-lightbulb', action: 'feature' },
+                    { text: 'multi-language', icon: 'fas fa-globe', action: 'feature' },
+                    { text: 'real-time search', icon: 'fas fa-search', action: 'feature' },
+                    { text: 'export functionality', icon: 'fas fa-file-export', action: 'feature' },
+                    { text: 'secure login', icon: 'fas fa-shield-alt', action: 'feature' },
+                    { text: 'voice commands', icon: 'fas fa-microphone-alt', action: 'feature' }
+                ],
+                commands: [
+                    { text: '/help', icon: 'fas fa-question-circle', action: 'command' },
+                    { text: '/clear', icon: 'fas fa-eraser', action: 'command' },
+                    { text: '/export', icon: 'fas fa-file-export', action: 'command' },
+                    { text: '/settings', icon: 'fas fa-cog', action: 'command' },
+                    { text: '/login', icon: 'fas fa-sign-in-alt', action: 'command' },
+                    { text: '/logout', icon: 'fas fa-sign-out-alt', action: 'command' },
+                    { text: '/voice', icon: 'fas fa-microphone', action: 'command' },
+                    { text: '/search', icon: 'fas fa-search', action: 'command' }
+                ],
+                shortcuts: [
+                    { text: 'Ctrl+K - Quick search', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Ctrl+M - Voice input', icon: 'fas fa-microphone', action: 'shortcut' },
+                    { text: 'Ctrl+/ - Show commands', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Esc - Close search', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Enter - Select suggestion', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: '↑↓ - Navigate suggestions', icon: 'fas fa-keyboard', action: 'shortcut' }
+                ]
             },
 
             knowledge: {
@@ -1507,6 +2049,22 @@
                 document.getElementById('closeSettingsBtn').addEventListener('click', () => this.toggleSettingsModal(false));
                 document.getElementById('modalOverlay').addEventListener('click', () => this.toggleSettingsModal(false));
 
+                // Confirmation modal event listeners
+                document.getElementById('cancelClearBtn').addEventListener('click', () => {
+                    this.hideClearChatConfirmation();
+                });
+
+                document.getElementById('confirmClearBtn').addEventListener('click', () => {
+                    this.confirmClearChat();
+                });
+
+                // Close confirmation modal on overlay click
+                document.getElementById('modalOverlay').addEventListener('click', () => {
+                    if (document.getElementById('clearChatModal').classList.contains('show')) {
+                        this.hideClearChatConfirmation();
+                    }
+                });
+
                 document.getElementById('accountBtn').addEventListener('click', () => {
                     if (this.state.isLoggedIn) {
                         this.showUserMenu();
@@ -1563,21 +2121,62 @@
                 });
                 
                 document.getElementById('clearChat').addEventListener('click', () => {
-                    if (confirm('Kya aap sach mein puri chat clear karna chahte hain?')) {
-                        this.clearChat();
-                    }
+                    this.showClearChatConfirmation();
                 });
 
                 document.getElementById('clearHistory').addEventListener('click', () => {
-                    if (confirm('Chat history permanently delete ho jayegi. Continue?')) {
-                        this.clearChat();
-                        this.toggleSettingsModal(false);
-                    }
+                    this.showClearChatConfirmation();
                 });
 
                 document.getElementById('searchBtn').addEventListener('click', () => {
-                    const query = prompt('Chat mein kya search karna hai?');
-                    if (query) this.searchChat(query);
+                    this.toggleSearchBar();
+                });
+
+                document.getElementById('searchCloseBtn').addEventListener('click', () => {
+                    this.closeSearchBar();
+                });
+
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.handleSearchInput(e.target.value);
+                });
+
+                document.getElementById('searchInput').addEventListener('keydown', (e) => {
+                    this.handleSearchKeydown(e);
+                });
+
+                document.getElementById('searchInput').addEventListener('focus', () => {
+                    if (document.getElementById('searchBar').classList.contains('expanded')) {
+                        const query = document.getElementById('searchInput').value.trim();
+                        if (query) {
+                            this.showSearchSuggestions();
+                            this.filterSuggestions(query);
+                        }
+                    }
+                });
+
+                // Click outside to close suggestions
+                document.addEventListener('click', (e) => {
+                    const searchContainer = document.getElementById('searchContainer');
+                    if (!searchContainer.contains(e.target)) {
+                        this.hideSearchSuggestions();
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'k') {
+                        e.preventDefault();
+                        this.toggleSearchBar();
+                    }
+                    if (e.ctrlKey && e.key === 'm') {
+                        e.preventDefault();
+                        this.toggleVoiceRecording();
+                    }
+                    if (e.ctrlKey && e.key === '/') {
+                        e.preventDefault();
+                        document.getElementById('searchInput').value = '/';
+                        this.toggleSearchBar();
+                    }
                 });
 
                 document.getElementById('exportChat').addEventListener('click', () => {
@@ -1915,17 +2514,349 @@
                 this.sendInitialMessage();
             },
 
-            searchChat(query) {
+            showClearChatConfirmation() {
+                const modal = document.getElementById('clearChatModal');
+                const overlay = document.getElementById('modalOverlay');
+                
+                modal.classList.add('show');
+                overlay.style.display = 'block';
+                overlay.classList.add('open');
+            },
+
+            hideClearChatConfirmation() {
+                const modal = document.getElementById('clearChatModal');
+                const overlay = document.getElementById('modalOverlay');
+                
+                modal.classList.remove('show');
+                overlay.classList.remove('open');
+                overlay.style.display = 'none';
+            },
+
+            confirmClearChat() {
+                this.clearChat();
+                this.hideClearChatConfirmation();
+                // Close settings modal only if it's open
+                const settingsModal = document.getElementById('settingsModal');
+                if (settingsModal.classList.contains('open')) {
+                    this.toggleSettingsModal(false);
+                }
+                this.showNotification('Chat history cleared! 🗑️');
+            },
+
+            handleSearchInput(query) {
+                if (!query.trim()) {
+                    this.hideSearchSuggestions();
+                    return;
+                }
+
+                this.performSearch(query);
+                this.filterSuggestions(query);
+            },
+
+            handleSearchKeydown(e) {
+                const suggestions = document.querySelectorAll('.suggestion-item');
+                
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.navigateSuggestions(1);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.navigateSuggestions(-1);
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (this.state.selectedSuggestionIndex >= 0 && suggestions[this.state.selectedSuggestionIndex]) {
+                            suggestions[this.state.selectedSuggestionIndex].click();
+                        } else {
+                            this.performSearch(e.target.value);
+                        }
+                        break;
+                    case 'Escape':
+                        this.closeSearchBar();
+                        break;
+                }
+            },
+
+            showSearchSuggestions() {
+                const suggestions = document.getElementById('searchSuggestions');
+                suggestions.classList.add('show');
+                this.state.searchSuggestionsVisible = true;
+                this.populateAllSuggestions();
+            },
+
+            hideSearchSuggestions() {
+                const suggestions = document.getElementById('searchSuggestions');
+                suggestions.classList.remove('show');
+                this.state.searchSuggestionsVisible = false;
+                this.state.selectedSuggestionIndex = -1;
+            },
+
+            populateAllSuggestions() {
+                this.populateSuggestions('chatSuggestions', this.searchSuggestionsData.chats);
+                this.populateSuggestions('settingsSuggestions', this.searchSuggestionsData.settings);
+                this.populateSuggestions('optionsSuggestions', this.searchSuggestionsData.options);
+                this.populateSuggestions('featuresSuggestions', this.searchSuggestionsData.features);
+                this.populateSuggestions('commandsSuggestions', this.searchSuggestionsData.commands);
+                this.populateSuggestions('shortcutsSuggestions', this.searchSuggestionsData.shortcuts);
+            },
+
+            populateSuggestions(containerId, suggestions) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                
+                suggestions.forEach((suggestion, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `<i class="${suggestion.icon}"></i> ${suggestion.text}`;
+                    item.addEventListener('click', () => this.selectSuggestion(suggestion));
+                    container.appendChild(item);
+                });
+            },
+
+            filterSuggestions(query) {
+                const lowerQuery = query.toLowerCase();
+                
+                ['chatSuggestions', 'settingsSuggestions', 'optionsSuggestions', 'featuresSuggestions', 'commandsSuggestions', 'shortcutsSuggestions'].forEach((containerId, categoryIndex) => {
+                    const container = document.getElementById(containerId);
+                    const categoryData = Object.values(this.searchSuggestionsData)[categoryIndex];
+                    const filtered = categoryData.filter(item => 
+                        item.text.toLowerCase().includes(lowerQuery)
+                    );
+                    
+                    container.innerHTML = '';
+                    filtered.forEach(suggestion => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        
+                        // Highlight matching text
+                        const highlightedText = this.highlightText(suggestion.text, query);
+                        item.innerHTML = `<i class="${suggestion.icon}"></i> ${highlightedText}`;
+                        
+                        item.addEventListener('click', () => this.selectSuggestion(suggestion));
+                        container.appendChild(item);
+                    });
+                });
+            },
+
+            highlightText(text, query) {
+                if (!query) return text;
+                const regex = new RegExp(`(${query})`, 'gi');
+                return text.replace(regex, '<span class="suggestion-highlight">$1</span>');
+            },
+
+            navigateSuggestions(direction) {
+                const suggestions = document.querySelectorAll('.suggestion-item');
+                if (suggestions.length === 0) return;
+                
+                // Remove previous selection
+                if (this.state.selectedSuggestionIndex >= 0) {
+                    suggestions[this.state.selectedSuggestionIndex].classList.remove('active');
+                }
+                
+                // Calculate new index
+                this.state.selectedSuggestionIndex += direction;
+                
+                // Wrap around
+                if (this.state.selectedSuggestionIndex < 0) {
+                    this.state.selectedSuggestionIndex = suggestions.length - 1;
+                } else if (this.state.selectedSuggestionIndex >= suggestions.length) {
+                    this.state.selectedSuggestionIndex = 0;
+                }
+                
+                // Add selection to new item
+                suggestions[this.state.selectedSuggestionIndex].classList.add('active');
+                
+                // Update input value
+                const suggestionText = suggestions[this.state.selectedSuggestionIndex].textContent.trim();
+                document.getElementById('searchInput').value = suggestionText;
+            },
+
+            selectSuggestion(suggestion) {
+                document.getElementById('searchInput').value = suggestion.text;
+                
+                switch(suggestion.action) {
+                    case 'search':
+                        this.performSearch(suggestion.text);
+                        break;
+                    case 'setting':
+                        this.handleSettingAction(suggestion.text);
+                        break;
+                    case 'option':
+                        this.handleOptionAction(suggestion.text);
+                        break;
+                    case 'feature':
+                        this.handleFeatureAction(suggestion.text);
+                        break;
+                    case 'command':
+                        this.handleCommandAction(suggestion.text);
+                        break;
+                    case 'shortcut':
+                        this.handleShortcutAction(suggestion.text);
+                        break;
+                }
+                
+                this.hideSearchSuggestions();
+            },
+
+            handleSettingAction(text) {
+                this.showNotification(`Opening settings for: ${text}`);
+                this.toggleSettingsModal(true);
+            },
+
+            handleOptionAction(text) {
+                switch(text) {
+                    case 'export chat':
+                        this.exportChat();
+                        break;
+                    case 'clear history':
+                        this.showClearChatConfirmation();
+                        break;
+                    case 'search chat':
+                        // Already in search
+                        break;
+                    case 'voice input':
+                        this.showNotification('Click the microphone button to use voice input');
+                        break;
+                    case 'file upload':
+                        this.showNotification('Click the paperclip button to upload files');
+                        break;
+                }
+            },
+
+            handleFeatureAction(text) {
+                this.showNotification(`${text} feature is now available!`);
+            },
+
+            handleCommandAction(command) {
+                switch(command) {
+                    case '/help':
+                        this.showNotification('Available commands: /help, /clear, /export, /settings, /login, /logout, /voice, /search');
+                        break;
+                    case '/clear':
+                        this.showClearChatConfirmation();
+                        break;
+                    case '/export':
+                        this.exportChat();
+                        break;
+                    case '/settings':
+                        this.toggleSettingsModal(true);
+                        break;
+                    case '/login':
+                        this.showAuthModal('login');
+                        break;
+                    case '/logout':
+                        this.logout();
+                        break;
+                    case '/voice':
+                        this.showNotification('Click the microphone button to start voice input');
+                        break;
+                    case '/search':
+                        this.toggleSearchBar();
+                        break;
+                }
+            },
+
+            handleShortcutAction(shortcut) {
+                this.showNotification(`Keyboard shortcut: ${shortcut}`);
+            },
+
+            toggleSearchBar() {
+                const searchBar = document.getElementById('searchBar');
+                const searchInput = document.getElementById('searchInput');
+                const headerActions = document.querySelector('.header-actions');
+                
+                if (searchBar.classList.contains('expanded')) {
+                    this.closeSearchBar();
+                } else {
+                    // Expand search bar
+                    searchBar.classList.add('expanded');
+                    headerActions.classList.add('search-expanded');
+                    
+                    // Focus input after animation
+                    setTimeout(() => {
+                        searchInput.focus();
+                    }, 400);
+                }
+            },
+
+            closeSearchBar() {
+                const searchBar = document.getElementById('searchBar');
+                const searchInput = document.getElementById('searchInput');
+                const headerActions = document.querySelector('.header-actions');
+                
+                searchBar.classList.remove('expanded');
+                headerActions.classList.remove('search-expanded');
+                searchInput.value = '';
+                
+                // Clear search results and hide suggestions
+                this.clearSearchResults();
+                this.hideSearchSuggestions();
+            },
+
+            performSearch(query) {
+                if (!query.trim()) {
+                    this.clearSearchResults();
+                    return;
+                }
+
                 const results = this.state.messages.filter(msg => 
                     msg.text.toLowerCase().includes(query.toLowerCase())
                 );
                 
-                if (results.length > 0) {
-                    alert(`${results.length} messages mile "${query}" ke saath:\n\n` + 
-                        results.slice(0, 5).map(r => `• [${r.sender.toUpperCase()}] ${r.text.replace(/<[^>]*>/g, '').substring(0, 50)}${r.text.length > 50 ? '...' : ''}`).join('\n'));
-                } else {
-                    alert(`"${query}" ke liye koi message nahi mila.`);
+                this.displaySearchResults(results, query);
+            },
+
+            displaySearchResults(results, query) {
+                // Clear previous search results
+                this.clearSearchResults();
+                
+                if (results.length === 0) {
+                    this.showNotification(`No results found for "${query}"`);
+                    return;
                 }
+
+                // Highlight search results in chat
+                this.highlightSearchResults(results, query);
+                
+                // Show notification with results count
+                this.showNotification(`Found ${results.length} message${results.length > 1 ? 's' : ''} for "${query}"`);
+                
+                // Scroll to first result
+                if (results.length > 0) {
+                    const firstResult = document.querySelector(`[data-message-id="${results[0].timestamp}"]`);
+                    if (firstResult) {
+                        firstResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            },
+
+            highlightSearchResults(results, query) {
+                results.forEach(result => {
+                    const messageElements = document.querySelectorAll('.message-wrapper');
+                    messageElements.forEach(element => {
+                        const content = element.querySelector('.message-content');
+                        if (content && content.textContent.toLowerCase().includes(query.toLowerCase())) {
+                            element.style.background = 'rgba(255, 255, 100, 0.1)';
+                            element.style.border = '1px solid rgba(255, 255, 100, 0.3)';
+                            element.style.borderRadius = '8px';
+                            element.style.padding = '4px';
+                            element.setAttribute('data-message-id', result.timestamp);
+                        }
+                    });
+                });
+            },
+
+            clearSearchResults() {
+                const messageElements = document.querySelectorAll('.message-wrapper[data-message-id]');
+                messageElements.forEach(element => {
+                    element.style.background = '';
+                    element.style.border = '';
+                    element.style.borderRadius = '';
+                    element.style.padding = '';
+                    element.removeAttribute('data-message-id');
+                });
             },
 
             exportChat() {
@@ -2016,22 +2947,36 @@
             },
 
             initVoiceRecognition() {
-                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                // Check for browser support
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                
+                if (!SpeechRecognition) {
+                    console.warn('Voice recognition not supported in this browser');
+                    this.showNotification('Voice recognition not supported. Try Chrome or Edge. 🎤');
+                    document.getElementById('voiceBtn').disabled = true;
+                    document.getElementById('voiceBtn').title = 'Voice not supported in this browser';
+                    return;
+                }
+
+                try {
                     this.state.recognition = new SpeechRecognition();
                     this.state.recognition.continuous = true;
                     this.state.recognition.interimResults = true;
                     this.state.recognition.maxAlternatives = 1;
-                    this.state.recognition.lang = 'hi-IN';
+                    this.state.recognition.lang = localStorage.getItem('vanieVoiceLanguage') || 'hi-IN';
 
                     this.state.recognition.onstart = () => {
                         this.state.isRecording = true;
                         this.state.interimTranscript = '';
                         document.getElementById('voiceBtn').classList.add('recording');
-                        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop"></i>';
+                        document.getElementById('voiceBtn').innerHTML = `
+                            <i class="fas fa-stop"></i>
+                            <span class="voice-status-indicator">Listening...</span>
+                        `;
                         document.getElementById('inputWrapper').classList.add('recording');
-                        this.updateStatus('Listening...');
+                        this.updateStatus('Listening... 🎤');
                         this.playSound('start');
+                        this.showNotification('Voice recording started! Speak now... 🎤');
                     };
 
                     this.state.recognition.onresult = (event) => {
@@ -2078,20 +3023,23 @@
                         
                         switch (event.error) {
                             case 'no-speech':
-                                errorMessage = 'No speech detected. Try speaking louder.';
+                                errorMessage = 'No speech detected. Try speaking louder. 🎤';
                                 break;
                             case 'audio-capture':
                                 errorMessage = 'Microphone not available. Check permissions.';
                                 break;
                             case 'not-allowed':
-                                errorMessage = 'Microphone permission denied. Allow access to use voice input.';
+                                errorMessage = 'Microphone access denied. Please allow microphone access in your browser settings.';
                                 break;
                             case 'network':
-                                errorMessage = 'Network error. Check your connection.';
+                                errorMessage = 'Network error. Please check your internet connection.';
                                 break;
                             case 'service-not-allowed':
-                                errorMessage = 'Voice recognition service not available.';
+                                errorMessage = 'Voice recognition service not available. Try again later.';
                                 break;
+                            case 'aborted':
+                                // User aborted, no need to show error
+                                return;
                         }
                         
                         this.showNotification(errorMessage);
@@ -2105,21 +3053,23 @@
                         }
                     };
 
-                    // Request microphone permission
-                    navigator.mediaDevices.getUserMedia({ audio: true })
-                        .then(() => {
-                            console.log('Microphone access granted');
-                        })
-                        .catch((error) => {
-                            console.error('Microphone access denied:', error);
-                            this.showNotification('Microphone access required for voice input.');
-                            document.getElementById('voiceBtn').disabled = true;
-                        });
+                    // Request microphone permission early
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        navigator.mediaDevices.getUserMedia({ audio: true })
+                            .then(() => {
+                                console.log('Microphone access granted');
+                                document.getElementById('voiceBtn').title = 'Voice Input (Ctrl+M) - Ready';
+                            })
+                            .catch((error) => {
+                                console.error('Microphone access denied:', error);
+                                this.showNotification('Microphone access required for voice input. Click the mic button to allow access.');
+                            });
+                    }
 
-                } else {
-                    this.showNotification('Voice recognition not supported in your browser. Try Chrome or Edge.');
+                } catch (error) {
+                    console.error('Failed to initialize voice recognition:', error);
+                    this.showNotification('Voice recognition initialization failed. Please refresh the page.');
                     document.getElementById('voiceBtn').disabled = true;
-                    document.getElementById('voiceBtn').title = 'Voice recognition not supported';
                 }
             },
 
@@ -2149,7 +3099,10 @@
                 this.state.isRecording = false;
                 this.state.interimTranscript = '';
                 document.getElementById('voiceBtn').classList.remove('recording');
-                document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i>';
+                document.getElementById('voiceBtn').innerHTML = `
+                    <i class="fas fa-microphone"></i>
+                    <span class="voice-status-indicator">Listening...</span>
+                `;
                 document.getElementById('inputWrapper').classList.remove('recording');
                 document.getElementById('interimText').textContent = '';
                 this.updateStatus('Online');
