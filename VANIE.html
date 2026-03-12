@@ -1193,7 +1193,187 @@
             transform: translateY(-1px);
         }
 
-        /* Confirmation Modal Styles - Enhanced */
+        /* In-App Notification System */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 999;
+            pointer-events: none;
+            max-width: 350px;
+        }
+        
+        .in-app-notification {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            pointer-events: all;
+            cursor: pointer;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .in-app-notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        .in-app-notification:hover::before {
+            width: 4px;
+        }
+        
+        .in-app-notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .in-app-notification.hide {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        
+        .in-app-notification.success {
+            border-color: rgba(52, 199, 89, 0.3);
+        }
+        
+        .in-app-notification.success::before {
+            background: rgba(52, 199, 89, 0.8);
+        }
+        
+        .in-app-notification.error {
+            border-color: rgba(255, 59, 48, 0.3);
+        }
+        
+        .in-app-notification.error::before {
+            background: rgba(255, 59, 48, 0.8);
+        }
+        
+        .in-app-notification.info {
+            border-color: rgba(0, 122, 255, 0.3);
+        }
+        
+        .in-app-notification.info::before {
+            background: rgba(0, 122, 255, 0.8);
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .notification-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        
+        .notification-text {
+            flex: 1;
+            word-wrap: break-word;
+        }
+        
+        .notification-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 10px;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        
+        .in-app-notification:hover .notification-close {
+            opacity: 1;
+        }
+        
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+        }
+        
+        /* Voice Wave Pattern */
+        .voice-waves {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .voice-btn.recording .voice-waves {
+            display: block;
+        }
+        
+        .wave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(255, 59, 48, 0.6);
+            border-radius: 50%;
+            animation: wave-expand 2s infinite;
+        }
+        
+        .wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+        
+        .wave:nth-child(3) {
+            animation-delay: 1s;
+        }
+        
+        .wave:nth-child(4) {
+            animation-delay: 1.5s;
+        }
+        
+        @keyframes wave-expand {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 1;
+                border-width: 3px;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
         .confirmation-modal {
             position: fixed;
             top: 0;
@@ -1207,8 +1387,6 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
         }
 
         .confirmation-modal.show {
@@ -1217,113 +1395,72 @@
         }
 
         .confirmation-content {
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.95), rgba(30, 30, 30, 0.98));
+            background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(30px);
-            border: 2px solid rgba(255, 59, 48, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px;
-            padding: 50px 60px;
-            max-width: 650px;
-            width: 92%;
-            min-height: 450px;
+            padding: 70px;
+            max-width: 800px;
+            width: 95%;
+            min-height: 500px;
             text-align: center;
-            transform: scale(0.8) translateY(20px);
+            transform: scale(0.3);
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.6),
-                0 0 0 1px rgba(255, 59, 48, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
         }
 
         .confirmation-modal.show .confirmation-content {
-            transform: scale(1) translateY(0);
-            animation: modalBounceIn 0.5s ease forwards;
+            animation: bounceIn 0.6s ease forwards;
         }
 
-        @keyframes modalBounceIn {
-            0% { transform: scale(0.8) translateY(30px); opacity: 0; }
-            50% { transform: scale(1.02) translateY(-5px); }
-            100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-
-        .confirmation-header {
-            margin-bottom: 30px;
-        }
-
-        .warning-icon-large {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, rgba(255, 59, 48, 0.2), rgba(255, 100, 80, 0.1));
-            border: 3px solid rgba(255, 59, 48, 0.5);
+        .confirmation-icon {
+            width: 110px;
+            height: 110px;
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.15), rgba(255, 149, 0, 0.15));
+            border: 3px solid rgba(255, 59, 48, 0.4);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 25px;
-            font-size: 42px;
-            color: #ff3b30;
-            animation: warningPulse 2s infinite;
+            margin: 0 auto 35px;
+            font-size: 40px;
+            color: rgba(255, 59, 48, 0.9);
+            animation: pulseBounce 2s infinite;
             box-shadow: 0 0 30px rgba(255, 59, 48, 0.3);
+            position: relative;
+        }
+        
+        .confirmation-icon::before {
+            content: '';
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            border: 2px solid rgba(255, 59, 48, 0.2);
+            border-radius: 50%;
+            animation: pulseRing 2s infinite;
         }
 
-        @keyframes warningPulse {
-            0%, 100% { 
-                transform: scale(1); 
-                box-shadow: 0 0 30px rgba(255, 59, 48, 0.3);
-            }
-            50% { 
-                transform: scale(1.05); 
-                box-shadow: 0 0 40px rgba(255, 59, 48, 0.5);
-            }
-        }
-
-        .confirmation-header h2 {
+        .confirmation-content h3 {
             font-family: var(--display-font);
             font-weight: 700;
             font-size: 28px;
             color: var(--text-primary);
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .confirmation-header .subtitle {
+        .confirmation-content p {
+            color: var(--text-secondary);
             font-size: 18px;
-            color: rgba(255, 255, 255, 0.7);
-            font-weight: 400;
-        }
-
-        .warning-details {
-            background: rgba(255, 59, 48, 0.08);
-            border: 1px solid rgba(255, 59, 48, 0.2);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 35px;
-            text-align: left;
-        }
-
-        .warning-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            margin-bottom: 16px;
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.85);
-            line-height: 1.5;
-        }
-
-        .warning-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .warning-item i {
-            color: #ff3b30;
-            font-size: 20px;
-            margin-top: 2px;
-            flex-shrink: 0;
-        }
-
-        .warning-item strong {
-            color: #ff6b5a;
-            font-weight: 600;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .confirmation-buttons {
@@ -1334,96 +1471,163 @@
         }
 
         .confirmation-btn {
-            padding: 18px 36px;
-            border: none;
-            border-radius: 14px;
+            padding: 18px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
             font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            gap: 12px;
-            min-width: 200px;
+            gap: 10px;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+            min-width: 140px;
             justify-content: center;
-            font-family: var(--body-font);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .cancel-btn-large {
+        .confirmation-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
             background: rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
         }
 
-        .cancel-btn-large:hover {
+        .confirmation-btn:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .cancel-btn:hover {
             background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-3px);
+            animation: bounce 0.5s ease;
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
         }
 
-        .confirm-btn-large {
-            background: linear-gradient(135deg, #ff3b30, #ff6b5a);
-            color: white;
-            border: 2px solid rgba(255, 59, 48, 0.5);
-            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
+        .confirm-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.3), rgba(255, 149, 0, 0.3));
+            border-color: rgba(255, 59, 48, 0.5);
+            transform: translateY(-3px);
+            animation: shake 0.5s ease;
+            box-shadow: 0 8px 20px rgba(255, 59, 48, 0.3);
         }
 
-        .confirm-btn-large:hover {
-            background: linear-gradient(135deg, #ff4433, #ff7a6a);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(255, 59, 48, 0.4);
+        .confirmation-btn:active {
+            transform: scale(0.96);
+            animation: pulseBounce 0.3s ease;
         }
-
-        .confirm-btn-large:active {
-            transform: translateY(-1px) scale(0.98);
+        
+        /* Enhanced warning details */
+        .warning-details {
+            background: rgba(255, 59, 48, 0.08);
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .warning-details h4 {
+            color: rgba(255, 59, 48, 0.9);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .warning-details ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .warning-details li {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+            padding: 6px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .warning-details li::before {
+            content: '⚠️';
+            font-size: 12px;
+            margin-top: 4px;
         }
 
         .confirmation-btn i {
-            font-size: 22px;
+            font-size: 16px;
+        }
+
+        .cancel-btn i {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .confirm-btn i {
+            color: rgba(255, 59, 48, 0.8);
         }
 
         /* Responsive styles for confirmation modal */
         @media (max-width: 768px) {
             .confirmation-content {
-                padding: 35px 25px;
-                max-width: calc(100% - 30px);
-                min-height: 400px;
+                margin: 20px;
+                padding: 40px 30px;
+                max-width: none;
+                width: calc(100% - 40px);
+                min-height: auto;
+                border-radius: 20px;
             }
             
-            .warning-icon-large {
+            .confirmation-icon {
                 width: 80px;
                 height: 80px;
-                font-size: 34px;
+                font-size: 28px;
+                margin-bottom: 24px;
             }
             
-            .confirmation-header h2 {
-                font-size: 22px;
+            .confirmation-icon::before {
+                width: 100px;
+                height: 100px;
             }
             
-            .confirmation-header .subtitle {
-                font-size: 15px;
+            .confirmation-content h3 {
+                font-size: 24px;
+                margin-bottom: 16px;
+            }
+            
+            .confirmation-content p {
+                font-size: 16px;
+                margin-bottom: 24px;
             }
             
             .warning-details {
-                padding: 18px;
+                margin: 24px 0;
+                padding: 16px;
             }
             
-            .warning-item {
-                font-size: 14px;
-            }
-            
-            .confirmation-btn {
-                padding: 16px 28px;
+            .warning-details h4 {
                 font-size: 15px;
-                min-width: 160px;
-                flex: 1;
             }
-        }
-
-        @media (max-width: 480px) {
-            .confirmation-content {
-                padding: 30px 20px;
+            
+            .warning-details li {
+                font-size: 14px;
             }
             
             .confirmation-buttons {
@@ -1432,7 +1636,44 @@
             }
             
             .confirmation-btn {
-                width: 100%;
+                padding: 16px 24px;
+                font-size: 16px;
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .confirmation-content {
+                margin: 15px;
+                padding: 30px 20px;
+                width: calc(100% - 30px);
+            }
+            
+            .confirmation-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 24px;
+            }
+            
+            .confirmation-content h3 {
+                font-size: 22px;
+            }
+            
+            .confirmation-content p {
+                font-size: 15px;
+            }
+            
+            .warning-details {
+                padding: 14px;
+            }
+            
+            .warning-details li {
+                font-size: 13px;
+            }
+            
+            .confirmation-btn {
+                padding: 14px 20px;
+                font-size: 15px;
             }
         }
 
@@ -1602,6 +1843,9 @@
         </div>
 
         <div class="chat-container" id="chatContainer">
+            <!-- In-App Notification Container -->
+            <div class="notification-container" id="notificationContainer"></div>
+            
             <div class="welcome-screen" id="welcomeScreen">
                 <div class="welcome-icon">
                     <i class="fas fa-robot"></i>
@@ -1667,6 +1911,12 @@
                 <button class="action-btn" id="voiceBtn" title="Voice Input (Ctrl+M)">
                     <i class="fas fa-microphone"></i>
                     <span class="voice-status-indicator">Listening...</span>
+                    <div class="voice-waves">
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                    </div>
                 </button>
                 <button class="send-btn" id="sendBtn" disabled title="Send Message">
                     <i class="fas fa-paper-plane"></i>
@@ -1678,37 +1928,34 @@
     <!-- Clear Chat Confirmation Modal -->
     <div class="confirmation-modal" id="clearChatModal">
         <div class="confirmation-content">
-            <div class="confirmation-header">
-                <div class="warning-icon-large">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <h2>Chat History Clear Karna Hai?</h2>
-                <p class="subtitle">Are you sure you want to clear all chat history?</p>
+            <div class="confirmation-icon">
+                <i class="fas fa-trash-alt"></i>
             </div>
+            <h3>Clear Chat History?</h3>
+            <p>This action will permanently delete all your conversations and chat history. Please review what will be lost before proceeding.</p>
             
             <div class="warning-details">
-                <div class="warning-item">
-                    <i class="fas fa-info-circle"></i>
-                    <span><strong>Warning:</strong> This action cannot be undone</span>
-                </div>
-                <div class="warning-item">
-                    <i class="fas fa-database"></i>
-                    <span>All your chat messages will be permanently deleted</span>
-                </div>
-                <div class="warning-item">
-                    <i class="fas fa-history"></i>
-                    <span>Conversation history cannot be recovered after clearing</span>
-                </div>
+                <h4>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    What will be permanently deleted:
+                </h4>
+                <ul>
+                    <li>All chat messages and conversation history</li>
+                    <li>Saved responses and important information</li>
+                    <li>Context memory for ongoing conversations</li>
+                    <li>Any shared files or media in chat</li>
+                    <li>Personalized AI responses based on your history</li>
+                </ul>
             </div>
             
             <div class="confirmation-buttons">
-                <button class="confirmation-btn cancel-btn-large" id="cancelClearBtn">
-                    <i class="fas fa-times-circle"></i>
-                    <span>Cancel / Rokiye</span>
+                <button class="confirmation-btn cancel-btn" id="cancelClearBtn">
+                    <i class="fas fa-times"></i>
+                    Cancel
                 </button>
-                <button class="confirmation-btn confirm-btn-large" id="confirmClearBtn">
-                    <i class="fas fa-trash-alt"></i>
-                    <span>Clear Chat / Saaf Karein</span>
+                <button class="confirmation-btn confirm-btn" id="confirmClearBtn">
+                    <i class="fas fa-trash"></i>
+                    Clear All Chat
                 </button>
             </div>
         </div>
@@ -2485,7 +2732,7 @@
                     this.state.isLoggedIn = true;
                     this.state.userName = username.trim();
                     document.getElementById('accountBtn').title = `Logged in as ${this.state.userName} (Click to Logout)`;
-                    this.showNotification(`Welcome back, ${this.state.userName}! 👋`);
+                    this.showNotification(`Welcome back, ${this.state.userName}! 👋`, 'success');
                     this.updateStatus('Online');
                 }
             },
@@ -2495,7 +2742,7 @@
                     this.state.isLoggedIn = false;
                     this.state.userName = 'Guest';
                     document.getElementById('accountBtn').title = 'Account / Login';
-                    this.showNotification('Logged out successfully! 👋');
+                    this.showNotification('Logged out successfully! 👋', 'info');
                     this.updateStatus('Online');
                 }
             },
@@ -2619,7 +2866,7 @@
                 if (settingsModal.classList.contains('open')) {
                     this.toggleSettingsModal(false);
                 }
-                this.showNotification('Chat history cleared! 🗑️');
+                this.showNotification('Chat history cleared! 🗑️', 'success');
             },
 
             handleSearchInput(query) {
@@ -2958,7 +3205,7 @@
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
 
-                this.showNotification('Chat successfully export ho gayi! ✓');
+                this.showNotification('Chat successfully export ho gayi! ✓', 'success');
             },
 
             copyToClipboard(text) {
@@ -2971,58 +3218,76 @@
                 
                 try {
                     document.execCommand('copy');
-                    this.showNotification('Message copied! ✓');
+                    this.showNotification('Message copied! ✓', 'success');
                 } catch (err) {
                     console.error('Copy failed:', err);
+                    this.showNotification('Copy failed. Please try again.', 'error');
                 }
                 
                 document.body.removeChild(textarea);
             },
 
-            showNotification(message) {
-                if (document.querySelector('#globalNotification')) return;
+            showNotification(message, type = 'info', duration = 4000) {
+                const container = document.getElementById('notificationContainer');
+                if (!container) return;
                 
+                // Create notification element
                 const notification = document.createElement('div');
-                notification.id = 'globalNotification';
-                notification.textContent = message;
-                notification.style.cssText = `
-                    position: fixed;
-                    bottom: 120px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: rgba(255, 255, 255, 0.1);
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 8px;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    backdrop-filter: blur(10px);
-                    z-index: 1000;
-                    font-size: 14px;
-                    animation: slideUp 0.3s ease-out;
+                notification.className = `in-app-notification ${type}`;
+                
+                // Determine icon based on type
+                let icon = 'fas fa-info-circle';
+                if (type === 'success') icon = 'fas fa-check-circle';
+                else if (type === 'error') icon = 'fas fa-exclamation-circle';
+                else if (type === 'info') icon = 'fas fa-info-circle';
+                
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            <i class="${icon}"></i>
+                        </div>
+                        <div class="notification-text">${message}</div>
+                    </div>
+                    <button class="notification-close">
+                        <i class="fas fa-times"></i>
+                    </button>
                 `;
-
-                document.body.appendChild(notification);
-
+                
+                // Add to container
+                container.appendChild(notification);
+                
+                // Show animation
                 setTimeout(() => {
-                    notification.style.animation = 'slideDown 0.3s ease-out';
-                    setTimeout(() => notification.remove(), 300);
-                }, 2000);
-
-                if (!document.getElementById('notificationStyles')) {
-                    const style = document.createElement('style');
-                    style.id = 'notificationStyles';
-                    style.textContent = `
-                        @keyframes slideUp {
-                            from { opacity: 0; transform: translate(-50%, 20px); }
-                            to { opacity: 1; transform: translate(-50%, 0); }
+                    notification.classList.add('show');
+                }, 50);
+                
+                // Close button functionality
+                const closeBtn = notification.querySelector('.notification-close');
+                const closeNotification = () => {
+                    notification.classList.remove('show');
+                    notification.classList.add('hide');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
                         }
-                        @keyframes slideDown {
-                            from { opacity: 1; transform: translate(-50%, 0); }
-                            to { opacity: 0; transform: translate(-50%, 20px); }
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }
+                    }, 300);
+                };
+                
+                closeBtn.addEventListener('click', closeNotification);
+                
+                // Auto-remove after duration
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        closeNotification();
+                    }
+                }, duration);
+                
+                // Click to dismiss
+                notification.addEventListener('click', (e) => {
+                    if (!e.target.closest('.notification-close')) {
+                        closeNotification();
+                    }
+                });
             },
 
             initVoiceRecognition() {
@@ -3031,7 +3296,7 @@
                 
                 if (!SpeechRecognition) {
                     console.warn('Voice recognition not supported in this browser');
-                    this.showNotification('Voice recognition not supported. Try Chrome or Edge. 🎤');
+                    this.showNotification('Voice recognition not supported. Try Chrome or Edge. 🎤', 'error');
                     document.getElementById('voiceBtn').disabled = true;
                     document.getElementById('voiceBtn').title = 'Voice not supported in this browser';
                     return;
@@ -3055,7 +3320,7 @@
                         document.getElementById('inputWrapper').classList.add('recording');
                         this.updateStatus('Listening... 🎤');
                         this.playSound('start');
-                        this.showNotification('Voice recording started! Speak now... 🎤');
+                        this.showNotification('Voice recording started! Speak now... 🎤', 'info');
                     };
 
                     this.state.recognition.onresult = (event) => {
@@ -3090,7 +3355,7 @@
                             setTimeout(() => {
                                 if (this.state.isRecording) {
                                     this.stopVoiceRecording();
-                                    this.showNotification('Voice input completed! 🎤');
+                                    this.showNotification('Voice input completed! 🎤', 'success');
                                 }
                             }, 1000);
                         }
@@ -3121,7 +3386,7 @@
                                 return;
                         }
                         
-                        this.showNotification(errorMessage);
+                        this.showNotification(errorMessage, 'error');
                         this.playSound('error');
                         this.stopVoiceRecording();
                     };
@@ -3141,13 +3406,13 @@
                             })
                             .catch((error) => {
                                 console.error('Microphone access denied:', error);
-                                this.showNotification('Microphone access required for voice input. Click the mic button to allow access.');
+                                this.showNotification('Microphone access required for voice input. Click the mic button to allow access.', 'error');
                             });
                     }
 
                 } catch (error) {
                     console.error('Failed to initialize voice recognition:', error);
-                    this.showNotification('Voice recognition initialization failed. Please refresh the page.');
+                    this.showNotification('Voice recognition initialization failed. Please refresh the page.', 'error');
                     document.getElementById('voiceBtn').disabled = true;
                 }
             },
