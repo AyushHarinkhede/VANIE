@@ -584,14 +584,15 @@
         }
 
         .input-container {
-            padding: 16px 32px;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             gap: 12px;
             position: relative;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
         }
         
         .input-container::before {
@@ -609,14 +610,16 @@
         .input-wrapper {
             flex: 1;
             display: flex;
-            flex-direction: column;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            align-items: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 12px;
-            padding: 8px 12px;
+            padding: 8px 16px;
+            max-height: 120px;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             position: relative;
+            overflow: hidden;
         }
         
         .input-wrapper::before {
@@ -626,17 +629,16 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(139, 69, 19, 0.04) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(160, 82, 45, 0.03) 0%, transparent 50%);
+            background: transparent;
             pointer-events: none;
             z-index: -1;
             border-radius: 12px;
         }
 
         .input-wrapper:focus-within {
-            border-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
             background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
         }
 
         .interim-text {
@@ -654,52 +656,48 @@
 
         .action-buttons {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
+            margin-right: 8px;
         }
 
         .action-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            font-size: 14px;
+            transition: all 0.2s ease;
             flex-shrink: 0;
-            backdrop-filter: blur(10px);
             position: relative;
         }
 
         .action-btn:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .action-btn::before {
+            display: none;
         }
 
         .action-btn.recording {
-            background: rgba(255, 59, 48, 0.15);
-            border-color: rgba(255, 59, 48, 0.5);
-            animation: pulse 1.2s infinite;
-            box-shadow: 0 0 20px rgba(255, 59, 48, 0.3);
+            color: rgba(255, 59, 48, 0.8);
+            animation: pulse 1.5s infinite;
         }
 
         .action-btn.recording::before {
-            content: '';
-            position: absolute;
-            inset: -6px;
-            border-radius: 12px;
-            background: rgba(255, 59, 48, 0.1);
-            animation: pulseRing 1.2s infinite;
-            z-index: -1;
+            display: none;
         }
 
         .action-btn.recording i {
-            color: rgba(255, 59, 48, 0.9);
+            color: rgba(255, 59, 48, 0.8);
         }
 
         .voice-status-indicator {
@@ -749,22 +747,26 @@
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: var(--text-primary);
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 16px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             flex-shrink: 0;
             backdrop-filter: blur(10px);
         }
 
         .send-btn:hover:not(:disabled) {
             background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
+            transform: scale(1.05);
+        }
+        
+        .send-btn::before {
+            display: none;
         }
         
         .send-btn:disabled { 
@@ -782,7 +784,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
-            width: 420px;
+            width: 600px;
             max-width: 90vw;
             background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(30px);
@@ -802,7 +804,7 @@
         }
 
         .auth-header {
-            padding: 24px 24px 16px;
+            padding: 30px 30px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: space-between;
@@ -817,31 +819,31 @@
         }
 
         .auth-content {
-            padding: 24px;
+            padding: 30px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .form-group label {
             display: block;
-            font-size: 14px;
+            font-size: 16px;
             color: var(--text-primary);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: 500;
         }
 
         .form-input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 16px 20px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             color: var(--text-primary);
-            font-size: 14px;
+            font-size: 16px;
             transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+            font-family: var(--body-font);
         }
 
         .form-input:focus {
@@ -1050,12 +1052,27 @@
             outline: none;
             background: transparent;
             color: var(--text-primary);
-            font-size: var(--base-font-size);
+            font-size: 14px;
             resize: none;
-            max-height: 80px;
+            max-height: 104px;
+            min-height: 20px;
             font-family: var(--body-font);
             line-height: 1.4;
-            padding: 2px 0;
+            padding: 0;
+            overflow-y: auto;
+        }
+        
+        #messageInput::-webkit-scrollbar {
+            width: 3px;
+        }
+        
+        #messageInput::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        #messageInput::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
         }
         
         #messageInput::placeholder {
@@ -1467,6 +1484,8 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .confirmation-modal.show {
@@ -1479,10 +1498,10 @@
             backdrop-filter: blur(30px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px;
-            padding: 120px;
-            max-width: 1100px;
-            width: 95%;
-            min-height: 650px;
+            padding: 160px;
+            max-width: 90vw;
+            width: 90vw;
+            min-height: 750px;
             text-align: center;
             transform: scale(0.3);
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1496,16 +1515,16 @@
         }
 
         .confirmation-icon {
-            width: 160px;
-            height: 160px;
+            width: 200px;
+            height: 200px;
             background: linear-gradient(135deg, rgba(255, 59, 48, 0.15), rgba(255, 149, 0, 0.15));
             border: 3px solid rgba(255, 59, 48, 0.4);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 60px;
-            font-size: 56px;
+            margin: 0 auto 80px;
+            font-size: 72px;
             color: rgba(255, 59, 48, 0.9);
             animation: pulseBounce 2s infinite;
             box-shadow: 0 0 30px rgba(255, 59, 48, 0.3);
@@ -1515,8 +1534,8 @@
         .confirmation-icon::before {
             content: '';
             position: absolute;
-            width: 180px;
-            height: 180px;
+            width: 220px;
+            height: 220px;
             border: 2px solid rgba(255, 59, 48, 0.2);
             border-radius: 50%;
             animation: pulseRing 2s infinite;
@@ -1525,19 +1544,19 @@
         .confirmation-content h3 {
             font-family: var(--display-font);
             font-weight: 700;
-            font-size: 44px;
+            font-size: 52px;
             color: var(--text-primary);
-            margin-bottom: 35px;
+            margin-bottom: 45px;
             letter-spacing: -0.5px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .confirmation-content p {
             color: var(--text-secondary);
-            font-size: 28px;
+            font-size: 32px;
             line-height: 1.7;
-            margin-bottom: 55px;
-            max-width: 650px;
+            margin-bottom: 65px;
+            max-width: 750px;
             margin-left: auto;
             margin-right: auto;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -1551,22 +1570,22 @@
         }
 
         .confirmation-btn {
-            padding: 30px 65px;
+            padding: 40px 85px;
             border: 1px solid rgba(255, 255, 255, 0.25);
             border-radius: 16px;
             background: rgba(255, 255, 255, 0.08);
             color: var(--text-primary);
-            font-size: 22px;
+            font-size: 26px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 22px;
             backdrop-filter: blur(15px);
             position: relative;
             overflow: hidden;
-            min-width: 240px;
+            min-width: 320px;
             justify-content: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
@@ -1615,19 +1634,19 @@
             background: rgba(255, 59, 48, 0.08);
             border: 1px solid rgba(255, 59, 48, 0.2);
             border-radius: 12px;
-            padding: 35px;
-            margin: 45px 0;
+            padding: 40px;
+            margin: 50px 0;
             text-align: left;
         }
         
         .warning-details h4 {
             color: rgba(255, 59, 48, 0.9);
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 16px;
         }
         
         .warning-details ul {
@@ -1638,12 +1657,12 @@
         
         .warning-details li {
             color: var(--text-secondary);
-            font-size: 20px;
+            font-size: 22px;
             line-height: 1.6;
-            padding: 12px 0;
+            padding: 14px 0;
             display: flex;
             align-items: flex-start;
-            gap: 14px;
+            gap: 16px;
         }
         
         .warning-details li::before {
