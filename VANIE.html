@@ -2716,59 +2716,62 @@
             },
 
             async generateResponse(userInput) {
-                await new Promise(resolve => setTimeout(resolve, this.config.typingDelay));
-
-                const input = userInput.toLowerCase();
-                
-                if (this.matchKeywords(input, this.knowledge.greetings)) {
-                    return this.getRandomResponse(this.responses.greeting);
-                }
-
-                if (this.matchKeywords(input, this.knowledge.coding)) {
-                    if (input.includes('python')) {
-                        return this.responses.coding.python + " Kya aap koi specific Python code chahte hain?";
-                    } else if (input.includes('algorithm')) {
-                        return this.responses.coding.algorithm + " Kaunsa algorithm samajhna hai?";
-                    } else if (input.includes('quicksort')) {
-                        return this.getQuickSortExample();
-                    } else if (input.includes('debug') || input.includes('error')) {
-                        return "Debugging ka matlab hai code mein errors dhundhna. Apna error message batayein, main help karungi!";
+                try {
+                    // Show typing indicator
+                    this.showTyping();
+                    
+                    // Call Enhanced Python Backend API
+                    const response = await fetch('http://localhost:5000/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: userInput,
+                            session_id: this.state.userId || 'default'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Hide typing indicator
+                    this.hideTyping();
+                    
+                    if (data.status === 'success') {
+                        // Enhanced logging for debugging
+                        console.log('🚀 Enhanced AI Response:', {
+                            response: data.response,
+                            category: data.category,
+                            confidence: data.confidence,
+                            matched_keywords: data.matched_keywords,
+                            complexity_score: data.complexity_score,
+                            word_count: data.word_count,
+                            has_multiple_keywords: data.has_multiple_keywords,
+                            context_length: data.context_length
+                        });
+                        
+                        // Show category indicator
+                        if (data.category) {
+                            this.showNotification(`🎯 ${data.category.toUpperCase()} - Confidence: ${Math.round(data.confidence * 100)}%`, 'info', 2000);
+                        }
+                        
+                        return data.response;
+                    } else {
+                        console.error('Backend error:', data.error);
+                        this.showNotification('Backend error: ' + data.error, 'error');
+                        return this.getRandomResponse(this.responses.fallback);
                     }
-                    return this.responses.coding.general;
-                }
-
-                if (this.matchKeywords(input, this.knowledge.science)) {
-                    if (input.includes('quantum')) {
-                        return this.responses.science.quantum + " Quantum computers normal computers se exponentially fast hain certain tasks ke liye.";
-                    } else if (input.includes('space') || input.includes('mars')) {
-                        return this.responses.science.space + " Recent mein NASA ne Mars par successfully rovers bheje hain.";
+                } catch (error) {
+                    console.error('Network error:', error);
+                    this.hideTyping();
+                    
+                    // Enhanced error handling
+                    if (error.message.includes('Failed to fetch')) {
+                        this.showNotification('🔴 Enhanced Backend not available. Using fallback responses. ⚠️', 'error');
                     }
-                    return this.responses.science.general;
-                }
-
-                if (this.matchKeywords(input, this.knowledge.history)) {
-                    if (input.includes('gupta')) {
-                        return this.responses.history.gupta + " Aryabhata aur Kalidasa jaise mahan scholars is era mein the.";
-                    } else if (input.includes('india') || input.includes('bharat')) {
-                        return this.responses.history.india + " Kaunsi period ke baare mein detail chahiye?";
-                    }
-                    return this.responses.history.general;
-                }
-
-                if (this.matchKeywords(input, this.knowledge.math)) {
-                    return this.responses.math + " Kya aap koi specific problem solve karna chahte hain?";
-                }
-
-                if (input.includes('vanie') || input.includes('aap kaun') || input.includes('tumhara naam')) {
-                    return "Main VANIE hoon - Virtual Assistant of Neural Integrated Engine. Mujhe advanced algorithms ke saath train kiya gaya hai taaki main aapke sawaalon ka best possible answer de sakun. Main coding, science, history, math aur bahut kuch mein madad kar sakti hoon!";
-                }
-
-                if (input.includes('kya kar sakti') || input.includes('capabilities')) {
-                    return "Main bahut kuch kar sakti hoon! 💪\n• Complex coding problems solve karna\n• Scientific concepts explain karna\n• Historical events discuss karna\n• Mathematical calculations\n• General knowledge questions\n• Aur bhi bahut kuch! Bas puchiye.";
-                }
-
-                if (input.includes('thank') || input.includes('thanks') || input.includes('dhanyavaad') || input.includes('shukriya')) {
-                    return "Aapka swagat hai! 😊 Koi aur sawal ho toh zaroor puchiye.";
+                    
+                    // Fallback to existing responses if backend is unavailable
+                    return this.getRandomResponse(this.responses.fallback);
                 }
 
                 return this.getRandomResponse(this.responses.fallback);
