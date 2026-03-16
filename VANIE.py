@@ -1833,7 +1833,15 @@ class VANIEAI:
             for token in tokens:
                 for keyword in data['keywords']:
                     # Check for exact match or partial match
-                    if token == keyword.lower() or keyword.lower() in token or token in keyword.lower():
+                    keyword_lower = keyword.lower()
+                    token_lower = token.lower()
+                    
+                    # Handle multi-word keywords better
+                    if (token_lower == keyword_lower or 
+                        keyword_lower in token_lower or 
+                        token_lower in keyword_lower or
+                        # Check if token is part of multi-word keyword
+                        any(token_lower in part.lower() for part in keyword_lower.split())):
                         score += 1
                         matched_keywords.append(keyword)
             
@@ -2277,7 +2285,15 @@ class VANIEAI:
             for token in tokens:
                 for keyword in data['keywords']:
                     # Check for exact match or partial match
-                    if token == keyword.lower() or keyword.lower() in token or token in keyword.lower():
+                    keyword_lower = keyword.lower()
+                    token_lower = token.lower()
+                    
+                    # Handle multi-word keywords better
+                    if (token_lower == keyword_lower or 
+                        keyword_lower in token_lower or 
+                        token_lower in keyword_lower or
+                        # Check if token is part of multi-word keyword
+                        any(token_lower in part.lower() for part in keyword_lower.split())):
                         score += 1
                         matched_keywords.append(keyword)
             
