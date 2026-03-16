@@ -1,9 +1,4 @@
-# VANIE - Complete Backend - All-in-One Single File Solution
-# Advanced AI with Multi-Keyword Scoring, Memory, Emotion Analysis, and NLP
 
-# ========================================
-# SECTION 1: IMPORTS & SETUP
-# ========================================
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import random
@@ -43,9 +38,6 @@ except ImportError:
     sentence_model = None
     print("⚠️ Sentence Transformers not installed. Run: pip install sentence-transformers")
 
-# ========================================
-# SECTION 2: COMPLETE KNOWLEDGE BASE
-# ========================================
 class VANIEKnowledgeBase:
     """Complete knowledge base with intents, keywords, and responses"""
     
