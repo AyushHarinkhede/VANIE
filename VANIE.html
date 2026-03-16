@@ -6,7 +6,302 @@
     <title>VANIE - Virtual Assistant of Neural Integrated Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
+    <style>
+        /* Performance Optimizations */
+        * {
+            box-sizing: border-box;
+        }
+        
+        /* Hardware acceleration for smooth animations */
+        .message-wrapper,
+        .message,
+        button,
+        .modal,
+        .notification,
+        .sound-toggle {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        
+        /* Smooth transitions */
+        .message-wrapper {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        button {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Optimized animations */
+        @keyframes fadeInSmooth {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulseSmooth {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.02);
+                opacity: 0.8;
+            }
+        }
+        
+        @keyframes slideInSmooth {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Reduced motion for better performance */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Optimized button states */
+        button:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease;
+        }
+        
+        /* Message animations */
+        .message-sending {
+            animation: pulseSmooth 0.4s ease-out;
+        }
+        
+        .message-received {
+            animation: slideInSmooth 0.3s ease-out;
+        }
+        
+        /* Button click effect */
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+            pointer-events: none;
+        }
+        
+        button:active::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* Performance mode optimizations */
+        body.performance-mode * {
+            animation-duration: 0.1s !important;
+            transition-duration: 0.1s !important;
+        }
+        
+        body.performance-mode .message-sending,
+        body.performance-mode .message-received {
+            animation: none !important;
+        }
+        
+        body.performance-mode button::after {
+            display: none !important;
+        }
+        
+        body.performance-mode .sound-toggle {
+            transform: none !important;
+        }
+        
+        /* Optimized loading states */
+        .loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .loading * {
+            pointer-events: none;
+        }
+        
+        /* Smooth focus indicators */
+        button:focus,
+        input:focus,
+        textarea:focus {
+            outline: 2px solid rgba(255, 255, 255, 0.3);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        
+        /* Better text rendering */
+        body {
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Optimized scrolling */
+        .chat-container {
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Prevent text selection during animations */
+        .message-wrapper,
+        button {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .message-content {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        
+        /* Performance mode indicator */
+        .performance-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            color: #00ff00;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            display: none;
+            z-index: 1000;
+        }
+        
+        body.performance-mode .performance-indicator {
+            display: block;
+        }
+        
+        /* Sound Effects Styles */
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .sound-toggle.muted {
+            opacity: 0.5;
+        }
+        
+        .sound-toggle i {
+            color: #ffffff;
+            font-size: 16px;
+        }
+        
+        /* Button click effects */
+        button {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        button:active::after {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Message animation with sound effect indicator */
+        .message-sending {
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .message-received {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Notification sound indicator */
+        .notification-sound {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: rgba(255, 59, 48, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: none;
+            z-index: 999;
+            animation: fadeInOut 2s ease-in-out;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
         :root {
             --bg-primary: #000000;
             --bg-secondary: rgba(255, 255, 255, 0);
@@ -1879,6 +2174,21 @@
     </style>
 </head>
 <body>
+    <!-- Sound Effects Toggle Button -->
+    <button class="sound-toggle" id="soundToggle" title="Toggle Sound Effects">
+        <i class="fas fa-volume-up" id="soundIcon"></i>
+    </button>
+    
+    <!-- Sound Notification Indicator -->
+    <div class="notification-sound" id="soundNotification">
+        <i class="fas fa-bell"></i> Sound On
+    </div>
+    
+    <!-- Performance Indicator -->
+    <div class="performance-indicator" id="performanceIndicator">
+        ⚡ Performance Mode
+    </div>
+    
     <div class="app-wrapper" id="appWrapper">
         <div class="header">
             <div class="header-left">
@@ -2216,6 +2526,110 @@
             </div>    </div>  </div>
 
     <script>
+        // Sound Effects System
+        class SoundEffects {
+            constructor() {
+                this.enabled = true;
+                this.audioContext = null;
+                this.sounds = {};
+                this.lastSoundTime = {};
+                this.minSoundInterval = 50; // Minimum interval between sounds
+                this.initializeAudio();
+            }
+            
+            initializeAudio() {
+                try {
+                    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.audioContext = new AudioContext();
+                    this.createSounds();
+                } catch (error) {
+                    console.log('Audio context not supported:', error);
+                    // Fallback: create silent sound system
+                    this.enabled = false;
+                }
+            }
+            
+            createSounds() {
+                if (!this.audioContext) return;
+                
+                // Create sound configurations
+                this.soundConfigs = {
+                    click: { frequency: 800, duration: 0.1, type: 'sine', volume: 0.3 },
+                    send: { frequency: 1200, duration: 0.15, type: 'square', volume: 0.4 },
+                    receive: { frequency: 600, duration: 0.2, type: 'triangle', volume: 0.3 },
+                    notification: { frequency: 1000, duration: 0.3, type: 'sawtooth', volume: 0.5 },
+                    hover: { frequency: 400, duration: 0.05, type: 'sine', volume: 0.1 },
+                    error: { frequency: 300, duration: 0.4, type: 'sawtooth', volume: 0.6 },
+                    success: { frequency: 1500, duration: 0.25, type: 'sine', volume: 0.4 },
+                    typing: { frequency: 500, duration: 0.08, type: 'triangle', volume: 0.2 },
+                    clear: { frequency: 200, duration: 0.5, type: 'sawtooth', volume: 0.5 },
+                    modal: { frequency: 700, duration: 0.2, type: 'sine', volume: 0.3 }
+                };
+            }
+            
+            play(soundName, customVolume = null) {
+                if (!this.enabled || !this.audioContext || !this.soundConfigs[soundName]) return;
+                
+                // Rate limiting to prevent sound spam
+                const now = Date.now();
+                if (this.lastSoundTime[soundName] && now - this.lastSoundTime[soundName] < this.minSoundInterval) {
+                    return;
+                }
+                this.lastSoundTime[soundName] = now;
+                
+                try {
+                    const config = this.soundConfigs[soundName];
+                    const volume = customVolume !== null ? customVolume : config.volume;
+                    
+                    // Create audio nodes
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    // Configure oscillator
+                    oscillator.type = config.type;
+                    oscillator.frequency.setValueAtTime(config.frequency, this.audioContext.currentTime);
+                    
+                    // Configure gain (volume)
+                    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + config.duration);
+                    
+                    // Connect nodes
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    // Play sound
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + config.duration);
+                    
+                } catch (error) {
+                    // Silent fail to avoid breaking the app
+                    console.log('Sound play error:', error);
+                }
+            }
+            
+            toggle() {
+                this.enabled = !this.enabled;
+                this.showNotification(this.enabled ? 'Sound On 🔊' : 'Sound Off 🔇');
+                return this.enabled;
+            }
+            
+            showNotification(message) {
+                const notification = document.getElementById('soundNotification');
+                if (notification) {
+                    notification.textContent = message;
+                    notification.style.display = 'block';
+                    clearTimeout(this.notificationTimeout);
+                    this.notificationTimeout = setTimeout(() => {
+                        notification.style.display = 'none';
+                    }, 2000);
+                }
+            }
+        }
+        
+        // Initialize sound effects
+        const soundEffects = new SoundEffects();
+        
         const VANIE = {
             config: {
                 name: 'VANIE',
@@ -2223,7 +2637,77 @@
                 theme: 'dark',
                 fontSize: 14,
                 language: 'hi',
-                soundEnabled: true
+                soundEnabled: true,
+                performanceMode: true,
+                debugMode: false
+            },
+            
+            // Performance monitoring
+            performance: {
+                startTime: Date.now(),
+                messageCount: 0,
+                errorCount: 0,
+                lastError: null,
+                
+                trackMessage() {
+                    this.messageCount++;
+                    if (this.messageCount % 10 === 0) {
+                        this.checkPerformance();
+                    }
+                },
+                
+                trackError(error) {
+                    this.errorCount++;
+                    this.lastError = error;
+                    console.error('VANIE Error:', error);
+                },
+                
+                checkPerformance() {
+                    const runtime = Date.now() - this.startTime;
+                    const avgMessageTime = runtime / this.messageCount;
+                    
+                    if (this.debugMode) {
+                        console.log(`Performance: ${this.messageCount} messages, ${avgMessageTime.toFixed(2)}ms avg, ${this.errorCount} errors`);
+                    }
+                    
+                    // Auto-optimization
+                    if (avgMessageTime > 100) {
+                        this.enablePerformanceMode();
+                    }
+                },
+                
+                enablePerformanceMode() {
+                    // Reduce animations and effects for better performance
+                    document.body.classList.add('performance-mode');
+                    if (this.debugMode) {
+                        console.log('Performance mode enabled');
+                    }
+                }
+            },
+            
+            // Enhanced error handling
+            handleError(error, context = 'Unknown') {
+                this.performance.trackError(error);
+                
+                // User-friendly error messages
+                const errorMessages = {
+                    'NetworkError': 'Connection issue. Please check your internet connection.',
+                    'TypeError': 'Something went wrong. Please refresh the page.',
+                    'ReferenceError': 'System error. Please try again.',
+                    'SyntaxError': 'Internal error. Please refresh the page.',
+                    'default': 'An error occurred. Please try again.'
+                };
+                
+                const message = errorMessages[error.name] || errorMessages.default;
+                this.showNotification(`${message} (${context})`, 'error', 5000);
+                
+                // Auto-recovery for certain errors
+                if (error.name === 'TypeError' && context.includes('message')) {
+                    setTimeout(() => {
+                        this.clearChat();
+                        this.showNotification('Chat cleared for stability.', 'info');
+                    }, 2000);
+                }
             },
             
             state: {
@@ -2431,9 +2915,13 @@
                 const overlay = document.getElementById('modalOverlay');
                 
                 if (open) {
+                    // Play modal open sound
+                    soundEffects.play('modal');
                     modal.classList.add('open');
                     overlay.classList.add('open');
                 } else {
+                    // Play modal close sound
+                    soundEffects.play('modal');
                     modal.classList.remove('open');
                     overlay.classList.remove('open');
                 }
@@ -2443,10 +2931,33 @@
                 const input = document.getElementById('messageInput');
                 const sendBtn = document.getElementById('sendBtn');
                 
+                // Sound toggle event listener
+                document.getElementById('soundToggle').addEventListener('click', () => {
+                    const isEnabled = soundEffects.toggle();
+                    const soundIcon = document.getElementById('soundIcon');
+                    const soundToggle = document.getElementById('soundToggle');
+                    
+                    if (isEnabled) {
+                        soundIcon.className = 'fas fa-volume-up';
+                        soundToggle.classList.remove('muted');
+                    } else {
+                        soundIcon.className = 'fas fa-volume-mute';
+                        soundToggle.classList.add('muted');
+                    }
+                    
+                    this.config.soundEnabled = isEnabled;
+                    this.saveSettings();
+                });
+                
                 input.addEventListener('input', (e) => {
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.min(e.target.scrollHeight, 156) + 'px';
                     sendBtn.disabled = e.target.value.trim() === '';
+                    
+                    // Debounced typing sound - only play occasionally
+                    if (Math.random() > 0.7) { // 30% chance to play sound
+                        soundEffects.play('typing', 0.05);
+                    }
                 });
 
                 input.addEventListener('keydown', (e) => {
@@ -2459,14 +2970,17 @@
                 sendBtn.addEventListener('click', () => this.sendMessage());
 
                 document.getElementById('uploadBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     document.getElementById('fileInput').click();
                 });
 
                 document.getElementById('fileInput').addEventListener('change', (e) => {
+                    soundEffects.play('notification');
                     this.handleFileUpload(e.target.files);
                 });
 
                 document.getElementById('voiceBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.toggleVoiceRecording();
                 });
 
@@ -2476,6 +2990,7 @@
 
                 // Confirmation modal event listeners
                 document.getElementById('cancelClearBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.hideClearChatConfirmation();
                 });
 
@@ -2514,24 +3029,29 @@
                 });
 
                 document.getElementById('loginBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.handleLogin();
                 });
 
                 document.getElementById('signupBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.handleSignup();
                 });
 
                 document.getElementById('showTerms').addEventListener('click', (e) => {
+                    soundEffects.play('click');
                     e.preventDefault();
                     this.showTermsModal('terms');
                 });
 
                 document.getElementById('showPrivacy').addEventListener('click', (e) => {
+                    soundEffects.play('click');
                     e.preventDefault();
                     this.showTermsModal('privacy');
                 });
 
                 document.getElementById('closeTermsBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.hideTermsModal();
                 });
 
@@ -2546,18 +3066,22 @@
                 });
                 
                 document.getElementById('clearChat').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.showClearChatConfirmation();
                 });
 
                 document.getElementById('clearHistory').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.showClearChatConfirmation();
                 });
 
                 document.getElementById('searchBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.toggleSearchBar();
                 });
 
                 document.getElementById('searchCloseBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     this.closeSearchBar();
                 });
 
@@ -2605,7 +3129,17 @@
                 });
 
                 document.getElementById('exportChat').addEventListener('click', () => {
+                    soundEffects.play('success');
                     this.exportChat();
+                });
+
+                document.getElementById('accountBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
+                    if (this.state.isLoggedIn) {
+                        this.showUserMenu();
+                    } else {
+                        this.showAuthModal('login');
+                    }
                 });
 
                 document.getElementById('themeToggle').addEventListener('change', (e) => {
@@ -2620,6 +3154,30 @@
                     document.getElementById('fontSizeValue').textContent = `${e.target.value}px`;
                     this.saveSettings();
                 });
+                
+                // Add hover sound effects to all buttons with debouncing
+                const allButtons = document.querySelectorAll('button');
+                const hoverSoundDelay = 100; // Minimum delay between hover sounds
+                let lastHoverSoundTime = 0;
+                
+                allButtons.forEach(button => {
+                    button.addEventListener('mouseenter', () => {
+                        const now = Date.now();
+                        if (now - lastHoverSoundTime > hoverSoundDelay) {
+                            soundEffects.play('hover', 0.05);
+                            lastHoverSoundTime = now;
+                        }
+                    });
+                });
+                
+                // Initialize sound toggle state
+                if (this.config.soundEnabled === false) {
+                    const soundIcon = document.getElementById('soundIcon');
+                    const soundToggle = document.getElementById('soundToggle');
+                    soundIcon.className = 'fas fa-volume-mute';
+                    soundToggle.classList.add('muted');
+                    soundEffects.enabled = false;
+                }
 
                 document.getElementById('languageSelect').addEventListener('change', (e) => {
                     this.config.language = e.target.value;
@@ -2693,25 +3251,44 @@
                 
                 if (!text || this.state.isTyping) return;
 
-                document.getElementById('welcomeScreen').classList.add('hidden');
+                try {
+                    // Track performance
+                    this.performance.trackMessage();
+                    
+                    // Play send sound effect
+                    soundEffects.play('send');
+                    
+                    document.getElementById('welcomeScreen').classList.add('hidden');
 
-                this.addMessage(text, 'user');
-                this.state.conversationContext.push({role: 'user', text: text});
+                    this.addMessage(text, 'user');
+                    this.state.conversationContext.push({role: 'user', text: text});
 
-                input.value = '';
-                input.style.height = 'auto';
-                document.getElementById('sendBtn').disabled = true;
+                    input.value = '';
+                    input.style.height = 'auto';
+                    document.getElementById('sendBtn').disabled = true;
 
-                this.showTyping();
+                    this.showTyping();
 
-                const response = await this.generateResponse(text);
-                
-                this.hideTyping();
-                this.addMessage(response, 'bot');
-                this.state.conversationContext.push({role: 'bot', text: response});
+                    const response = await this.generateResponse(text);
+                    
+                    this.hideTyping();
+                    
+                    // Play receive sound effect
+                    setTimeout(() => {
+                        soundEffects.play('receive');
+                    }, 500);
+                    
+                    this.addMessage(response, 'bot');
+                    this.state.conversationContext.push({role: 'bot', text: response});
 
-                if (this.state.conversationContext.length > 10) {
-                    this.state.conversationContext = this.state.conversationContext.slice(-10);
+                    if (this.state.conversationContext.length > 10) {
+                        this.state.conversationContext = this.state.conversationContext.slice(-10);
+                    }
+                    
+                } catch (error) {
+                    this.handleError(error, 'sendMessage');
+                    this.hideTyping();
+                    document.getElementById('sendBtn').disabled = false;
                 }
             },
 
@@ -2883,7 +3460,15 @@
 
                 this.state.messages.push(message);
                 this.saveChatHistory();
-                this.renderMessage(message);
+                
+                // Add animation class based on sender
+                const messageElement = this.renderMessage(message);
+                if (sender === 'user') {
+                    messageElement.classList.add('message-sending');
+                } else {
+                    messageElement.classList.add('message-received');
+                }
+                
                 this.scrollToBottom();
             },
 
@@ -2909,6 +3494,7 @@
                 content.title = `Time: ${message.timestamp} | Double-click to copy`;
 
                 content.addEventListener('dblclick', () => {
+                    soundEffects.play('click');
                     this.copyToClipboard(message.text.replace(/<[^>]*>/g, ''));
                 });
 
@@ -2918,6 +3504,8 @@
                 const container = document.getElementById('chatContainer');
                 const typing = document.getElementById('typingWrapper');
                 container.insertBefore(wrapper, typing);
+                
+                return wrapper; // Return the wrapper element for animation
             },
 
             scrollToBottom(smooth = true) {
@@ -2961,8 +3549,15 @@
             },
 
             confirmClearChat() {
+                // Play clear sound effect
+                soundEffects.play('clear');
+                
                 this.clearChat();
                 this.hideClearChatConfirmation();
+                // Play success sound effect
+                setTimeout(() => {
+                    soundEffects.play('success');
+                }, 300);
                 // Close settings modal only if it's open
                 const settingsModal = document.getElementById('settingsModal');
                 if (settingsModal.classList.contains('open')) {
@@ -3412,16 +4007,10 @@
                     this.state.recognition.lang = localStorage.getItem('vanieVoiceLanguage') || 'hi-IN';
 
                     this.state.recognition.onstart = () => {
-                        this.state.isRecording = true;
-                        this.state.interimTranscript = '';
                         document.getElementById('voiceBtn').classList.add('recording');
-                        document.getElementById('voiceBtn').innerHTML = `
-                            <i class="fas fa-stop"></i>
-                            <span class="voice-status-indicator">Listening...</span>
-                        `;
                         document.getElementById('inputWrapper').classList.add('recording');
                         this.updateStatus('Listening... 🎤');
-                        this.playSound('start');
+                        soundEffects.play('notification');
                         this.showNotification('Voice recording started! Speak now... 🎤', 'info');
                     };
 
@@ -3489,7 +4078,7 @@
                         }
                         
                         this.showNotification(errorMessage, 'error');
-                        this.playSound('error');
+                        soundEffects.play('error');
                         this.stopVoiceRecording();
                     };
 
@@ -3552,43 +4141,7 @@
                 document.getElementById('inputWrapper').classList.remove('recording');
                 document.getElementById('interimText').textContent = '';
                 this.updateStatus('Online');
-                this.playSound('stop');
-            },
-
-            playSound(type) {
-                if (!this.config.soundEnabled) return;
-                
-                try {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    switch (type) {
-                        case 'start':
-                            oscillator.frequency.value = 800;
-                            gainNode.gain.value = 0.1;
-                            oscillator.start();
-                            oscillator.stop(audioContext.currentTime + 0.1);
-                            break;
-                        case 'stop':
-                            oscillator.frequency.value = 600;
-                            gainNode.gain.value = 0.1;
-                            oscillator.start();
-                            oscillator.stop(audioContext.currentTime + 0.15);
-                            break;
-                        case 'error':
-                            oscillator.frequency.value = 300;
-                            gainNode.gain.value = 0.1;
-                            oscillator.start();
-                            oscillator.stop(audioContext.currentTime + 0.2);
-                            break;
-                    }
-                } catch (error) {
-                    console.log('Sound effect failed:', error);
-                }
+                soundEffects.play('modal');
             },
 
             changeVoiceLanguage(language) {
