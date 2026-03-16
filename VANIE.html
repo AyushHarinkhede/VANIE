@@ -2980,17 +2980,28 @@
             handleError(error, context = 'Unknown') {
                 this.performance.trackError(error);
                 
+                // Don't show error notifications for common network issues
+                const silentErrors = ['Failed to fetch', 'NetworkError', 'TypeError'];
+                const shouldSilent = silentErrors.some(silentError => 
+                    error.message?.includes(silentError) || error.name === silentError
+                );
+                
+                if (shouldSilent && context === 'sendMessage') {
+                    console.log('Silent error handled:', error.message);
+                    return; // Don't show notification for common network errors
+                }
+                
                 // User-friendly error messages
                 const errorMessages = {
                     'NetworkError': 'Connection issue. Please check your internet connection.',
-                    'TypeError': 'Something went wrong. Please refresh the page.',
+                    'TypeError': 'Something went wrong. Please try again.',
                     'ReferenceError': 'System error. Please try again.',
                     'SyntaxError': 'Internal error. Please refresh the page.',
                     'default': 'An error occurred. Please try again.'
                 };
                 
                 const message = errorMessages[error.name] || errorMessages.default;
-                this.showNotification(`${message} (${context})`, 'error', 5000);
+                this.showNotification(`${message} (${context})`, 'error', 3000);
                 
                 // Auto-recovery for certain errors
                 if (error.name === 'TypeError' && context.includes('message')) {
@@ -3512,59 +3523,141 @@
                     // Show typing indicator
                     this.showTyping();
                     
-                    // Call Enhanced Python Backend API
-                    const response = await fetch('http://localhost:5000/api/chat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            message: userInput,
-                            session_id: this.state.userId || 'default'
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    // Hide typing indicator
-                    this.hideTyping();
-                    
-                    if (data.status === 'success') {
-                        // Enhanced logging for debugging
-                        console.log('🚀 Enhanced AI Response:', {
-                            response: data.response,
-                            detected_intents: data.metadata?.detected_intents || [],
-                            emotion: data.metadata?.emotion || {},
-                            session_id: data.metadata?.session_id || 'default',
-                            status: data.status
+                    // Try Enhanced Python Backend API first
+                    try {
+                        const response = await fetch('http://localhost:5000/api/chat', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                message: userInput,
+                                session_id: this.state.userId || 'default'
+                            })
                         });
                         
-                        // Show category indicator if available
-                        if (data.metadata?.detected_intents && data.metadata.detected_intents.length > 0) {
-                            const mainIntent = data.metadata.detected_intents[0];
-                            this.showNotification(`🎯 ${mainIntent.toUpperCase()} - VANIE AI Response`, 'info', 2000);
-                        }
+                        const data = await response.json();
                         
-                        return data.response;
-                    } else {
-                        console.error('Backend error:', data.error);
-                        this.showNotification('Backend error: ' + (data.error || 'Unknown error'), 'error');
-                        return this.getRandomResponse(this.responses.fallback);
+                        // Hide typing indicator
+                        this.hideTyping();
+                        
+                        if (data.status === 'success') {
+                            // Enhanced logging for debugging
+                            console.log('🚀 Enhanced AI Response:', {
+                                response: data.response,
+                                detected_intents: data.metadata?.detected_intents || [],
+                                emotion: data.metadata?.emotion || {},
+                                session_id: data.metadata?.session_id || 'default',
+                                status: data.status
+                            });
+                            
+                            // Show category indicator if available
+                            if (data.metadata?.detected_intents && data.metadata.detected_intents.length > 0) {
+                                const mainIntent = data.metadata.detected_intents[0];
+                                this.showNotification(`🎯 ${mainIntent.toUpperCase()} - VANIE AI Response`, 'info', 2000);
+                            }
+                            
+                            return data.response;
+                        } else {
+                            console.error('Backend error:', data.error);
+                            throw new Error(data.error || 'Backend error');
+                        }
+                    } catch (backendError) {
+                        console.log('Backend not available, using fallback responses');
+                        throw backendError;
                     }
+                    
                 } catch (error) {
                     console.error('Network error:', error);
                     this.hideTyping();
                     
                     // Enhanced error handling
                     if (error.message.includes('Failed to fetch')) {
-                        this.showNotification('🔴 Enhanced Backend not available. Using fallback responses. ⚠️', 'error');
+                        this.showNotification('🔴 Backend not available. Using smart responses. ⚠️', 'error', 2000);
                     }
                     
-                    // Fallback to existing responses if backend is unavailable
-                    return this.getRandomResponse(this.responses.fallback);
+                    // Use smart fallback responses
+                    return this.getSmartFallbackResponse(userInput);
                 }
+            },
 
-                return this.getRandomResponse(this.responses.fallback);
+            getSmartFallbackResponse(userInput) {
+                const input = userInput.toLowerCase();
+                
+                // Algorithm responses
+                if (input.includes('bubble sort') || input.includes('sorting')) {
+                    return this.getBubbleSortExample();
+                }
+                if (input.includes('quick sort')) {
+                    return this.getQuickSortExample();
+                }
+                if (input.includes('merge sort')) {
+                    return this.getMergeSortExample();
+                }
+                if (input.includes('binary search')) {
+                    return `Binary Search ek efficient searching algorithm hai!\n\n<strong>Python Code:</strong>\n<pre><code>def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    
+    return -1\n\n# Example\narr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\ntarget = 6\nresult = binary_search(arr, target)\nprint(f"Found at index: {result}")</code></pre>\n\n<strong>Time Complexity:</strong> O(log n)\n<strong>Space Complexity:</strong> O(1)`;
+                }
+                if (input.includes('dijkstra') || input.includes('graph')) {
+                    return `Dijkstra's Algorithm ek shortest path finding algorithm hai!\n\n<strong>Python Code:</strong>\n<pre><code>import heapq\n\ndef dijkstra(graph, start, end):\n    distances = {node: float('infinity') for node in graph}\n    distances[start] = 0\n    pq = [(0, start)]\n    \n    while pq:\n        current_distance, current = heapq.heappop(pq)\n        \n        if current == end:\n            break\n            \n        for neighbor, weight in graph[current].items():\n            distance = current_distance + weight\n            if distance < distances[neighbor]:\n                distances[neighbor] = distance\n                heapq.heappush(pq, (distance, neighbor))\n    \n    return distances[end]\n\n# Example\ngraph = {\n    'A': {'B': 1, 'C': 4},\n    'B': {'A': 1, 'C': 2, 'D': 5},\n    'C': {'A': 4, 'B': 2, 'D': 1},\n    'D': {'B': 5, 'C': 1}\n}\nprint(dijkstra(graph, 'A', 'D'))</code></pre>\n\n<strong>Time Complexity:</strong> O((V + E) log V)`;
+                }
+                if (input.includes('fibonacci')) {
+                    return `Fibonacci Sequence ek mathematical series hai!\n\n<strong>Python Code:</strong>\n<pre><code># Recursive approach\ndef fibonacci_recursive(n):\n    if n <= 1:\n        return n\n    return fibonacci_recursive(n-1) + fibonacci_recursive(n-2)\n\n# Memoization approach\ndef fibonacci_memo(n, memo={}):\n    if n in memo:\n        return memo[n]\n    if n <= 1:\n        return n\n    memo[n] = fibonacci_memo(n-1, memo) + fibonacci_memo(n-2, memo)\n    return memo[n]\n\n# Iterative approach\ndef fibonacci_iterative(n):\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n\n# Example\nfor i in range(10):\n    print(f"F({i}) = {fibonacci_iterative(i)}")</code></pre>\n\n<strong>Time Complexity:</strong> O(n) with memoization, O(2^n) naive recursive`;
+                }
+                
+                // Programming help
+                if (input.includes('python') || input.includes('code')) {
+                    return `मैं प्रोग्रामिंग में मदद कर सकती हूँ! Python, JavaScript, Data Structures, Algorithms - कोई भी programming topic में मदद कर सकती हूँ। कौन सा topic चाहिए? 🐍💻`;
+                }
+                
+                // Web development
+                if (input.includes('web') || input.includes('html') || input.includes('css') || input.includes('javascript')) {
+                    return `Web development में मदद कर सकती हूँ! HTML, CSS, JavaScript, React, Node.js - कोई भी web technology में expert हूँ। क्या सीखना चाहिए? 🌐🎨`;
+                }
+                
+                // Math help
+                if (input.includes('math') || input.includes('calculate') || input.includes('formula')) {
+                    return `Math में मदद कर सकती हूँ! Algebra, Geometry, Calculus, Statistics - कोई भी math topic में मदद कर सकती हूँ। कौन सा topic चाहिए? 🔢📐`;
+                }
+                
+                // Greeting responses
+                if (input.includes('hello') || input.includes('hi') || input.includes('namaste')) {
+                    return this.getRandomResponse(this.responses.greeting);
+                }
+                
+                // Time responses
+                if (input.includes('time') || input.includes('samay')) {
+                    const currentTime = new Date().toLocaleTimeString('en-IN', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    });
+                    return `अभी समय है: ${currentTime} ⏰`;
+                }
+                
+                // Joke responses
+                if (input.includes('joke') || input.includes('funny') || input.includes('hasi')) {
+                    return this.getRandomResponse(this.responses.jokes);
+                }
+                
+                // Default smart response
+                return this.getRandomResponse([
+                    "मैं VANIE हूँ - Virtual Assistant of Neural Integrated Engine! मुझे Ayush Harinkhede ने develop किया है। मैं algorithms, programming, math, और बहुत कुछ में मदद कर सकती हूँ! 🤖✨",
+                    "मैं अभी भी सीख रही हूँ, लेकिन मैं आपको algorithms, programming, math, या jokes में मदद कर सकती हूँ! क्या चाहिए? 😊",
+                    "मैं VANIE AI हूँ! मुझे Python, JavaScript, Algorithms, Data Structures में expertise है। क्या help चाहिए? 🚀",
+                    "Hello! मैं आपकी मदद करने के लिए हूँ! Programming, Algorithms, Math, या बातचीत - कुछ भी! क्या बात करें? 💬"
+                ]);
             },
 
             getQuickSortExample() {
