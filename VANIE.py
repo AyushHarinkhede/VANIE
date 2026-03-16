@@ -1701,7 +1701,24 @@ class VANIEAI:
             if word and word not in self.stop_words:
                 cleaned_words.append(word)
         
-        return cleaned_words
+        # Also add multi-word phrases for better matching
+        phrases = []
+        for i in range(len(words)):
+            # Create multi-word phrases (2-3 words)
+            if i < len(words) - 1:
+                phrase2 = words[i] + ' ' + words[i+1]
+                phrase2 = re.sub(r'[^\w\s]', '', phrase2)
+                if phrase2 and phrase2 not in self.stop_words:
+                    phrases.append(phrase2)
+            
+            if i < len(words) - 2:
+                phrase3 = words[i] + ' ' + words[i+1] + ' ' + words[i+2]
+                phrase3 = re.sub(r'[^\w\s]', '', phrase3)
+                if phrase3 and phrase3 not in self.stop_words:
+                    phrases.append(phrase3)
+        
+        # Combine single words and phrases
+        return cleaned_words + phrases
     
     def _analyze_sentiment(self, text: str) -> Dict[str, Any]:
         """Basic sentiment analysis using word matching"""
@@ -2153,7 +2170,24 @@ class VANIEAI:
             if word and word not in self.stop_words:
                 cleaned_words.append(word)
         
-        return cleaned_words
+        # Also add multi-word phrases for better matching
+        phrases = []
+        for i in range(len(words)):
+            # Create multi-word phrases (2-3 words)
+            if i < len(words) - 1:
+                phrase2 = words[i] + ' ' + words[i+1]
+                phrase2 = re.sub(r'[^\w\s]', '', phrase2)
+                if phrase2 and phrase2 not in self.stop_words:
+                    phrases.append(phrase2)
+            
+            if i < len(words) - 2:
+                phrase3 = words[i] + ' ' + words[i+1] + ' ' + words[i+2]
+                phrase3 = re.sub(r'[^\w\s]', '', phrase3)
+                if phrase3 and phrase3 not in self.stop_words:
+                    phrases.append(phrase3)
+        
+        # Combine single words and phrases
+        return cleaned_words + phrases
     
     def _analyze_sentiment(self, text: str) -> Dict[str, Any]:
         """Basic sentiment analysis using word matching"""
@@ -2587,4 +2621,5 @@ if __name__ == '__main__':
     
     def get_frontend_config(self):
         return {'search_suggestions': self.search_suggestions_data, 'knowledge': self.enhanced_knowledge, 'responses': self.enhanced_responses, 'intents': self.intents, 'stop_words': self.stop_words}
+
 
