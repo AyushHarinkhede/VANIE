@@ -2120,6 +2120,51 @@
             } 
         }
 
+        /* Sound Toggle Button Styles */
+        .sound-toggle-container {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .sound-toggle-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 8px 16px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .sound-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .sound-toggle-btn.muted {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+        }
+
+        .sound-toggle-btn.muted:hover {
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+        }
+
+        .sound-toggle-btn i {
+            font-size: 16px;
+        }
+
+        .sound-toggle-btn span {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .settings-modal { 
                 width: 100%; 
@@ -2174,11 +2219,7 @@
     </style>
 </head>
 <body>
-    <!-- Sound Effects Toggle Button -->
-    <button class="sound-toggle" id="soundToggle" title="Toggle Sound Effects">
-        <i class="fas fa-volume-up" id="soundIcon"></i>
-    </button>
-    
+        
     <!-- Sound Notification Indicator -->
     <div class="notification-sound" id="soundNotification">
         <i class="fas fa-bell"></i> Sound On
@@ -2503,11 +2544,15 @@
             <div class="setting-group">
                 <h4><i class="fas fa-bell"></i> Notifications</h4>
                 <div class="setting-item">
-                    <label for="soundToggle">Sound Effects</label>
-                    <label class="switch">
-                        <input type="checkbox" id="soundToggle" checked>
-                        <span class="slider"></span>
-                    </label>    </div> </div>
+                    <label>Sound Effects</label>
+                    <div class="sound-toggle-container">
+                        <button class="sound-toggle-btn" id="soundToggle" title="Toggle Sound Effects">
+                            <i class="fas fa-volume-up" id="soundIcon"></i>
+                            <span id="soundText">Sound On</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <div class="setting-group">
                 <h4><i class="fas fa-download"></i> Data</h4>
@@ -2880,7 +2925,21 @@
                 document.getElementById('fontSize').value = this.config.fontSize;
                 document.getElementById('fontSizeValue').textContent = `${this.config.fontSize}px`;
                 document.getElementById('languageSelect').value = this.config.language;
-                document.getElementById('soundToggle').checked = this.config.soundEnabled;
+                
+                // Update sound toggle button
+                const soundToggle = document.getElementById('soundToggle');
+                const soundIcon = document.getElementById('soundIcon');
+                const soundText = document.getElementById('soundText');
+                
+                if (this.config.soundEnabled) {
+                    soundIcon.className = 'fas fa-volume-up';
+                    soundToggle.classList.remove('muted');
+                    soundText.textContent = 'Sound On';
+                } else {
+                    soundIcon.className = 'fas fa-volume-mute';
+                    soundToggle.classList.add('muted');
+                    soundText.textContent = 'Sound Off';
+                }
                 
                 // Set voice language if recognition is available
                 if (this.state.recognition) {
@@ -2936,13 +2995,16 @@
                     const isEnabled = soundEffects.toggle();
                     const soundIcon = document.getElementById('soundIcon');
                     const soundToggle = document.getElementById('soundToggle');
+                    const soundText = document.getElementById('soundText');
                     
                     if (isEnabled) {
                         soundIcon.className = 'fas fa-volume-up';
                         soundToggle.classList.remove('muted');
+                        soundText.textContent = 'Sound On';
                     } else {
                         soundIcon.className = 'fas fa-volume-mute';
                         soundToggle.classList.add('muted');
+                        soundText.textContent = 'Sound Off';
                     }
                     
                     this.config.soundEnabled = isEnabled;
@@ -3174,8 +3236,10 @@
                 if (this.config.soundEnabled === false) {
                     const soundIcon = document.getElementById('soundIcon');
                     const soundToggle = document.getElementById('soundToggle');
+                    const soundText = document.getElementById('soundText');
                     soundIcon.className = 'fas fa-volume-mute';
                     soundToggle.classList.add('muted');
+                    soundText.textContent = 'Sound Off';
                     soundEffects.enabled = false;
                 }
 
@@ -3188,11 +3252,7 @@
                     this.changeVoiceLanguage(e.target.value);
                 });
 
-                document.getElementById('soundToggle').addEventListener('change', (e) => {
-                    this.config.soundEnabled = e.target.checked;
-                    this.saveSettings();
-                });
-
+                
                 document.getElementById('scrollTopBtn').addEventListener('click', () => {
                     document.getElementById('chatContainer').scrollTo({ top: 0, behavior: 'smooth' });
                 });
