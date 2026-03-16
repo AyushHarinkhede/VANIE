@@ -260,6 +260,6 @@ def health_check():
 
 if __name__ == '__main__':
     print("🚀 VANIE Backend is running perfectly! Waiting for HTML to connect...")
-    print("📡 Server running at: http://localhost:5000")
+    print("📡 Server running at: http://localhost:5000") 
     print("🔗 API Endpoint: http://localhost:5000/chat")
     app.run(debug=True, host='0.0.0.0', port=5000)
