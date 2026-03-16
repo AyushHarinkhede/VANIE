@@ -1,265 +1,579 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import random
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+VANIE - Virtual Assistant of Neural Integrated Engine
+Advanced Backend System with Real-time Information Capabilities
+"""
+
+import os
+import sys
 import json
-from datetime import datetime
+import datetime
+import platform
+import socket
+import psutil
+import subprocess
+import threading
+import time
+import requests
+import re
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
+import logging
+from typing import Dict, Any, List
+import random
+import math
 
-# ==========================================
-# 1. SERVER SETUP
-# ==========================================
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
-CORS(app) # Yeh HTML ko connect hone dega
+CORS(app)
 
-# ==========================================
-# 2. VANIE'S KNOWLEDGE BASE (Intents)
-# ==========================================
-INTENTS = {
-    "greeting": {
-        "keywords": ["hi", "hello", "hey", "kaise ho", "what's up", "namaste", "aur batao"],
-        "responses": [
-            "Hello! Main VANIE hu. Kaise help kar sakti hu aapki?", 
-            "Hi there! Aapka din kaisa ja raha hai?", 
-            "Hey! VANIE here. Boliye, kya madad karu?"
-        ]
-    },
-    "identity": {
-        "keywords": ["who are you", "tum kon ho", "naam kya hai", "who made you", "creator", "kisne banaya", "owner"],
-        "responses": [
-            "Main VANIE hu, ek smart AI assistant. Mujhe Ayush Harinkhede ne develop kiya hai!", 
-            "Mera naam VANIE hai aur mujhe Ayush Harinkhede ne banaya hai aapki madad karne ke liye."
-        ]
-    },
-    "capabilities": {
-        "keywords": ["help", "what can you do", "tum kya kar sakte ho", "features", "assist"],
-        "responses": [
-            "Main aapke sawaalon ke jawab de sakti hu, aapse baatein kar sakti hu, aur time bata sakti hu!", 
-            "Main ek conversational AI hu. Aap mujhse kuch bhi puch sakte hain."
-        ]
-    },
-    "time": {
-        "keywords": ["time", "samay", "baj rahe", "kya time ho raha"],
-        "responses": ["Abhi ka exact time {time} ho raha hai."]
-    },
-    "goodbye": {
-        "keywords": ["bye", "see you", "goodnight", "tata", "chalo baad me milte"],
-        "responses": [
-            "Bye! Apna khayal rakhna.", 
-            "See you soon! Have a great day."
-        ]
-    }
-}
-
-# ==========================================
-# 3. THE CORE AI ALGORITHM (Original + Enhanced)
-# ==========================================
-def get_ai_response(user_message=''):
-    """
-    VANIE (cleaned) — getAIResponse implementation
-    - Consolidated, syntactically-correct version of the AI-response logic
-    - Matches user messages against prioritized checks and keyword categories
-    - Returns a plain string (safe for the chat UI)
-    """
-    msg = str(user_message or '').strip().lower()
-    if not msg:
-        return "Please tell me how I can help — type 'help' for examples."
-
-    hour = datetime.now().hour
-    ai_response = "I'm here to help with your health — type 'help' for suggestions."
-
-    # --- priority / exact checks ---
-    if 'dark' in msg and 'mode' in msg:
-        return '🌙 Switched to dark mode.'
-    if 'light' in msg and 'mode' in msg:
-        return '☀️ Switched to light mode.'
-
-    # Emergency / high-risk keywords (return immediately)
-    emergency_triggers = ['chest pain','cant breathe','can\'t breathe','heart attack','stroke','suicide','kill myself','not breathing']
-    if any(trigger in msg for trigger in emergency_triggers):
-        return '🚨 If this is an emergency, call your local emergency number (112/102). Please seek help immediately.'
-
-    # Quick metric reads from dashboard (if present)
-    if 'bmi' in msg:
-        return f'📏 Your BMI is 23.5.'
-    if 'blood pressure' in msg or 'bp' in msg:
-        return f'❤️ Your blood pressure is 128/80 mmHg.'
-    if 'heart rate' in msg or 'hr' in msg:
-        return f'💓 Heart rate: 80 BPM.'
-
-    # Simple conversational responses
-    if msg == 'help':
-        return "I can help with: view metrics (BMI, BP), navigate the app (dashboard/profile), give general health tips (diet, sleep), or provide emergency guidance. Try: 'What is my BMI?', 'How to lower BP?', 'Open profile'."
+class VANIEEngine:
+    """Main VANIE Engine with Advanced Real-time Capabilities"""
     
-    import re
-    if re.search(r'\b(hi|hello|hey)\b', msg):
-        if hour < 12:
-            return '☀️ Good morning — how can I help?'
-        if hour < 18:
-            return '🌤️ Good afternoon — what can I do for you?'
-        return '🌙 Good evening — how can I assist?'
-
-    if 'thank' in msg:
-        return "You're welcome! 😊 Anything else?"
-
-    # Keyword-category fallback (expanded comprehensive list)
-    keyword_categories = {
-        'symptoms': {
-            'keywords': ['headache','fever','cough','nausea','dizziness','fatigue','rash','vomit','stomach','pain','sore throat','cold','flu','body ache','muscle pain','joint pain','back pain','chest pain','breathing','asthma','allergy','infection','inflammation','swelling','burning','itching','diarrhea','constipation','bloating','gas','acid reflux','heartburn','indigestion','loss of appetite','weight loss','weight gain','thirsty','urination','frequent urination','dark urine','yellow skin','pale skin','bruising','bleeding','numbness','tingling','weakness','confusion','memory loss','concentration','mood swings','depression','anxiety','stress','panic','insomnia','sleepiness','drowsiness','restless','sweating','chills','hot flashes','menstrual','period','cramps','pms','menopause'],
-            'responses': [
-                "I'm sorry you're not feeling well. While I can provide general information, please consult a healthcare professional for proper diagnosis and treatment. Your health is important!",
-                "I understand you're experiencing discomfort. For accurate medical advice, it's best to speak with a doctor who can evaluate your specific situation. Take care of yourself!",
-                "Health concerns should always be taken seriously. I recommend reaching out to a healthcare provider for personalized medical guidance. Your wellbeing matters!"
-            ]
-        },
-        'diet': {
-            'keywords': ['diet','healthy food','what to eat','snack','calories','nutrition','protein','carbs','fat','vitamins','minerals','water','hydration','meal','breakfast','lunch','dinner','cooking','recipe','ingredients','organic','vegetarian','vegan','keto','paleo','mediterranean','gluten free','dairy free','sugar free','low carb','high protein','fiber','antioxidants','omega','supplements','multivitamin','calcium','iron','zinc','magnesium','potassium','sodium','caffeine','alcohol','coffee','tea','juice','smoothie','salad','vegetables','fruits','grains','legumes','nuts','seeds','dairy','meat','fish','chicken','eggs','tofu','beans','lentils','quinoa','oats','rice','bread','pasta','pizza','burger','fries','chips','chocolate','dessert','cake','cookie','ice cream','candy','soda','energy drink','protein shake','meal prep','portion size','calorie counting','macros','diet plan','weight loss','weight gain','muscle building','fat loss','bulking','cutting','intermittent fasting','keto diet','paleo diet','vegan diet','vegetarian diet','mediterranean diet','dash diet','low fodmap','anti inflammatory','diabetic','heart healthy','kidney friendly','liver detox','gut health','probiotics','prebiotics','digestive enzymes','acid reflux','gerd','ibs','crohn','colitis','celiac','food allergy','food intolerance','sensitivity'],
-            'responses': [
-                "A balanced diet includes lean proteins, whole grains, healthy fats, and plenty of colorful vegetables. Consider consulting a nutritionist for personalized meal planning!",
-                "Focus on whole foods, limit processed items, stay hydrated, and listen to your body's hunger cues. Everyone's nutritional needs are unique - what works for one person may not work for another.",
-                "Healthy eating is about variety, moderation, and balance. Include different food groups, pay attention to portion sizes, and choose foods that make you feel energized and satisfied!"
-            ]
-        },
-        'sleep': {
-            'keywords': ['sleep','insomnia','tired','fatigue','rest','nap','bedtime','wake up','alarm','night','morning','dream','nightmare','sleep cycle','circadian rhythm','sleep quality','deep sleep','rem sleep','sleep disorder','sleep apnea','snoring','restless leg syndrome','sleep hygiene','sleep schedule','sleep routine','bedtime routine','relaxation','meditation','melatonin','sleep aid','sleep tracker','sleep monitor','sleep mask','ear plugs','white noise','sleep environment','dark room','cool temperature','comfortable bed','pillow','mattress','sleep position','sleep posture','sleep habits','sleep patterns','sleep deprivation','sleep debt','power nap','siesta','cat nap','beauty sleep','sleep tips','sleep advice','better sleep','sleep problems','sleep solutions','sleep science','sleep research','sleep health','sleep wellness','sleep medicine','sleep specialist','sleep clinic','sleep study','sleep test','polysomnography','cpap','sleep therapy','sleep coaching','sleep consultation'],
-            'responses': [
-                "Quality sleep is crucial for overall health. Aim for 7-9 hours, maintain a consistent schedule, create a relaxing bedtime routine, and ensure your sleep environment is dark, cool, and quiet.",
-                "Good sleep hygiene includes avoiding screens before bed, limiting caffeine in the evening, exercising regularly (but not too close to bedtime), and managing stress through relaxation techniques.",
-                "If sleep problems persist, consider consulting a sleep specialist. They can help identify underlying issues and provide personalized solutions for better rest and recovery."
-            ]
-        },
-        'mental': {
-            'keywords': ['mental','stress','anxious','anxiety','depressed','sad','panic','worry','fear','phobia','obsessive','compulsive','ocd','ptsd','trauma','therapy','counseling','psychologist','psychiatrist','medication','antidepressant','anti anxiety','mood','emotion','feeling','emotional','psychological','mental health','wellbeing','self care','mindfulness','meditation','relaxation','breathing','deep breathing','grounding','coping','resilience','stress management','anxiety management','depression help','suicidal','self harm','crisis','emergency','hotline','support','friends','family','community','social','isolation','loneliness','connection','relationships','communication','boundaries','self esteem','confidence','motivation','purpose','meaning','goals','achievement','success','failure','setback','recovery','healing','growth','personal development','self improvement','positive thinking','gratitude','journaling','affirmations','visualization','exercise','physical activity','nature','outdoors','sunlight','vitamin d','sleep','nutrition','caffeine','alcohol','substance','addiction','recovery','sober','clean','relapse','trigger','craving','withdrawal','detox','rehab','treatment','program','group therapy','individual therapy','cognitive behavioral therapy','cbt','dbt','act','emdr','talk therapy','psychotherapy','meditation','yoga','tai chi','qigong','acupuncture','massage','aromatherapy','music therapy','art therapy','pet therapy','service animal','emotional support animal'],
-            'responses': [
-                "Mental health is just as important as physical health. If you're struggling, please reach out to a mental health professional or crisis hotline. You don't have to face this alone - support is available.",
-                "Taking care of your mental wellbeing includes self-care practices, seeking support when needed, and being kind to yourself. Consider talking to a therapist or counselor for professional guidance.",
-                "If you're in crisis, please call emergency services or a mental health hotline immediately. For ongoing support, a mental health professional can provide tools and strategies for better emotional wellbeing."
-            ]
-        },
-        'exercise': {
-            'keywords': ['exercise','workout','fitness','gym','training','cardio','strength','weight lifting','running','jogging','walking','swimming','cycling','yoga','pilates','stretching','flexibility','mobility','balance','coordination','endurance','stamina','energy','calories','burn fat','build muscle','tone','shape','bodybuilding','powerlifting','crossfit','hiit','interval training','circuit training','aerobic','anaerobic','resistance','bands','dumbbells','barbell','kettlebell','machine','bodyweight','calisthenics','pushups','pullups','squats','lunges','plank','burpee','jumping jacks','mountain climbers','crunches','situps','deadlift','bench press','squat','overhead press','bicep curl','tricep extension','leg press','leg curl','leg extension','calf raise','shoulder press','lateral raise','front raise','reverse fly','row','lat pulldown','chin up','dip','push press','jerk','clean','snatch','thruster','wall ball','box jump','rope climb','farmer walk','tire flip','sledgehammer','battle rope','ski erg','rower','bike','treadmill','elliptical','stair climber','step mill','arc trainer','recumbent bike','upright bike','spin class','group fitness','personal trainer','coach','program','routine','schedule','frequency','intensity','duration','reps','sets','rest','recovery','warm up','cool down','stretching','foam rolling','massage','physical therapy','injury','prevention','rehabilitation','sports','athlete','performance','competition','marathon','triathlon','5k','10k','half marathon','obstacle course','mud run','spartan','tough mudder','crossfit games','olympics','professional','amateur','beginner','intermediate','advanced','expert','master','senior','youth','kids','family','couples','group','class','online','virtual','home','outdoor','indoor','park','beach','mountain','trail','road','track','pool','lake','river','ocean'],
-            'responses': [
-                "Regular exercise offers incredible benefits for both physical and mental health. Aim for at least 150 minutes of moderate activity weekly, plus strength training twice a week. Start slow and build gradually!",
-                "The best exercise routine is one you enjoy and can stick with consistently. Mix cardio, strength, and flexibility training. Remember to warm up, cool down, and listen to your body's signals.",
-                "Exercise isn't just about physical appearance - it boosts mood, energy, sleep quality, and overall wellbeing. Find activities you love, set realistic goals, and celebrate your progress along the journey!"
-            ]
-        },
-        'medical': {
-            'keywords': ['doctor','physician','medical','medicine','medication','prescription','drug','pharmacy','hospital','clinic','emergency','urgent care','specialist','general practitioner','gp','family doctor','pediatrician','cardiologist','neurologist','dermatologist','psychiatrist','psychologist','therapist','counselor','nurse','nurse practitioner','physician assistant','medical assistant','surgeon','anesthesiologist','radiologist','pathologist','oncologist','endocrinologist','gastroenterologist','pulmonologist','nephrologist','urologist','orthopedic','rheumatologist','immunologist','allergist','infectious disease','critical care','emergency medicine','sports medicine','preventive medicine','occupational health','public health','epidemiology','clinical research','medical trial','study','experiment','diagnosis','prognosis','treatment','therapy','rehabilitation','recovery','healing','cure','remission','relapse','chronic','acute','symptoms','signs','diagnostic','test','lab work','blood test','urine test','x-ray','mri','ct scan','ultrasound','ecg','ekg','eeg','stress test','colonoscopy','endoscopy','biopsy','screening','checkup','annual','physical','vaccination','immunization','vaccine','shot','injection','iv','infusion','transfusion','surgery','operation','procedure','transplant','dialysis','chemotherapy','radiation','palliative','hospice','home health','telemedicine','virtual visit','online consultation','second opinion','referral','prior authorization','insurance','coverage','copay','deductible','premium','healthcare','health system','medical records','patient chart','history','allergies','medications','conditions','diagnoses','procedures','family history','genetics','hereditary','lifestyle','risk factors','prevention','wellness','health promotion','disease management','chronic care','acute care','emergency care','primary care','specialty care','mental health','substance abuse','rehabilitation','long term care','skilled nursing','assisted living','memory care','hospice care','palliative care'],
-            'responses': [
-                "For medical concerns, always consult with qualified healthcare professionals. They can provide accurate diagnosis, appropriate treatment, and personalized care based on your individual health needs and medical history.",
-                "Medical decisions should be made in partnership with healthcare providers who know your complete health picture. Don't hesitate to ask questions, seek second opinions, or advocate for your health needs.",
-                "Your health is your most valuable asset. Build relationships with trusted healthcare providers, stay informed about your conditions, and actively participate in your healthcare decisions for the best outcomes."
-            ]
-        },
-        'personal': {
-            'keywords': ['name','age','birthday','date of birth','gender','sex','male','female','non binary','transgender','identity','pronouns','he','she','they','them','relationship','single','married','divorced','widowed','partner','boyfriend','girlfriend','husband','wife','family','parents','mother','father','sister','brother','son','daughter','children','kids','grandparents','grandmother','grandfather','grandchildren','relatives','uncle','aunt','cousin','nephew','niece','friends','best friend','roommate','colleague','coworker','boss','manager','employee','student','teacher','professor','mentor','coach','neighbor','community','hometown','city','state','country','nationality','ethnicity','race','culture','religion','spirituality','beliefs','values','morals','ethics','principles','philosophy','worldview','perspective','opinion','thought','idea','dream','goal','ambition','passion','hobby','interest','talent','skill','ability','strength','weakness','challenge','obstacle','opportunity','success','failure','achievement','accomplishment','pride','joy','happiness','sadness','anger','fear','love','hate','excitement','boredom','curiosity','surprise','disappointment','frustration','relief','gratitude','hope','despair','optimism','pessimism','confidence','doubt','courage','fear','bravery','cowardice','honesty','dishonesty','loyalty','betrayal','trust','suspicion','forgiveness','revenge','patience','impatience','kindness','cruelty','generosity','selfishness','humility','arrogance','modesty','vanity','wisdom','ignorance','knowledge','learning','teaching','sharing','listening','speaking','writing','reading','creating','destroying','building','breaking','giving','taking','helping','hurting','healing','wounding','protecting','attacking','defending','offending','supporting','opposing','agreeing','disagreeing','accepting','rejecting','welcoming','excluding','including','excluding','embracing','rejecting','choosing','refusing','deciding','hesitating','acting','waiting','moving','staying','starting','stopping','continuing','quitting','trying','giving up','persisting','surrendering','fighting','yielding','winning','losing','competing','cooperating','leading','following','organizing','disorganizing','planning','improvising','preparing','reacting','anticipating','surprising','expecting','disappointing','promising','breaking','keeping','forgetting','remembering','learning','teaching','growing','shrinking','expanding','contracting','opening','closing','beginning','ending','starting','finishing'],
-            'responses': [
-                "I appreciate you sharing personal details with me! While I'm here to listen and provide support, remember that I'm an AI assistant. For deeply personal matters, consider speaking with trusted friends, family, or professional counselors.",
-                "Personal conversations help build connection and understanding. I'm here to offer support and information, but the most meaningful relationships are built with real people who can provide genuine human connection and empathy.",
-                "Your personal story and experiences are valuable and unique. While I can provide information and support, don't forget the importance of human relationships and professional help when dealing with personal challenges and decisions."
-            ]
-        },
-        'entertainment': {
-            'keywords': ['movie','film','cinema','theater','show','concert','music','song','album','artist','band','singer','musician','genre','rock','pop','jazz','classical','hip hop','rap','country','folk','blues','reggae','electronic','dance','edm','house','techno','trance','dubstep','ambient','instrumental','vocal','lyrics','melody','harmony','rhythm','beat','tempo','chord','note','scale','tune','concert','festival','tour','performance','live','studio','record','album','single','ep','lp','mixtape','playlist','radio','podcast','audiobook','streaming','spotify','apple music','youtube','netflix','hulu','amazon prime','disney','hbo','showtime','starz','tubi','crunchyroll','anime','manga','comic','book','novel','magazine','newspaper','article','blog','video','game','gaming','console','pc','mobile','playstation','xbox','nintendo','steam','epic games','fortnite','minecraft','call of duty','league of legends','valorant','apex legends','overwatch','fifa','nba','madden','mlb','nfl','sports','football','basketball','baseball','soccer','tennis','golf','hockey','boxing','mma','wrestling','olympics','world cup','super bowl','world series','nba finals','stanley cup','grand slam','tour de france','marathon','triathlon','ironman','extreme sports','skateboarding','snowboarding','surfing','skiing','rock climbing','bungee jumping','skydiving','scuba diving','paragliding','hang gliding','zip lining','rafting','kayaking','canoeing','sailing','fishing','hunting','camping','hiking','backpacking','mountaineering','exploring','travel','vacation','holiday','trip','journey','adventure','tour','destination','resort','hotel','motel','airbnb','cruise','flight','train','bus','car','road trip','city','beach','mountain','forest','desert','island','country','continent','culture','language','food','architecture','history','art','museum','gallery','exhibit','sculpture','painting','photography','design','fashion','style','trend','shopping','mall','store','online','amazon','ebay','etsy','craft','diy','hobby','collection','antique','vintage','retro','modern','contemporary','classic','timeless','popular','trending','viral','meme','internet','social media','facebook','instagram','twitter','tiktok','snapchat','reddit','linkedin','youtube','whatsapp','messenger','zoom','skype','email','text','call','video chat','live stream','broadcast','podcast','radio','tv','television','show','series','episode','season','finale','premiere','trailer','preview','review','rating','critic','award','oscar','grammy','emmy','tony','golden globe','bafta','sag','mtv','billboard','top charts','bestseller','blockbuster','hit','flop','success','failure','comeback','debut','breakthrough','scandal','controversy','news','gossip','celebrity','famous','infamous','iconic','legendary','rising star','influencer','content creator','vlogger','blogger','streamer','gamer','athlete','artist','musician','actor','director','producer','writer','author','poet','journalist','photographer','designer','architect','chef','scientist','researcher','professor','teacher','coach','mentor','leader','entrepreneur','innovator','inventor','pioneer','visionary','revolutionary','game changer','trendsetter','role model','inspiration','hero','villain','protagonist','antagonist','character','story','plot','twist','ending','beginning','middle','climax','resolution','drama','comedy','tragedy','romance','thriller','horror','mystery','suspense','action','adventure','fantasy','sci-fi','documentary','biography','autobiography','memoir','fiction','nonfiction','poetry','prose','essay','article','column','review','critique','analysis','opinion','commentary','interview','profile','feature','investigative','journalism','broadcast','podcast','radio','television','film','video','photography','art','music','literature','theater','dance','performance','exhibition','festival','competition','contest','game','sport','recreation','leisure','entertainment','fun','enjoyment','relaxation','escape','inspiration','creativity','expression','communication','connection','community','culture','society','world','life','experience','memory','emotion','feeling','thought','idea','dream','hope','love','passion','joy','sadness','anger','fear','surprise','excitement','boredom','curiosity','wonder','awe','beauty','truth','goodness','meaning','purpose','value','importance','significance','relevance','impact','influence','power','strength','weakness','vulnerability','courage','fear','hope','despair','faith','doubt','certainty','uncertainty','knowledge','ignorance','wisdom','foolishness','intelligence','stupidity','genius','mediocrity','excellence','failure','success','victory','defeat','win','lose','draw','tie','competition','cooperation','teamwork','individuality','uniqueness','similarity','difference','diversity','unity','harmony','conflict','peace','war','love','hate','friendship','enmity','trust','betrayal','loyalty','disloyalty','honesty','dishonesty','truth','lies','reality','illusion','fact','fiction','certainty','doubt','clarity','confusion','order','chaos','structure','randomness','pattern','design','art','science','logic','emotion','reason','feeling','thought','action','inaction','movement','stillness','change','stability','growth','decay','birth','death','life','death','beginning','end','start','finish','create','destroy','build','break','make','unmake','give','take','receive','send','love','hate','help','hurt','heal','wound','protect','attack','defend','offend','support','oppose','agree','disagree','accept','reject','welcome','exclude','embrace','push away','choose','refuse','decide','hesitate','act','wait','move','stay','start','stop','continue','quit','try','give up','persist','surrender','fight','yield','compete','cooperate','lead','follow','organize','disorganize','plan','improvise','prepare','react','anticipate','surprise','expect','disappoint','promise','break','keep','forget','remember','learn','teach','grow','shrink','expand','contract','open','close','begin','end','start','finish'],
-            'responses': [
-                "Entertainment adds joy and relaxation to life! Whether you enjoy movies, music, games, or outdoor activities, make time for hobbies that recharge your spirit and spark creativity.",
-                "From movies and music to sports and gaming, entertainment offers endless ways to explore new worlds, connect with others, and express yourself. What brings you the most joy and relaxation?",
-                "Life needs balance between work and play. Entertainment isn't just fun - it's essential for mental health, stress relief, and maintaining perspective. Enjoy your favorite activities guilt-free!"
-            ]
-        },
-        'technology': {
-            'keywords': ['computer','laptop','desktop','pc','mac','windows','macos','linux','software','app','application','program','code','programming','developer','engineer','tech','technology','digital','online','internet','web','website','blog','social media','facebook','instagram','twitter','tiktok','youtube','netflix','streaming','download','upload','cloud','storage','data','database','server','network','wifi','bluetooth','usb','hdmi','monitor','screen','keyboard','mouse','trackpad','touchscreen','smartphone','iphone','android','samsung','google','apple','microsoft','amazon','tesla','spacex','ai','artificial intelligence','machine learning','robot','automation','iot','internet of things','smart home','virtual reality','vr','augmented reality','ar','metaverse','blockchain','cryptocurrency','bitcoin','ethereum','nft','gaming','esports','streaming','twitch','discord','slack','zoom','teams','office','productivity','email','calendar','notes','documents','spreadsheets','presentations','photos','videos','editing','graphic design','video editing','audio editing','music production','podcast','youtube','content creation','influencer','vlogger','blogger','streamer','gamer','tech support','it','help desk','cybersecurity','hacking','privacy','security','password','encryption','firewall','antivirus','malware','virus','phishing','scam','fraud','identity theft','backup','recovery','maintenance','update','upgrade','install','uninstall','troubleshooting','error','bug','glitch','crash','freeze','slow','fast','performance','speed','memory','ram','storage','ssd','hdd','cpu','gpu','processor','graphics','gaming','rendering','video editing','3d modeling','cad','design','architecture','engineering','science','research','data analysis','statistics','python','javascript','html','css','react','node','database','sql','nosql','mongodb','mysql','postgresql','api','rest','graphql','microservices','devops','agile','scrum','kanban','project management','github','git','version control','testing','debugging','documentation','tutorial','course','education','learning','certification','career','job','interview','resume','portfolio','freelance','remote work','work from home','office','startup','entrepreneur','innovation','disruption','future','trends','emerging tech','quantum computing','biotech','nanotechnology','renewable energy','solar','wind','electric','battery','sustainable','green tech','climate change','environment','conservation','recycling','waste','pollution','carbon footprint','eco','organic','natural','health','wellness','fitness','wearable','smartwatch','fitness tracker','health app','telemedicine','digital health','medical tech','research','development','innovation','patent','intellectual property','copyright','trademark','legal','regulation','policy','government','ethics','responsibility','accessibility','inclusion','diversity','equality','digital divide','literacy','skills','training','education','future of work','automation','jobs','economy','business','finance','banking','payments','fintech','cryptocurrency','bitcoin','blockchain','defi','nft','metaverse','virtual reality','augmented reality','mixed reality','extended reality','xr','spatial computing','hologram','projection','display','screen','resolution','4k','8k','hdr','dolby','surround sound','audio','headphones','speakers','microphone','camera','photography','videography','drone','gimbal','stabilizer','lighting','studio','production','broadcast','live','streaming','content','media','entertainment','gaming','esports','competitive','professional','casual','mobile','console','pc','vr','ar','mr','metaverse','social','community','networking','communication','collaboration','productivity','creativity','innovation','technology','future','progress','advancement','development','research','science','engineering','mathematics','physics','chemistry','biology','medicine','health','wellness','fitness','nutrition','mental health','psychology','sociology','anthropology','history','philosophy','art','music','literature','culture','society','world','universe','space','exploration','astronomy','astrology','spirituality','religion','belief','faith','doubt','certainty','uncertainty','knowledge','wisdom','understanding','learning','teaching','sharing','communication','connection','relationship','community','family','friends','love','hate','joy','sadness','anger','fear','hope','despair','life','death','meaning','purpose','value','importance','significance','relevance','impact','influence','power','control','freedom','choice','decision','action','inaction','responsibility','accountability','leadership','followership','teamwork','individuality','creativity','innovation','tradition','change','stability','growth','decline','success','failure','victory','defeat','win','lose','compete','cooperate','share','give','take','receive','send','connect','disconnect','join','leave','include','exclude','embrace','reject','accept','refuse','welcome','unwelcome','invite','decline','offer','request','ask','answer','question','solution','problem','challenge','opportunity','risk','reward','cost','benefit','advantage','disadvantage','pro','con','positive','negative','good','bad','right','wrong','true','false','real','fake','authentic','fake','genuine','artificial','natural','synthetic','organic','healthy','unhealthy','safe','dangerous','secure','insecure','private','public','personal','professional','work','leisure','business','pleasure','serious','fun','important','trivial','urgent','routine','emergency','normal','abnormal','typical','unusual','common','rare','frequent','occasional','always','never','sometimes','often','rarely','maybe','perhaps','possibly','probably','definitely','certainly','uncertainly','absolutely','relatively','comparatively','similarly','differently','equally','unequally','fairly','unfairly','justly','unjustly','honestly','dishonestly','truthfully','falsely','accurately','inaccurately','precisely','imprecisely','exactly','approximately','roughly','precisely','carefully','carelessly','thoughtfully','thoughtlessly','mindfully','mindlessly','consciously','unconsciously','deliberately','accidentally','intentionally','unintentionally','purposefully','randomly','systematically','chaotically','organized','disorganized','structured','unstructured','planned','unplanned','prepared','unprepared','ready','unready','able','unable','capable','incapable','skilled','unskilled','experienced','inexperienced','qualified','unqualified','professional','amateur','expert','novice','master','beginner','advanced','intermediate','basic','complex','simple','easy','difficult','hard','soft','rough','smooth','sharp','dull','bright','dark','light','heavy','big','small','large','tiny','huge','massive','enormous','gigantic','microscopic','minuscule','visible','invisible','clear','unclear','transparent','opaque','open','closed','available','unavailable','accessible','inaccessible','free','busy','occupied','vacant','empty','full','complete','incomplete','finished','unfinished','done','undone','started','stopped','continued','paused','resumed','cancelled','postponed','delayed','early','late','on time','ahead','behind','fast','slow','quick','gradual','sudden','immediate','eventual','temporary','permanent','short','long','brief','extended','limited','unlimited','finite','infinite','countable','uncountable','measurable','immeasurable','quantifiable','unquantifiable','significant','insignificant','meaningful','meaningless','important','unimportant','relevant','irrelevant','useful','useless','helpful','unhelpful','effective','ineffective','efficient','inefficient','productive','unproductive','successful','unsuccessful','possible','impossible','likely','unlikely','probable','improbable','certain','uncertain','sure','unsure','confident','insecure','optimistic','pessimistic','hopeful','hopeless','positive','negative','enthusiastic','apathetic','excited','bored','interested','disinterested','curious','indifferent','concerned','unconcerned','worried','calm','anxious','relaxed','tense','comfortable','uncomfortable','happy','unhappy','satisfied','dissatisfied','pleased','displeased','content','discontent','grateful','ungrateful','thankful','unthankful','appreciative','unappreciative','respectful','disrespectful','polite','impolite','kind','unkind','gentle','harsh','soft','hard','warm','cold','friendly','unfriendly','welcoming','unwelcoming','inviting','uninviting','hospitable','inhospitable','generous','stingy','giving','selfish','sharing','hoarding','open','closed','honest','dishonest','truthful','deceitful','loyal','disloyal','faithful','unfaithful','trustworthy','untrustworthy','reliable','unreliable','dependable','undependable','consistent','inconsistent','stable','unstable','steady','unsteady','balanced','unbalanced','centered','uncentered','focused','unfocused','attentive','inattentive','alert','drowsy','awake','asleep','energetic','tired','active','passive','dynamic','static','moving','still','progressive','regressive','forward','backward','upward','downward','inward','outward','toward','away','closer','farther','near','far','here','there','now','then','today','yesterday','tomorrow','past','present','future','before','after','during','while','until','since','when','where','why','how','what','who','which','whose','whom','this','that','these','those','it','they','we','you','I','me','my','your','his','her','its','our','their','myself','yourself','himself','herself','itself','ourselves','yourselves','themselves','someone','anyone','everyone','no one','somebody','anybody','everybody','nobody','something','anything','everything','nothing','somewhere','anywhere','everywhere','nowhere','sometime','anytime','everytime','never','always','often','sometimes','rarely','frequently','occasionally','regularly','occasionally','daily','weekly','monthly','yearly','annually','seasonally','periodically','occasionally','sporadically','randomly','systematically','methodically','carefully','carelessly','thoughtfully','thoughtlessly','mindfully','mindlessly','consciously','unconsciously','deliberately','accidentally','intentionally','unintentionally','purposefully','randomly','spontaneously','naturally','artificially','organically','synthetically','chemically','physically','mentally','emotionally','spiritually','intellectually','creatively','logically','rationally','irrationally','sensibly','foolishly','wisely','unwisely','intelligently','stupidly','brightly','dimly','clearly','unclearly','loudly','quietly','softly','harshly','gently','roughly','smoothly','quickly','slowly','rapidly','gradually','suddenly','immediately','eventually','finally','ultimately','initially','originally','previously','subsequently','consequently','therefore','however','nevertheless','nonetheless','moreover','furthermore','additionally','besides','also','too','either','neither','both','all','none','some','many','few','several','multiple','single','individual','collective','personal','public','private','secret','open','hidden','visible','invisible','obvious','subtle','clear','vague','specific','general','particular','universal','unique','common','rare','typical','unusual','normal','abnormal','standard','irregular','regular','irregular','consistent','inconsistent','uniform','diverse','homogeneous','heterogeneous','pure','mixed','clean','dirty','fresh','stale','new','old','young','ancient','modern','contemporary','traditional','conventional','unconventional','radical','conservative','liberal','moderate','extreme','intense','mild','strong','weak','powerful','powerless','influential','uninfluential','significant','insignificant','major','minor','primary','secondary','main','secondary','principal','subordinate','superior','inferior','higher','lower','upper','inner','outer','front','back','left','right','center','side','top','bottom','above','below','inside','outside','within','beyond','between','among','throughout','across','around','about','regarding','concerning','involving','including','excluding','except','besides','except for','aside from','instead of','rather than','more than','less than','greater than','smaller than','bigger than','tinyer than','larger than','higher than','lower than','better than','worse than','superior to','inferior to','equal to','same as','different from','similar to','like','unlike','as','than','so','too','very','quite','rather','somewhat','fairly','pretty','really','actually','literally','figuratively','essentially','basically','fundamentally','primarily','mainly','chiefly','principally','mostly','largely','generally','usually','typically','normally','commonly','ordinarily','regularly','frequently','often','sometimes','occasionally','rarely','seldom','hardly','scarcely','barely','merely','simply','just','only','even','still','yet','already','again','once','twice','three times','many times','several times','numerous times','countless times','endless times','infinite times','finite times','limited times','unlimited times','certain times','uncertain times','specific times','general times','particular times','special times','ordinary times','normal times','abnormal times','regular times','irregular times','scheduled times','unscheduled times','planned times','unplanned times','expected times','unexpected times','predicted times','surprising times','foreseen times','unforeseen times','anticipated times','unanticipated times','prepared times','unprepared times','ready times','unready times','suitable times','unsuitable times','appropriate times','inappropriate times','proper times','improper times','right times','wrong times','good times','bad times','best times','worst times','perfect times','imperfect times','ideal times','less than ideal times','optimal times','suboptimal times','favorable times','unfavorable times','advantageous times','disadvantageous times','beneficial times','harmful times','helpful times','unhelpful times','useful times','useless times','effective times','ineffective times','productive times','unproductive times','successful times','unsuccessful times','winning times','losing times','victorious times','defeated times','triumphant times','failed times','accomplished times','unaccomplished times','achieved times','unachieved times','completed times','incomplete times','finished times','unfinished times','done times','undone times','resolved times','unresolved times','settled times','unsettled times','decided times','undecided times','determined times','undetermined times','certain times','uncertain times','sure times','unsure times','confident times','insecure times','optimistic times','pessimistic times','hopeful times','hopeless times','positive times','negative times','upbeat times','downbeat times','enthusiastic times','apathetic times','excited times','bored times','interested times','disinterested times','curious times','indifferent times','concerned times','unconcerned times','worried times','calm times','anxious times','relaxed times','tense times','comfortable times','uncomfortable times','happy times','unhappy times','satisfied times','dissatisfied times','pleased times','displeased times','content times','discontent times','grateful times','ungrateful times','thankful times','unthankful times','appreciative times','unappreciative times','respectful times','disrespectful times','polite times','impolite times','kind times','unkind times','gentle times','harsh times','soft times','hard times','warm times','cold times','friendly times','unfriendly times','welcoming times','unwelcoming times','inviting times','uninviting times','hospitable times','inhospitable times','generous times','stingy times','giving times','selfish times','sharing times','hoarding times','open times','closed times','honest times','dishonest times','truthful times','deceitful times','loyal times','disloyal times','faithful times','unfaithful times','trustworthy times','untrustworthy times','reliable times','unreliable times','dependable times','undependable times','consistent times','inconsistent times','stable times','unstable times','steady times','unsteady times','balanced times','unbalanced times','centered times','uncentered times','focused times','unfocused times','attentive times','inattentive times','alert times','drowsy times','awake times','asleep times','energetic times','tired times','active times','passive times','dynamic times','static times','moving times','still times','progressive times','regressive times','forward times','backward times','upward times','downward times','inward times','outward times','toward times','away times','closer times','farther times','near times','far times','here times','there times','now times','then times','today times','yesterday times','tomorrow times','past times','present times','future times','before times','after times','during times','while times','until times','since times','when times','where times','why times','how times','what times','who times','which times','whose times','whom times','this times','that times','these times','those times','it times','they times','we times','you times','I times','me times','my times','your times','his times','her times','its times','our times','their times'],
-            'responses': [
-                "Technology shapes our world in incredible ways! From AI and smartphones to renewable energy and space exploration, innovation continues to transform how we live, work, and connect with each other.",
-                "The digital revolution has created endless possibilities for communication, creativity, and problem-solving. Stay curious about new technologies, but remember to balance screen time with real-world experiences.",
-                "Technology is a powerful tool that can enhance our lives when used thoughtfully. Whether you're into coding, gaming, or just staying connected, the digital world offers amazing opportunities for growth and connection!"
-            ]
-        },
-        'education': {
-            'keywords': ['school','college','university','education','learning','studying','teaching','student','teacher','professor','class','course','lesson','homework','assignment','project','exam','test','quiz','grade','degree','diploma','certificate','knowledge','skill','ability','talent','gift','intelligence','smart','clever','brilliant','genius','stupid','dumb','ignorant','uneducated','illiterate','literate','educated','trained','skilled','unskilled','experienced','inexperienced','qualified','unqualified','professional','amateur','expert','novice','master','beginner','advanced','intermediate','basic','fundamental','elementary','primary','secondary','higher','postgraduate','undergraduate','graduate','phd','masters','bachelors','associates','doctorate','research','thesis','dissertation','paper','article','journal','publication','book','textbook','notebook','library','study','reading','writing','mathematics','science','biology','chemistry','physics','astronomy','geology','psychology','sociology','anthropology','history','geography','economics','politics','philosophy','literature','art','music','drama','theater','dance','physical education','sports','athletics','competition','teamwork','leadership','discipline','motivation','inspiration','creativity','innovation','critical thinking','problem solving','analysis','synthesis','evaluation','application','implementation','practice','theory','concept','idea','principle','rule','law','formula','equation','calculation','computation','programming','coding','computer science','information technology','engineering','medicine','law','business','finance','accounting','marketing','management','administration','leadership','entrepreneurship','innovation','startup','venture','investment','capital','funding','grant','scholarship','financial aid','tuition','fees','cost','expense','budget','plan','schedule','deadline','timeline','curriculum','syllabus','program','major','minor','specialization','concentration','focus','interest','passion','career','profession','occupation','job','work','employment','unemployment','retirement','pension','benefits','salary','wage','income','earnings','profit','loss','success','failure','achievement','accomplishment','recognition','award','prize','honor','distinction','reputation','fame','celebrity','influence','impact','contribution','legacy','heritage','tradition','culture','society','community','world','global','international','foreign','language','translation','communication','presentation','speech','lecture','seminar','workshop','conference','meeting','discussion','debate','argument','perspective','viewpoint','opinion','belief','faith','doubt','certainty','uncertainty','question','answer','solution','problem','challenge','opportunity','risk','reward','benefit','advantage','disadvantage','pro','con','positive','negative','good','bad','right','wrong','true','false','fact','fiction','reality','illusion','dream','goal','ambition','aspiration','desire','want','need','requirement','necessity','luxury','comfort','convenience','difficulty','hardship','struggle','obstacle','barrier','limitation','constraint','freedom','choice','option','alternative','possibility','potential','capacity','capability','competence','incompetence','strength','weakness','power','powerlessness','control','chaos','order','disorder','structure','organization','system','method','technique','strategy','tactic','approach','style','way','manner','form','shape','pattern','design','plan','scheme','plot','story','narrative','tale','legend','myth','fable','parable','allegory','metaphor','symbol','sign','signal','message','meaning','interpretation','understanding','comprehension','misunderstanding','confusion','clarity','ambiguity','precision','accuracy','inaccuracy','correctness','incorrectness','truthfulness','falsehood','honesty','dishonesty','integrity','corruption','ethics','morality','values','principles','standards','expectations','requirements','qualifications','credentials','certifications','licenses','permits','authorizations','approvals','acceptances','rejections','admissions','enrollments','registrations','applications','submissions','proposals','offers','invitations','refusals','denials','acceptances','agreements','disagreements','contracts','promises','commitments','obligations','responsibilities','duties','tasks','chores','jobs','roles','positions','titles','ranks','levels','grades','scores','marks','points','percentages','statistics','data','information','knowledge','wisdom','experience','practice','training','development','growth','progress','improvement','decline','regression','advancement','promotion','demotion','rise','fall','increase','decrease','growth','shrinkage','expansion','contraction','development','underdevelopment','overdevelopment','sustainable','unsustainable','renewable','nonrenewable','natural','artificial','organic','synthetic','healthy','unhealthy','safe','dangerous','secure','insecure','stable','unstable','reliable','unreliable','dependable','undependable','consistent','inconsistent','regular','irregular','normal','abnormal','typical','unusual','common','rare','frequent','infrequent','often','seldom','sometimes','never','always','usually','generally','typically','normally','commonly','ordinarily','regularly','occasionally','rarely','hardly','scarcely','barely','merely','simply','just','only','even','still','yet','already','again','once','twice','three times','many times','several times','numerous times','countless times','endless times','infinite times','finite times','limited times','unlimited times','certain times','uncertain times','specific times','general times','particular times','special times','ordinary times','normal times','abnormal times','regular times','irregular times','scheduled times','unscheduled times','planned times','unplanned times','expected times','unexpected times','predicted times','surprising times','foreseen times','unforeseen times','anticipated times','unanticipated times','prepared times','unprepared times','ready times','unready times','suitable times','unsuitable times','appropriate times','inappropriate times','proper times','improper times','right times','wrong times','good times','bad times','best times','worst times','perfect times','imperfect times','ideal times','less than ideal times','optimal times','suboptimal times','favorable times','unfavorable times','advantageous times','disadvantageous times','beneficial times','harmful times','helpful times','unhelpful times','useful times','useless times','effective times','ineffective times','productive times','unproductive times','successful times','unsuccessful times','winning times','losing times','victorious times','defeated times','triumphant times','failed times','accomplished times','unaccomplished times','achieved times','unachieved times','completed times','incomplete times','finished times','unfinished times','done times','undone times','resolved times','unresolved times','settled times','unsettled times','decided times','undecided times','determined times','undetermined times','certain times','uncertain times','sure times','unsure times','confident times','insecure times','optimistic times','pessimistic times','hopeful times','hopeless times','positive times','negative times','upbeat times','downbeat times','enthusiastic times','apathetic times','excited times','bored times','interested times','disinterested times','curious times','indifferent times','concerned times','unconcerned times','worried times','calm times','anxious times','relaxed times','tense times','comfortable times','uncomfortable times','happy times','unhappy times','satisfied times','dissatisfied times','pleased times','displeased times','content times','discontent times','grateful times','ungrateful times','thankful times','unthankful times','appreciative times','unappreciative times','respectful times','disrespectful times','polite times','impolite times','kind times','unkind times','gentle times','harsh times','soft times','hard times','warm times','cold times','friendly times','unfriendly times','welcoming times','unwelcoming times','inviting times','uninviting times','hospitable times','inhospitable times','generous times','stingy times','giving times','selfish times','sharing times','hoarding times','open times','closed times','honest times','dishonest times','truthful times','deceitful times','loyal times','disloyal times','faithful times','unfaithful times','trustworthy times','untrustworthy times','reliable times','unreliable times','dependable times','undependable times','consistent times','inconsistent times','stable times','unstable times','steady times','unsteady times','balanced times','unbalanced times','centered times','uncentered times','focused times','unfocused times','attentive times','inattentive times','alert times','drowsy times','awake times','asleep times','energetic times','tired times','active times','passive times','dynamic times','static times','moving times','still times','progressive times','regressive times','forward times','backward times','upward times','downward times','inward times','outward times','toward times','away times','closer times','farther times','near times','far times','here times','there times','now times','then times','today times','yesterday times','tomorrow times','past times','present times','future times','before times','after times','during times','while times','until times','since times','when times','where times','why times','how times','what times','who times','which times','whose times','whom times','this times','that times','these times','those times','it times','they times','we times','you times','I times','me times','my times','your times','his times','her times','its times','our times','their times'],
-            'responses': [
-                "Education is a lifelong journey that opens doors to endless possibilities! Whether you're in school, learning online, or pursuing self-study, every bit of knowledge enriches your understanding of the world.",
-                "Learning comes in many forms - formal education, practical experience, and personal exploration. Stay curious, ask questions, and never stop growing. The more you learn, the more you discover how much there is to know!",
-                "Education empowers you to think critically, solve problems, and make informed decisions. It's not just about memorizing facts - it's about developing wisdom, creativity, and the ability to adapt to our changing world."
-            ]
-        },
-        'work': {
-            'keywords': ['work','job','career','profession','occupation','employment','unemployment','business','company','organization','office','workplace','colleague','coworker','boss','manager','supervisor','employee','staff','team','department','division','section','unit','branch','headquarters','corporate','industry','sector','market','economy','finance','money','salary','wage','income','earnings','pay','compensation','benefits','perks','bonus','commission','overtime','hours','schedule','shift','morning','afternoon','evening','night','full time','part time','temporary','permanent','contract','freelance','consultant','independent','self employed','entrepreneur','startup','small business','large corporation','multinational','global','local','regional','national','international','remote','work from home','telecommute','virtual','online','digital','technology','computer','software','hardware','internet','email','meeting','conference','call','video','presentation','report','document','file','data','information','analysis','research','development','innovation','creativity','design','marketing','sales','customer service','support','operations','production','manufacturing','logistics','supply chain','quality control','testing','inspection','maintenance','repair','installation','setup','configuration','training','education','learning','skill','ability','talent','experience','knowledge','expertise','specialization','certification','license','degree','diploma','qualification','credential','resume','cv','application','interview','hiring','firing','layoff','downsizing','rightsizing','expansion','growth','promotion','advancement','raise','increase','bonus','reward','recognition','achievement','performance','productivity','efficiency','effectiveness','success','failure','goal','target','objective','mission','vision','strategy','plan','project','task','assignment','responsibility','duty','role','position','title','rank','level','grade','status','hierarchy','structure','organization','management','leadership','supervision','guidance','direction','instruction','training','mentoring','coaching','feedback','evaluation','review','assessment','appraisal','criticism','praise','recognition','appreciation','respect','trust','communication','collaboration','teamwork','cooperation','coordination','synergy','partnership','alliance','network','connection','relationship','professional','personal','private','public','formal','informal','official','unofficial','written','verbal','spoken','unspoken','explicit','implicit','clear','unclear','direct','indirect','honest','dishonest','transparent','opaque','open','closed','accessible','inaccessible','available','unavailable','flexible','rigid','adaptable','stubborn','willing','unwilling','ready','unready','prepared','unprepared','confident','insecure','capable','incapable','competent','incompetent','skilled','unskilled','experienced','inexperienced','qualified','unqualified','certified','uncertified','licensed','unlicensed','authorized','unauthorized','permitted','forbidden','allowed','disallowed','approved','disapproved','accepted','rejected','included','excluded','invited','uninvited','welcome','unwelcome','wanted','unwanted','needed','unnecessary','required','optional','essential','nonessential','important','unimportant','urgent','nonurgent','critical','minor','major','primary','secondary','main','auxiliary','central','peripheral','core','surface','deep','shallow','complex','simple','easy','difficult','hard','soft','rough','smooth','clear','confusing','understandable','incomprehensible','logical','illogical','reasonable','unreasonable','practical','impractical','realistic','unrealistic','possible','impossible','achievable','unachievable','attainable','unattainable','reachable','unreachable','accessible','inaccessible','obtainable','unobtainable','available','unavailable','present','absent','here','there','now','then','today','yesterday','tomorrow','past','present','future','before','after','during','while','until','since','when','where','why','how','what','who','which','whose','whom','this','that','these','those','it','they','we','you','I','me','my','your','his','her','its','our','their','myself','yourself','himself','herself','itself','ourselves','yourselves','themselves','someone','anyone','everyone','no one','somebody','anybody','everybody','nobody','something','anything','everything','nothing','somewhere','anywhere','everywhere','nowhere','sometime','anytime','everytime','never','always','often','sometimes','rarely','frequently','occasionally','regularly','occasionally','daily','weekly','monthly','yearly','annually','seasonally','periodically','occasionally','sporadically','randomly','systematically','methodically','carefully','carelessly','thoughtfully','thoughtlessly','mindfully','mindlessly','consciously','unconsciously','deliberately','accidentally','intentionally','unintentionally','purposefully','randomly','spontaneously','naturally','artificially','organically','synthetically','chemically','physically','mentally','emotionally','spiritually','intellectually','creatively','logically','rationally','irrationally','sensibly','foolishly','wisely','unwisely','intelligently','stupidly','brightly','dimly','clearly','unclearly','loudly','quietly','softly','harshly','gently','roughly','smoothly','quickly','slowly','rapidly','gradually','suddenly','immediately','eventually','finally','ultimately','initially','originally','previously','subsequently','consequently','therefore','however','nevertheless','nonetheless','moreover','furthermore','additionally','besides','also','too','either','neither','both','all','none','some','many','few','several','multiple','single','individual','collective','personal','public','private','secret','open','hidden','visible','invisible','obvious','subtle','clear','vague','specific','general','particular','universal','unique','common','rare','typical','unusual','normal','abnormal','standard','irregular','regular','irregular','consistent','inconsistent','uniform','diverse','homogeneous','heterogeneous','pure','mixed','clean','dirty','fresh','stale','new','old','young','ancient','modern','contemporary','traditional','conventional','unconventional','radical','conservative','liberal','moderate','extreme','intense','mild','strong','weak','powerful','powerless','influential','uninfluential','significant','insignificant','major','minor','primary','secondary','main','secondary','principal','subordinate','superior','inferior','higher','lower','upper','inner','outer','front','back','left','right','center','side','top','bottom','above','below','inside','outside','within','beyond','between','among','throughout','across','around','about','regarding','concerning','involving','including','excluding','except','besides','except for','aside from','instead of','rather than','more than','less than','greater than','smaller than','bigger than','tinyer than','larger than','higher than','lower than','better than','worse than','superior to','inferior to','equal to','same as','different from','similar to','like','unlike','as','than','so','too','very','quite','rather','somewhat','fairly','pretty','really','actually','literally','figuratively','essentially','basically','fundamentally','primarily','mainly','chiefly','principally','mostly','largely','generally','usually','typically','normally','commonly','ordinarily','regularly','frequently','often','sometimes','occasionally','rarely','seldom','hardly','scarcely','barely','merely','simply','just','only','even','still','yet','already','again','once','twice','three times','many times','several times','numerous times','countless times','endless times','infinite times','finite times','limited times','unlimited times','certain times','uncertain times','specific times','general times','particular times','special times','ordinary times','normal times','abnormal times','regular times','irregular times','scheduled times','unscheduled times','planned times','unplanned times','expected times','unexpected times','predicted times','surprising times','foreseen times','unforeseen times','anticipated times','unanticipated times','prepared times','unprepared times','ready times','unready times','suitable times','unsuitable times','appropriate times','inappropriate times','proper times','improper times','right times','wrong times','good times','bad times','best times','worst times','perfect times','imperfect times','ideal times','less than ideal times','optimal times','suboptimal times','favorable times','unfavorable times','advantageous times','disadvantageous times','beneficial times','harmful times','helpful times','unhelpful times','useful times','useless times','effective times','ineffective times','productive times','unproductive times','successful times','unsuccessful times','winning times','losing times','victorious times','defeated times','triumphant times','failed times','accomplished times','unaccomplished times','achieved times','unachieved times','completed times','incomplete times','finished times','unfinished times','done times','undone times','resolved times','unresolved times','settled times','unsettled times','decided times','undecided times','determined times','undetermined times','certain times','uncertain times','sure times','unsure times','confident times','insecure times','optimistic times','pessimistic times','hopeful times','hopeless times','positive times','negative times','upbeat times','downbeat times','enthusiastic times','apathetic times','excited times','bored times','interested times','disinterested times','curious times','indifferent times','concerned times','unconcerned times','worried times','calm times','anxious times','relaxed times','tense times','comfortable times','uncomfortable times','happy times','unhappy times','satisfied times','dissatisfied times','pleased times','displeased times','content times','discontent times','grateful times','ungrateful times','thankful times','unthankful times','appreciative times','unappreciative times','respectful times','disrespectful times','polite times','impolite times','kind times','unkind times','gentle times','harsh times','soft times','hard times','warm times','cold times','friendly times','unfriendly times','welcoming times','unwelcoming times','inviting times','uninviting times','hospitable times','inhospitable times','generous times','stingy times','giving times','selfish times','sharing times','hoarding times','open times','closed times','honest times','dishonest times','truthful times','deceitful times','loyal times','disloyal times','faithful times','unfaithful times','trustworthy times','untrustworthy times','reliable times','unreliable times','dependable times','undependable times','consistent times','inconsistent times','stable times','unstable times','steady times','unsteady times','balanced times','unbalanced times','centered times','uncentered times','focused times','unfocused times','attentive times','inattentive times','alert times','drowsy times','awake times','asleep times','energetic times','tired times','active times','passive times','dynamic times','static times','moving times','still times','progressive times','regressive times','forward times','backward times','upward times','downward times','inward times','outward times','toward times','away times','closer times','farther times','near times','far times','here times','there times','now times','then times','today times','yesterday times','tomorrow times','past times','present times','future times','before times','after times','during times','while times','until times','since times','when times','where times','why times','how times','what times','who times','which times','whose times','whom times','this times','that times','these times','those times','it times','they times','we times','you times','I times','me times','my times','your times','his times','her times','its times','our times','their times'],
-            'responses': [
-                "Work provides purpose, structure, and opportunities for growth! Whether you're building a career, starting a business, or contributing to a team, your professional journey shapes who you become and what you can achieve.",
-                "The workplace is evolving with remote work, flexible schedules, and new technologies. Stay adaptable, keep learning, and find work that aligns with your values and strengths. Your career should fulfill you, not just pay the bills!",
-                "Professional success comes from continuous learning, strong relationships, and delivering value. Remember that work-life balance is essential - take care of yourself while pursuing your career goals!"
-            ]
-        },
-        'relationships': {
-            'keywords': ['relationship','love','romance','dating','marriage','wedding','divorce','breakup','heartbreak','crush','flirt','attraction','chemistry','connection','bond','intimacy','trust','commitment','loyalty','faithfulness','cheating','infidelity','betrayal','jealousy','insecurity','confidence','communication','conversation','talk','listen','understand','misunderstand','conflict','argument','fight','disagreement','compromise','solution','reconciliation','forgiveness','apology','sorry','forgive','forget','remember','memory','past','present','future','family','parents','mother','father','sister','brother','children','kids','son','daughter','grandparents','grandmother','grandfather','grandchildren','relatives','uncle','aunt','cousin','nephew','niece','in laws','mother in law','father in law','sister in law','brother in law','daughter in law','son in law','friends','friendship','best friend','close friend','childhood friend','school friend','work friend','neighbor','roommate','housemate','colleague','coworker','teammate','partner','boyfriend','girlfriend','husband','wife','fiancé','fiancée','significant other','soulmate','twin flame','companion','ally','supporter','confidant','mentor','coach','guide','teacher','student','protégé','apprentice','master','novice','beginner','expert','professional','amateur','casual','serious','long term','short term','temporary','permanent','exclusive','open','polyamorous','monogamous','single','dating','married','divorced','separated','widowed','engaged','committed','available','unavailable','looking','searching','waiting','hoping','dreaming','wishing','wanting','needing','desiring','craving','missing','longing','yearning','aching','hurting','healing','recovering','moving on','letting go','holding on','clinging','releasing','freeing','liberating','empowering','inspiring','motivating','encouraging','supporting','helping','caring','loving','liking','admiring','respecting','valuing','cherishing','treasuring','appreciating','grateful','thankful','blessed','lucky','fortunate','happy','joyful','excited','thrilled','ecstatic','blissful','content','satisfied','pleased','delighted','amused','entertained','interested','curious','intrigued','fascinated','captivated','enchanted','charmed','attracted','drawn','pulled','magnetized','mesmerized','hypnotized','spellbound','bewitched','enchanted','captivated','fascinated','intrigued','curious','interested','amused','entertained','pleased','delighted','satisfied','content','happy','joyful','thrilled','excited','ecstatic','blissful','grateful','thankful','blessed','lucky','fortunate','appreciative','cherishing','treasuring','valuing','respecting','admiring','liking','loving','caring','helping','supporting','encouraging','motivating','inspiring','empowering','liberating','freeing','releasing','letting go','moving on','recovering','healing','hurting','aching','longing','yearning','craving','desiring','needing','wanting','wishing','dreaming','hoping','waiting','searching','looking','unavailable','available','committed','uncommitted','open','exclusive','polyamorous','monogamous','married','single','divorced','separated','widowed','engaged','dating','short term','long term','permanent','temporary','serious','casual','amateur','professional','expert','novice','beginner','master','apprentice','protégé','student','teacher','guide','coach','mentor','confidant','supporter','ally','companion','soulmate','twin flame','significant other','husband','wife','boyfriend','girlfriend','partner','teammate','coworker','colleague','roommate','housemate','neighbor','work friend','school friend','childhood friend','close friend','best friend','friends','niece','nephew','cousin','aunt','uncle','grandchildren','grandfather','grandmother','grandparents','daughter','son','kids','children','father','mother','parents','family','future','present','past','memory','remember','forget','forgive','sorry','apology','forgiveness','reconciliation','solution','compromise','disagreement','fight','argument','conflict','misunderstand','understand','listen','talk','conversation','communication','commitment','trust','intimacy','bond','connection','chemistry','attraction','flirt','crush','heartbreak','breakup','divorce','wedding','marriage','dating','romance','love','relationship'],
-            'responses': [
-                "Relationships are among life's most meaningful experiences! Whether romantic, familial, or friendship, healthy connections require trust, communication, and mutual respect. Nurture the relationships that bring you joy and growth.",
-                "Love and friendship enrich our lives in countless ways. Be authentic, communicate openly, and remember that strong relationships are built on mutual understanding, shared values, and the courage to be vulnerable with each other.",
-                "Every relationship teaches us something about ourselves and others. Whether you're building new connections or healing from past ones, approach relationships with honesty, compassion, and the willingness to grow together."
-            ]
-        },
-        'finance': {
-            'keywords': ['money','cash','currency','dollar','rupee','euro','pound','yen','yuan','bitcoin','cryptocurrency','crypto','blockchain','investment','trading','stocks','shares','bonds','mutual funds','etf','index fund','retirement','401k','ira','pension','social security','income','salary','wage','earnings','pay','compensation','bonus','commission','tips','gratuity','profit','loss','gain','return','interest','dividend','capital','assets','liabilities','net worth','wealth','rich','poor','broke','budget','budgeting','saving','spending','frugal','thrifty','expensive','cheap','cost','price','value','worth','afford','expensive','inexpensive','reasonable','unreasonable','fair','unfair','deal','bargain','discount','sale','offer','promotion','coupon','voucher','rebate','cashback','reward','points','miles','credit','debit','card','visa','mastercard','amex','discover','bank','banking','account','checking','savings','loan','mortgage','car loan','student loan','personal loan','business loan','credit card','debt','debt consolidation','bankruptcy','foreclosure','repossession','credit score','fico','credit report','credit history','credit bureau','experian','transunion','equifax','interest rate','apr','fixed rate','variable rate','compound interest','simple interest','inflation','deflation','recession','depression','bull market','bear market','stock market','wall street','nasdaq','nyse','dow jones','s&p 500','index','commodity','gold','silver','oil','gas','energy','agriculture','real estate','property','home','house','apartment','condo','rent','mortgage','refinance','home equity','heloc','insurance','health insurance','life insurance','car insurance','home insurance','renters insurance','disability insurance','long term care','premium','deductible','copay','coverage','claim','policy','agent','broker','financial advisor','planner','cpa','accountant','bookkeeper','tax','taxes','income tax','property tax','sales tax','capital gains tax','estate tax','gift tax','tax return','refund','audit','irs','tax preparation','tax software','turbotax','h&r block','financial planning','retirement planning','estate planning','wealth management','investment strategy','risk tolerance','diversification','portfolio','asset allocation','rebalancing','dollar cost averaging','lump sum','market timing','technical analysis','fundamental analysis','day trading','swing trading','position trading','long term','short term','buy and hold','value investing','growth investing','dividend investing','income investing','speculation','gambling','lottery','casino','sports betting','poker','blackjack','roulette','slots','betting','wagering','odds','probability','risk','reward','return on investment','roi','rate of return','annual return','monthly return','daily return','volatility','standard deviation','beta','alpha','sharpe ratio','expense ratio','management fee','load','no load','front end load','back end load','12b-1 fee','expense ratio','management fee','performance fee','carried interest','hedge fund','private equity','venture capital','angel investor','startup','ipo','initial public offering','secondary offering','stock split','reverse split','dividend','yield','ex dividend date','record date','payable date','market cap','market capitalization','p/e ratio','price to earnings','p/b ratio','price to book','p/s ratio','price to sales','peg ratio','price earnings growth','eps','earnings per share','revenue','sales','profit margin','gross margin','net margin','operating margin','ebitda','earnings before interest taxes depreciation amortization','free cash flow','operating cash flow','capital expenditure','capex','working capital','current ratio','quick ratio','debt to equity','debt to assets','return on equity','return on assets','return on invested capital','economic value added','market value added','book value','tangible book value','intangible assets','goodwill','patents','trademarks','copyrights','intellectual property','brand value','customer loyalty','market share','competitive advantage','moat','barrier to entry','economies of scale','network effects','switching costs','customer acquisition cost','lifetime value','churn','retention','growth','expansion','merger','acquisition','takeover','hostile takeover','friendly takeover','leveraged buyout','management buyout','employee stock ownership plan','esop','stock options','restricted stock units','rsu','employee stock purchase plan','espp','401k','403b','457','thrift savings plan','tsb','roth ira','traditional ira','sep ira','simple ira','health savings account','hsa','flexible spending account','fsa','dependent care','dcaf','transportation','commuting','mileage','reimbursement','per diem','expense report','business expense','tax deduction','tax credit','tax shelter','tax haven','offshore','international','global','emerging markets','developed markets','frontier markets','currency exchange','forex','foreign exchange','exchange rate','currency pair','pip','spread','leverage','margin','call','put','option','derivative','future','forward','swap','commodity futures','financial futures','index futures','currency futures','interest rate futures','bond futures','stock futures','etf','exchange traded fund','mutual fund','hedge fund','private equity fund','venture capital fund','real estate investment trust','reit','master limited partnership','mlp','business development company','bdc','closed end fund','cef','unit investment trust','uit','annuity','fixed annuity','variable annuity','indexed annuity','immediate annuity','deferred annuity','surrender charge','death benefit','living benefit','guaranteed minimum withdrawal benefit','gmwb','guaranteed minimum income benefit','gmib','guaranteed minimum accumulation benefit','gmab','longevity insurance','longevity risk','mortality risk','longevity bond','mortality bond','cat bond','catastrophe bond','insurance linked security','ils','weather derivative','carbon credit','emission trading','cap and trade','carbon tax','green investing','esg','environmental social governance','socially responsible investing','sri','impact investing','sustainable investing','green bonds','climate bonds','blue bonds','social bonds','development bonds','municipal bonds','treasury bonds','corporate bonds','junk bonds','high yield','investment grade','aaa','aa','a','bbb','bb','b','ccc','cc','c','d','default','recovery','recovery rate','loss given default','probability of default','credit rating','moody\'s','s&p','fitch','dbrs','credit watch','outlook','stable','positive','negative','developing','upgrade','downgrade','sovereign debt','government debt','municipal debt','corporate debt','consumer debt','credit card debt','auto loan debt','student loan debt','mortgage debt','home equity debt','personal loan debt','business debt','commercial debt','industrial debt','financial debt','bank debt','insurance debt','pension debt','retirement debt','healthcare debt','education debt','infrastructure debt','energy debt','technology debt','telecommunications debt','utilities debt','real estate debt','consumer discretionary debt','consumer staples debt','industrial debt','materials debt','healthcare debt','financials debt','information technology debt','communication services debt','energy debt','utilities debt','real estate debt','sector','industry','market','economy','gdp','gross domestic product','gnp','gross national product','ndp','net domestic product','nnp','net national product','per capita','inflation','cpi','consumer price index','ppi','producer price index','core inflation','headline inflation','wage inflation','asset price inflation','housing inflation','food inflation','energy inflation','monetary policy','federal reserve','fed','interest rates','federal funds rate','discount rate','prime rate','libor','london interbank offered rate','euribor','euro interbank offered rate','sofr','secured overnight financing rate','treasury yield','10 year treasury','2 year treasury','30 year treasury','yield curve','inverted yield curve','steep yield curve','flat yield curve','normal yield curve','recession indicator','leading indicator','lagging indicator','coincident indicator','economic indicator','unemployment','unemployment rate','labor force','participation rate','job growth','job creation','job losses','layoffs','furlough','unemployment benefits','stimulus','fiscal policy','tax policy','government spending','deficit','surplus','national debt','debt ceiling','budget','appropriations','entitlement','social security','medicare','medicaid','affordable care act','obamacare','health insurance','healthcare','medical expenses','prescription drugs','doctor','hospital','clinic','urgent care','emergency room','copay','deductible','premium','out of pocket','maximum out of pocket','in network','out of network','pre authorization','referral','specialist','primary care','physician','nurse','medical assistant','healthcare provider','insurance company','payer','provider','patient','claim','reimbursement','explanation of benefits','eob','health savings account','flexible spending account','health reimbursement arrangement',' hra','wellness program','preventive care','screening','vaccination','immunization','checkup','physical','annual','biometric','blood pressure','cholesterol','glucose','diabetes','heart disease','cancer','obesity','overweight','bmi','body mass index','exercise','fitness','nutrition','diet','weight loss','weight gain','muscle','fat','protein','carbohydrates','fat','calories','metabolism','basal metabolic rate','bmr','total daily energy expenditure','tdee','macro','micro','vitamins','minerals','supplements','multivitamin','vitamin d','vitamin c','vitamin b12','iron','calcium','magnesium','zinc','omega','fish oil','probiotics','prebiotics','fiber','protein powder','creatine','beta alanine','caffeine','pre workout','post workout','recovery','sleep','stress','mental health','depression','anxiety','therapy','counseling','meditation','mindfulness','yoga','pilates','stretching','cardio','strength training','resistance training','weightlifting','bodybuilding','crossfit','hiit','high intensity interval training','steady state','low intensity','moderate intensity','vigorous intensity','heart rate','target heart rate','maximum heart rate','resting heart rate','vo2 max','aerobic','anaerobic','flexibility','mobility','balance','coordination','agility','speed','power','endurance','stamina','performance','recovery','rest','active recovery','passive recovery','sleep','napping','circadian rhythm','sleep cycle','rem sleep','deep sleep','light sleep','sleep quality','sleep duration','sleep hygiene','sleep environment','dark room','cool temperature','quiet','no screens','blue light','melatonin','sleep aid','cpap','sleep apnea','insomnia','restless leg syndrome','narcolepsy','sleepwalking','sleep talking','bruxism','nightmare','night terror','sleep paralysis','jet lag','shift work','circadian rhythm disorder','delayed sleep phase syndrome','advanced sleep phase syndrome','non 24 hour sleep wake disorder','irregular sleep wake rhythm','free running','blind','sighted','light therapy','dark therapy','chronotherapy','sleep restriction','stimulus control','relaxation techniques','progressive muscle relaxation','deep breathing','meditation','mindfulness','guided imagery','biofeedback','cognitive behavioral therapy','cbt','sleep hygiene','sleep schedule','bedtime routine','wake time','consistency','weekdays','weekends','vacation','travel','time zone','jet lag','melatonin','supplement','herbal','natural','alternative','complementary','integrative','holistic','wellness','health','preventive','medicine','doctor','physician','primary care','specialist','surgeon','anesthesiologist','radiologist','pathologist','oncologist','cardiologist','neurologist','endocrinologist','gastroenterologist','pulmonologist','nephrologist','urologist','orthopedic','rheumatologist','immunologist','allergist','infectious disease','critical care','emergency medicine','sports medicine','preventive medicine','occupational health','public health','epidemiology','clinical research','medical trial','study','experiment','diagnosis','prognosis','treatment','therapy','rehabilitation','recovery','healing','cure','remission','relapse','chronic','acute','symptoms','signs','diagnostic','test','lab work','blood test','urine test','x-ray','mri','ct scan','ultrasound','ecg','ekg','eeg','stress test','colonoscopy','endoscopy','biopsy','screening','checkup','annual','physical','vaccination','immunization','vaccine','shot','injection','iv','infusion','transfusion','surgery','operation','procedure','transplant','dialysis','chemotherapy','radiation','palliative','hospice','home health','telemedicine','virtual visit','online consultation','second opinion','referral','prior authorization','insurance','coverage','copay','deductible','premium','healthcare','cost','expensive','affordable','free','low cost','high cost','budget','financial','planning','saving','investing','retirement','estate','tax','legal','document','will','trust','power of attorney','healthcare proxy','living will','advance directive','medical decision','end of life','life support','dnr','do not resuscitate','dnr order','polst','physician orders for life sustaining treatment','living will','healthcare proxy','power of attorney','estate planning','probate','inheritance','beneficiary','executor','trustee','guardian','conservator','minor','child','elder','senior','disability','incapacity','competence','capacity','guardianship','conservatorship','court','legal','attorney','lawyer','paralegal','notary','document','contract','agreement','settlement','lawsuit','litigation','dispute','resolution','mediation','arbitration','negotiation','settlement','compromise','agreement','contract','binding','enforceable','legal','binding','signature','notarized','witness','jurisdiction','federal','state','local','municipal','county','city','town','village','community','neighborhood','district','region','area','zone','territory','country','nation','international','global','world','earth','planet','environment','climate','weather','temperature','rain','snow','wind','storm','hurricane','tornado','earthquake','flood','fire','natural disaster','emergency','crisis','catastrophe','disaster','recovery','relief','aid','assistance','help','support','donation','charity','nonprofit','organization','foundation','trust','endowment','scholarship','grant','fellowship','award','prize','recognition','honor','achievement','accomplishment','success','failure','victory','defeat','win','lose','competition','contest','game','sport','athletics','fitness','exercise','health','wellness','nutrition','diet','weight','loss','gain','muscle','fat','protein','carbs','calories','metabolism','energy','performance','endurance','strength','flexibility','balance','coordination','agility','speed','power','skill','technique','form','posture','breathing','heart rate','cardio','aerobic','anaerobic','resistance','training','workout','session','class','program','routine','schedule','plan','goal','target','objective','purpose','mission','vision','strategy','tactic','approach','method','technique','system','process','procedure','protocol','standard','guideline','rule','regulation','policy','procedure','practice','habit','routine','lifestyle','choice','decision','action','behavior','attitude','mindset','perspective','viewpoint','opinion','belief','faith','doubt','certainty','uncertainty','confidence','insecurity','optimism','pessimism','hope','despair','joy','sadness','anger','fear','love','hate','peace','war','harmony','conflict','balance','imbalance','stability','instability','order','chaos','structure','disorganization','organization','system','network','connection','relationship','communication','conversation','discussion','dialogue','exchange','sharing','giving','receiving','taking','offering','accepting','rejecting','welcoming','excluding','including','embracing','pushing away','choosing','refusing','deciding','hesitating','acting','waiting','moving','staying','starting','stopping','continuing','quitting','trying','giving up','persisting','surrendering','fighting','yielding','competing','cooperating','leading','following','organizing','disorganizing','planning','improvising','preparing','reacting','anticipating','surprising','expecting','disappointing','promising','breaking','keeping','forgetting','remembering','learning','teaching','growing','shrinking','expanding','contracting','opening','closing','beginning','ending','starting','finishing','creating','destroying','building','breaking','making','unmaking','giving','taking','receiving','sending','loving','hating','helping','hurting','healing','wounding','protecting','attacking','defending','offending','supporting','opposing','agreeing','disagreeing','accepting','rejecting','welcoming','excluding','embracing','rejecting','choosing','refusing','deciding','hesitating','acting','waiting','moving','staying','starting','stopping','continuing','quitting','trying','giving up','persisting','surrendering','fighting','yielding','competing','cooperating','leading','following','organizing','disorganizing','planning','improvising','preparing','reacting','anticipating','surprising','expecting','disappointing','promising','breaking','keeping','forgetting','remembering','learning','teaching','growing','shrinking','expanding','contracting','opening','closing','beginning','ending','starting','finishing'],
-            'responses': [
-                "Financial wellness is about making informed decisions with your money! Create a budget, save regularly, invest wisely, and remember that financial freedom comes from consistent habits and smart choices over time.",
-                "Money management skills are essential for life's goals. Whether you're saving for a home, investing for retirement, or just trying to make ends meet, financial literacy empowers you to build the future you want.",
-                "Remember that wealth isn't just about accumulation - it's about using financial resources to create security, opportunities, and the freedom to pursue what matters most to you in life."
-            ]
-        },
-        'travel': {
-            'keywords': ['travel','trip','journey','vacation','holiday','getaway','escape','adventure','explore','discover','experience','destination','place','location','city','town','village','country','nation','state','province','region','area','zone','territory','continent','island','beach','mountain','forest','desert','jungle','ocean','sea','lake','river','waterfall','canyon','valley','plain','plateau','hill','peak','summit','volcano','glacier','cave','cavern','grotto','park','reserve','sanctuary','wildlife','nature','outdoors','camping','hiking','trekking','backpacking','climbing','mountaineering','skiing','snowboarding','surfing','swimming','diving','snorkeling','fishing','boating','sailing','kayaking','rafting','canoeing','cruise','flight','airplane','airport','airline','ticket','booking','reservation','hotel','motel','resort','hostel','bnb','airbnb','rental','car','vehicle','transportation','bus','train','subway','metro','taxi','uber','lyft','rideshare','map','directions','gps','navigation','route','itinerary','schedule','plan','packing','luggage','suitcase','backpack','passport','visa','immigration','customs','border','security','checkpoint','departure','arrival','gate','terminal','layover','connection','delay','cancellation','refund','insurance','coverage','emergency','medical','health','safety','precaution','warning','advisory','weather','climate','season','summer','winter','spring','fall','autumn','temperature','rain','snow','wind','storm','hurricane','tornado','earthquake','flood','fire','natural disaster','local','culture','tradition','custom','language','food','cuisine','restaurant','cafe','bar','pub','nightlife','entertainment','show','concert','festival','celebration','event','activity','attraction','landmark','monument','museum','gallery','theater','cinema','shopping','souvenir','gift','memory','photo','picture','video','camera','phone','social media','internet','wifi','connection','battery','charger','adapter','converter','outlet','voltage','currency','exchange','money','cash','credit','card','tip','budget','cost','price','expense','affordable','expensive','cheap','free','discount','deal','bargain','sale','offer','promotion','package','all inclusive','guided','tour','group','solo','family','couple','friends','business','leisure','luxury','budget','backpacker','flashpacking','digital nomad','remote work','workation','staycation','day trip','weekend','week','month','year','short','long','distance','nearby','local','international','domestic','abroad','overseas','foreign','exotic','familiar','new','return','repeat','first','last','next','previous','future','past','present','experience','adventure','journey','voyage','expedition','mission','quest','pilgrimage','retreat','escape','hideaway','sanctuary','paradise','heaven','haven','oasis','utopia','dream','fantasy','reality','imagination','inspiration','motivation','excitement','thrill','rush','adrenaline','calm','peace','relaxation','rest','rejuvenation','renewal','refreshment','revitalization','transformation','change','growth','learning','education','discovery','exploration','wonder','awe','beauty','magnificence','splendor','grandeur','majesty','spectacular','amazing','incredible','unbelievable','fantastic','wonderful','excellent','outstanding','superb','magnificent','gorgeous','beautiful','lovely','charming','delightful','pleasant','enjoyable','fun','exciting','interesting','fascinating','intriguing','captivating','mesmerizing','breathtaking','stunning','impressive','remarkable','notable','significant','important','memorable','unforgettable','cherished','treasured','precious','valuable','worthwhile','rewarding','fulfilling','satisfying','pleasing','delightful','charming','appealing','attractive','inviting','welcoming','hospitable','friendly','warm','cozy','comfortable','luxurious','elegant','sophisticated','stylish','fashionable','trendy','modern','contemporary','historic','ancient','old','new','traditional','classic','timeless','vintage','retro','quaint','picturesque','scenic','beautiful','stunning','breathtaking','spectacular','amazing','incredible','unforgettable','memorable','remarkable','extraordinary','special','unique','one of a kind','rare','uncommon','unusual','different','distinct','individual','personal','private','public','open','closed','accessible','inaccessible','available','unavailable','popular','famous','well known','renowned','celebrated','acclaimed','award winning','five star','four star','three star','two star','one star','luxury','deluxe','premium','standard','basic','economy','budget','affordable','cheap','inexpensive','costly','expensive','pricey','high end','low end','upscale','downscale','formal','informal','casual','dressy','elegant','simple','complex','easy','difficult','challenging','demanding','relaxing','peaceful','quiet','loud','noisy','busy','crowded','empty','deserted','populated','sparsely populated','densely populated','urban','rural','suburban','metropolitan','cosmopolitan','provincial','local','regional','national','international','global','worldwide','world class','international','foreign','domestic','home','away','far','near','close','distant','remote','isolated','connected','accessible','reachable','unreachable','hidden','secret','mysterious','unknown','familiar','well known','obscure','forgotten','remembered','celebrated','ignored','overlooked','neglected','abandoned','deserted','inhabited','uninhabited','populated','empty','full','vacant','occupied','available','booked','reserved','taken','free','open','closed','operating','closed','out of business','under construction','renovated','restored','preserved','protected','endangered','threatened','safe','dangerous','risky','secure','stable','unstable','changing','constant','temporary','permanent','short term','long term','seasonal','year round','limited','unlimited','restricted','unrestricted','exclusive','inclusive','private','public','commercial','residential','industrial','agricultural','natural','man made','artificial','synthetic','organic','eco friendly','sustainable','green','clean','polluted','pristine','untouched','unspoiled','developed','undeveloped','modern','ancient','contemporary','historic','traditional','cultural','natural','architectural','artistic','scientific','educational','recreational','entertaining','inspiring','educational','informative','interesting','boring','exciting','dull','thrilling','peaceful','chaotic','orderly','disorganized','clean','dirty','tidy','messy','organized','cluttered','spacious','cramped','roomy','tight','comfortable','uncomfortable','welcoming','unwelcoming','friendly','unfriendly','hospitable','inhospitable','warm','cold','hot','cool','mild','severe','extreme','moderate','gentle','harsh','soft','hard','smooth','rough','even','uneven','flat','hilly','mountainous','flat','rolling','steep','gradual','sharp','rounded','straight','curved','winding','straight','direct','indirect','short','long','wide','narrow','deep','shallow','high','low','tall','short','big','small','large','tiny','huge','massive','enormous','gigantic','microscopic','minuscule','visible','invisible','clear','unclear','transparent','opaque','bright','dark','light','heavy','strong','weak','powerful','powerless','loud','quiet','noisy','silent','fast','slow','quick','gradual','rapid','sudden','immediate','eventual','final','initial','first','last','beginning','end','start','finish','middle','center','edge','border','boundary','limit','frontier','horizon','skyline','landscape','scenery','view','vista','panorama','outlook','perspective','sight','vision','glimpse','peek','glance','look','stare','gaze','watch','observe','notice','see','spot','find','discover','explore','investigate','examine','inspect','study','research','learn','understand','comprehend','grasp','master','know','experience','feel','sense','perceive','detect','recognize','identify','distinguish','differentiate','compare','contrast','analyze','evaluate','assess','judge','consider','think','reflect','contemplate','meditate','ponder','wonder','marvel','admire','appreciate','enjoy','savor','relish','delight','thrill','excite','inspire','motivate','encourage','uplift','energize','refresh','renew','restore','revitalize','rejuvenate','heal','comfort','soothe','calm','relax','rest','sleep','dream','imagine','create','build','make','do','accomplish','achieve','succeed','fail','try','attempt','effort','work','play','live','exist','be','become','change','transform','evolve','develop','grow','progress','advance','improve','enhance','upgrade','downgrade','expand','contract','increase','decrease','rise','fall','grow','shrink','flourish','wither','thrive','struggle','survive','endure','persist','continue','stop','start','begin','end','finish','complete','incomplete','whole','partial','full','empty','rich','poor','happy','sad','good','bad','right','wrong','true','false','real','fake','genuine','artificial','natural','synthetic','organic','healthy','unhealthy','safe','dangerous','secure','insecure','stable','unstable','reliable','unreliable','dependable','undependable','consistent','inconsistent','regular','irregular','normal','abnormal','typical','unusual','common','rare','frequent','infrequent','often','seldom','sometimes','never','always','usually','generally','typically','normally','commonly','ordinarily','regularly','occasionally','rarely','hardly','scarcely','barely','merely','simply','just','only','even','still','yet','already','again','once','twice','three times','many times','several times','numerous times','countless times','endless times','infinite times','finite times','limited times','unlimited times','certain times','uncertain times','specific times','general times','particular times','special times','ordinary times','normal times','abnormal times','regular times','irregular times','scheduled times','unscheduled times','planned times','unplanned times','expected times','unexpected times','predicted times','surprising times','foreseen times','unforeseen times','anticipated times','unanticipated times','prepared times','unprepared times','ready times','unready times','suitable times','unsuitable times','appropriate times','inappropriate times','proper times','improper times','right times','wrong times','good times','bad times','best times','worst times','perfect times','imperfect times','ideal times','less than ideal times','optimal times','suboptimal times','favorable times','unfavorable times','advantageous times','disadvantageous times','beneficial times','harmful times','helpful times','unhelpful times','useful times','useless times','effective times','ineffective times','productive times','unproductive times','successful times','unsuccessful times','winning times','losing times','victorious times','defeated times','triumphant times','failed times','accomplished times','unaccomplished times','achieved times','unachieved times','completed times','incomplete times','finished times','unfinished times','done times','undone times','resolved times','unresolved times','settled times','unsettled times','decided times','undecided times','determined times','undetermined times','certain times','uncertain times','sure times','unsure times','confident times','insecure times','optimistic times','pessimistic times','hopeful times','hopeless times','positive times','negative times','upbeat times','downbeat times','enthusiastic times','apathetic times','excited times','bored times','interested times','disinterested times','curious times','indifferent times','concerned times','unconcerned times','worried times','calm times','anxious times','relaxed times','tense times','comfortable times','uncomfortable times','happy times','unhappy times','satisfied times','dissatisfied times','pleased times','displeased times','content times','discontent times','grateful times','ungrateful times','thankful times','unthankful times','appreciative times','unappreciative times','respectful times','disrespectful times','polite times','impolite times','kind times','unkind times','gentle times','harsh times','soft times','hard times','warm times','cold times','friendly times','unfriendly times','welcoming times','unwelcoming times','inviting times','uninviting times','hospitable times','inhospitable times','generous times','stingy times','giving times','selfish times','sharing times','hoarding times','open times','closed times','honest times','dishonest times','truthful times','deceitful times','loyal times','disloyal times','faithful times','unfaithful times','trustworthy times','untrustworthy times','reliable times','unreliable times','dependable times','undependable times','consistent times','inconsistent times','stable times','unstable times','steady times','unsteady times','balanced times','unbalanced times','centered times','uncentered times','focused times','unfocused times','attentive times','inattentive times','alert times','drowsy times','awake times','asleep times','energetic times','tired times','active times','passive times','dynamic times','static times','moving times','still times','progressive times','regressive times','forward times','backward times','upward times','downward times','inward times','outward times','toward times','away times','closer times','farther times','near times','far times','here times','there times','now times','then times','today times','yesterday times','tomorrow times','past times','present times','future times','before times','after times','during times','while times','until times','since times','when times','where times','why times','how times','what times','who times','which times','whose times','whom times','this times','that times','these times','those times','it times','they times','we times','you times','I times','me times','my times','your times','his times','her times','its times','our times','their times'],
-            'responses': [
-                "Travel opens your mind and heart to new perspectives! Whether you're exploring distant lands or discovering hidden gems nearby, every journey teaches you something about the world and yourself.",
-                "The world is full of incredible destinations waiting to be discovered. From bustling cities to quiet villages, from majestic mountains to pristine beaches, each place offers unique experiences and memories to cherish.",
-                "Travel isn't just about seeing new places - it's about experiencing different cultures, trying new foods, meeting interesting people, and growing as a person. Every trip, whether near or far, enriches your life story!"
+    def __init__(self):
+        self.user_name = "Guest"  # Will be updated based on conversation
+        self.conversation_context = []
+        self.weather_cache = {}
+        self.system_info_cache = None
+        self.last_system_update = 0
+        self.personalization_data = {}
+        
+        # Initialize knowledge base
+        self.knowledge_base = self._initialize_knowledge_base()
+        
+        # Response patterns for natural conversation
+        self.response_patterns = {
+            'greetings': [
+                "नमस्ते {name}! मैं VANIE हूँ, आपकी AI assistant! कैसे मदद कर सकती हूँ? 😊",
+                "Hello {name}! I'm VANIE, how can I assist you today? 🤖",
+                "Hi {name}! VANIE at your service! What can I do for you? ✨"
+            ],
+            'time_responses': [
+                "अभी समय है {time}, {date} को 🕐",
+                "Current time is {time}, on {date} ⏰",
+                "Right now it's {time}, {date} 📅"
+            ],
+            'weather_responses': [
+                "आज का मौसम: {weather} 🌡️",
+                "Today's weather: {weather} 🌤️",
+                "Weather report: {weather} ☁️"
             ]
         }
-    }
-
-    for category in keyword_categories.values():
-        for keyword in category['keywords']:
-            if keyword in msg:
-                return random.choice(category['responses'])
-
-    # small talk / fallback
-    if 'joke' in msg or 'tell me a joke' in msg:
-        return "Why don't scientists trust atoms? Because they make up everything! 😂"
-    if 'weather' in msg:
-        return "I can't check live weather here, but I hope it's sunny where you are!"
     
-    return "Sorry — I don't understand that yet. Try asking about health metrics, tips, or type 'help'."
+    def _initialize_knowledge_base(self) -> Dict[str, Any]:
+        """Initialize comprehensive knowledge base"""
+        return {
+            'vanie_info': {
+                'full_form': "Virtual Assistant of Neural Integrated Engine",
+                'creator': "Ayush Harinkhede",
+                'version': "2.0",
+                'capabilities': [
+                    "Real-time Information",
+                    "System Monitoring", 
+                    "Weather Updates",
+                    "Natural Conversation",
+                    "Programming Help",
+                    "Mathematical Calculations",
+                    "Date & Time Services"
+                ]
+            },
+            'general_knowledge': {
+                'programming_languages': ['Python', 'JavaScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust'],
+                'frameworks': ['React', 'Angular', 'Vue.js', 'Django', 'Flask', 'FastAPI', 'Node.js'],
+                'algorithms': ['Binary Search', 'QuickSort', 'MergeSort', 'Dijkstra', 'Floyd-Warshall'],
+                'subjects': ['Physics', 'Chemistry', 'Mathematics', 'Computer Science', 'History', 'Geography']
+            },
+            'conversation_patterns': {
+                'name_questions': [
+                    r'(?i)(what is your|what\'s your|tell me your) name',
+                    r'(?i)(who are you|what are you)',
+                    r'(?i)(आपका नाम क्या है|तुम्हारा नाम क्या है)'
+                ],
+                'time_questions': [
+                    r'(?i)(what time|current time|समय क्या है|अभी कितना बजा)',
+                    r'(?i)(आज का समय|अभी समय)'
+                ],
+                'date_questions': [
+                    r'(?i)(what date|today\'s date|आज की तारीख|आज कौन सी तारीख है)',
+                    r'(?i)(दिनांक|तारीख)'
+                ],
+                'weather_questions': [
+                    r'(?i)(weather|मौसम|temperature|तापमान)',
+                    r'(?i)(how\'s the weather|आज का मौसम कैसा है)'
+                ],
+                'system_questions': [
+                    r'(?i)(system|computer|pc|कंप्यूटर)',
+                    r'(?i)(ram|memory|cpu|storage|disk)'
+                ],
+                'vanie_questions': [
+                    r'(?i)(vanie|vanie क्या है|vanie full form)',
+                    r'(?i)(who created you|आपको किसने बनाया)'
+                ]
+            }
+        }
+    
+    def get_current_datetime(self) -> Dict[str, str]:
+        """Get current date and time information"""
+        now = datetime.datetime.now()
+        
+        # Hindi days and months
+        hindi_days = ['सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार', 'रविवार']
+        hindi_months = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 
+                       'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर']
+        
+        return {
+            'time': now.strftime('%I:%M:%S %p'),
+            'time_24': now.strftime('%H:%M:%S'),
+            'date': now.strftime('%d-%m-%Y'),
+            'date_us': now.strftime('%m-%d-%Y'),
+            'day': now.strftime('%A'),
+            'day_hindi': hindi_days[now.weekday()],
+            'month': now.strftime('%B'),
+            'month_hindi': hindi_months[now.month - 1],
+            'year': str(now.year),
+            'formatted': now.strftime('%A, %B %d, %Y'),
+            'formatted_hindi': f"{hindi_days[now.weekday()]}, {hindi_months[now.month - 1]} {now.day}, {now.year}",
+            'timestamp': str(int(now.timestamp())),
+            'iso_format': now.isoformat()
+        }
+    
+    def get_system_info(self) -> Dict[str, Any]:
+        """Get comprehensive system information"""
+        current_time = time.time()
+        
+        # Cache system info for 60 seconds
+        if self.system_info_cache and (current_time - self.last_system_update) < 60:
+            return self.system_info_cache
+        
+        try:
+            # Basic system info
+            system_info = {
+                'platform': platform.system(),
+                'platform_version': platform.version(),
+                'platform_release': platform.release(),
+                'architecture': platform.machine(),
+                'hostname': socket.gethostname(),
+                'processor': platform.processor(),
+                'python_version': platform.python_version(),
+            }
+            
+            # CPU Information
+            cpu_info = {
+                'physical_cores': psutil.cpu_count(logical=False),
+                'total_cores': psutil.cpu_count(logical=True),
+                'max_frequency': psutil.cpu_freq().max if psutil.cpu_freq() else 0,
+                'current_frequency': psutil.cpu_freq().current if psutil.cpu_freq() else 0,
+                'cpu_usage_percent': psutil.cpu_percent(interval=1),
+                'cpu_per_core': psutil.cpu_percent(percpu=True)
+            }
+            
+            # Memory Information
+            memory = psutil.virtual_memory()
+            memory_info = {
+                'total': memory.total,
+                'available': memory.available,
+                'used': memory.used,
+                'percentage': memory.percent,
+                'total_gb': round(memory.total / (1024**3), 2),
+                'available_gb': round(memory.available / (1024**3), 2),
+                'used_gb': round(memory.used / (1024**3), 2)
+            }
+            
+            # Disk Information
+            disk = psutil.disk_usage('/')
+            disk_info = {
+                'total': disk.total,
+                'used': disk.used,
+                'free': disk.free,
+                'percentage': (disk.used / disk.total) * 100,
+                'total_gb': round(disk.total / (1024**3), 2),
+                'used_gb': round(disk.used / (1024**3), 2),
+                'free_gb': round(disk.free / (1024**3), 2)
+            }
+            
+            # Network Information
+            network_info = {}
+            try:
+                network_info = psutil.net_if_addrs()
+                network_stats = psutil.net_io_counters()
+                network_info['bytes_sent'] = network_stats.bytes_sent
+                network_info['bytes_recv'] = network_stats.bytes_recv
+            except:
+                pass
+            
+            # Boot time
+            boot_time = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S')
+            
+            self.system_info_cache = {
+                'system': system_info,
+                'cpu': cpu_info,
+                'memory': memory_info,
+                'disk': disk_info,
+                'network': network_info,
+                'boot_time': boot_time,
+                'uptime': str(datetime.datetime.now() - datetime.datetime.fromtimestamp(psutil.boot_time()))
+            }
+            
+            self.last_system_update = current_time
+            return self.system_info_cache
+            
+        except Exception as e:
+            logger.error(f"Error getting system info: {e}")
+            return {'error': 'Unable to retrieve system information'}
+    
+    def get_weather_info(self, location: str = "Delhi") -> Dict[str, Any]:
+        """Get weather information (mock implementation - can be extended with real API)"""
+        # Check cache first (cache for 30 minutes)
+        cache_key = f"{location}_{datetime.datetime.now().strftime('%Y%m%d%H')}"
+        if cache_key in self.weather_cache:
+            return self.weather_cache[cache_key]
+        
+        # Mock weather data (replace with real API call)
+        mock_weather = {
+            'location': location,
+            'temperature': f"{random.randint(18, 35)}°C",
+            'feels_like': f"{random.randint(16, 37)}°C",
+            'humidity': f"{random.randint(30, 80)}%",
+            'wind_speed': f"{random.randint(5, 25)} km/h",
+            'condition': random.choice(['Sunny', 'Partly Cloudy', 'Cloudy', 'Clear', 'Light Rain']),
+            'visibility': f"{random.randint(5, 10)} km",
+            'pressure': f"{random.randint(1000, 1020)} mb",
+            'uv_index': str(random.randint(1, 10)),
+            'last_updated': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        self.weather_cache[cache_key] = mock_weather
+        return mock_weather
+    
+    def detect_user_intent(self, message: str) -> str:
+        """Detect user intent from message"""
+        message_lower = message.lower()
+        
+        # Check for different types of questions
+        patterns = self.knowledge_base['conversation_patterns']
+        
+        # Name/Identity questions
+        for pattern in patterns['name_questions']:
+            if re.search(pattern, message):
+                return 'name_query'
+        
+        # Time questions
+        for pattern in patterns['time_questions']:
+            if re.search(pattern, message):
+                return 'time_query'
+        
+        # Date questions
+        for pattern in patterns['date_questions']:
+            if re.search(pattern, message):
+                return 'date_query'
+        
+        # Weather questions
+        for pattern in patterns['weather_questions']:
+            if re.search(pattern, message):
+                return 'weather_query'
+        
+        # System questions
+        for pattern in patterns['system_questions']:
+            if re.search(pattern, message):
+                return 'system_query'
+        
+        # VANIE specific questions
+        for pattern in patterns['vanie_questions']:
+            if re.search(pattern, message):
+                return 'vanie_query'
+        
+        # Check for programming/coding help
+        programming_keywords = ['code', 'program', 'algorithm', 'python', 'javascript', 'java', 'coding']
+        if any(keyword in message_lower for keyword in programming_keywords):
+            return 'programming_help'
+        
+        # Check for mathematical calculations
+        if any(char in message for char in '+-*/^()') and any(char.isdigit() for char in message):
+            return 'math_calculation'
+        
+        # Default to general conversation
+        return 'general_conversation'
+    
+    def generate_response(self, message: str, user_context: Dict = None) -> Dict[str, Any]:
+        """Generate intelligent response based on user input"""
+        intent = self.detect_user_intent(message)
+        datetime_info = self.get_current_datetime()
+        
+        # Update conversation context
+        self.conversation_context.append({
+            'message': message,
+            'intent': intent,
+            'timestamp': datetime_info['timestamp']
+        })
+        
+        # Keep only last 10 messages in context
+        self.conversation_context = self.conversation_context[-10:]
+        
+        response = {
+            'intent': intent,
+            'timestamp': datetime_info['timestamp'],
+            'context_updated': True
+        }
+        
+        try:
+            if intent == 'name_query':
+                response['response'] = self._handle_name_query()
+                response['data'] = {'name': 'VANIE', 'full_form': self.knowledge_base['vanie_info']['full_form']}
+                
+            elif intent == 'time_query':
+                response['response'] = self._handle_time_query(datetime_info)
+                response['data'] = {'datetime': datetime_info}
+                
+            elif intent == 'date_query':
+                response['response'] = self._handle_date_query(datetime_info)
+                response['data'] = {'datetime': datetime_info}
+                
+            elif intent == 'weather_query':
+                weather = self.get_weather_info()
+                response['response'] = self._handle_weather_query(weather)
+                response['data'] = {'weather': weather}
+                
+            elif intent == 'system_query':
+                system = self.get_system_info()
+                response['response'] = self._handle_system_query(system)
+                response['data'] = {'system': system}
+                
+            elif intent == 'vanie_query':
+                response['response'] = self._handle_vanie_query()
+                response['data'] = {'vanie_info': self.knowledge_base['vanie_info']}
+                
+            elif intent == 'programming_help':
+                response['response'] = self._handle_programming_help(message)
+                response['data'] = {'programming_languages': self.knowledge_base['general_knowledge']['programming_languages']}
+                
+            elif intent == 'math_calculation':
+                response['response'] = self._handle_math_calculation(message)
+                response['data'] = {'calculation': message}
+                
+            else:
+                response['response'] = self._handle_general_conversation(message)
+                response['data'] = {'conversation_type': 'general'}
+                
+        except Exception as e:
+            logger.error(f"Error generating response: {e}")
+            response['response'] = "मुझे अपनी प्रतिक्रिया उत्पन्न करने में कठिनाई हो रही है। कृपया फिर से प्रयास करें।"
+            response['error'] = str(e)
+        
+        return response
+    
+    def _handle_name_query(self) -> str:
+        """Handle name/identity queries"""
+        name_response = random.choice(self.response_patterns['greetings']).format(name=self.user_name)
+        vanie_info = self.knowledge_base['vanie_info']
+        return f"{name_response}\n\nमैं {vanie_info['full_form']} हूँ, जिसे {vanie_info['creator']} ने बनाया है। मैं आपको real-time information, programming help, और बहुत कुछ में मदद कर सकती हूँ! 🤖✨"
+    
+    def _handle_time_query(self, datetime_info: Dict) -> str:
+        """Handle time queries"""
+        time_response = random.choice(self.response_patterns['time_responses']).format(
+            time=datetime_info['time'],
+            date=datetime_info['formatted_hindi']
+        )
+        return f"{time_response}\n\nविस्तृत जानकारी:\n• समय: {datetime_info['time']} ({datetime_info['time_24']} 24-घंटे प्रारूप में)\n• दिन: {datetime_info['day_hindi']}\n• तारीख: {datetime_info['date']}"
+    
+    def _handle_date_query(self, datetime_info: Dict) -> str:
+        """Handle date queries"""
+        return f"आज की तारीख है: {datetime_info['formatted_hindi']} 📅\n\nअन्य प्रारूप:\n• DD-MM-YYYY: {datetime_info['date']}\n• MM-DD-YYYY: {datetime_info['date_us']}\n• ISO: {datetime_info['iso_format']}\n\nआज {datetime_info['day_hindi']} है और महीना {datetime_info['month_hindi']} है।"
+    
+    def _handle_weather_query(self, weather: Dict) -> str:
+        """Handle weather queries"""
+        weather_response = random.choice(self.response_patterns['weather_responses']).format(
+            weather=f"{weather['condition']}, तापमान {weather['temperature']}"
+        )
+        return f"{weather_response}\n\nविस्तृत मौसम जानकारी ({weather['location']}):\n• तापमान: {weather['temperature']} (महसूस {weather['feels_like']})\n• हालत: {weather['condition']}\n• नमी: {weather['humidity']}\n• हवा: {weather['wind_speed']}\n• दृश्यता: {weather['visibility']}\n• दबाव: {weather['pressure']}\n• UV इंडेक्स: {weather['uv_index']}"
+    
+    def _handle_system_query(self, system: Dict) -> str:
+        """Handle system information queries"""
+        if 'error' in system:
+            return "सिस्टम जानकारी प्राप्त करने में त्रुटि। कृपया बाद में पुनः प्रयास करें।"
+        
+        sys_info = system['system']
+        cpu_info = system['cpu']
+        mem_info = system['memory']
+        disk_info = system['disk']
+        
+        return f"""🖥️ **सिस्टम जानकारी:**
 
-# ==========================================
-# 4. API ENDPOINT (The Bridge)
-# ==========================================
+**बेसिक जानकारी:**
+• प्लेटफॉर्म: {sys_info['platform']} {sys_info['platform_release']}
+• होस्टनेम: {sys_info['hostname']}
+• प्रोसेसर: {sys_info['processor']}
+• Python वर्जन: {sys_info['python_version']}
+
+**CPU जानकारी:**
+• कोर: {cpu_info['total_cores']} (फिजिकल: {cpu_info['physical_cores']})
+• उपयोग: {cpu_info['cpu_usage_percent']}%
+• फ्रीक्वेंसी: {cpu_info['current_frequency']:.2f} MHz
+
+**मेमोरी जानकारी:**
+• कुल: {mem_info['total_gb']} GB
+• उपयोग में: {mem_info['used_gb']} GB ({mem_info['percentage']}%)
+• उपलब्ध: {mem_info['available_gb']} GB
+
+**डिस्क जानकारी:**
+• कुल: {disk_info['total_gb']} GB
+• उपयोग में: {disk_info['used_gb']} GB ({disk_info['percentage']:.1f}%)
+• खाली: {disk_info['free_gb']} GB
+
+**अपटाइम:** {system['uptime']}"""
+    
+    def _handle_vanie_query(self) -> str:
+        """Handle VANIE-specific queries"""
+        vanie_info = self.knowledge_base['vanie_info']
+        capabilities = '\n'.join([f"• {cap}" for cap in vanie_info['capabilities']])
+        
+        return f"""🤖 **VANIE - Virtual Assistant of Neural Integrated Engine**
+
+**पूरा नाम:** {vanie_info['full_form']}
+**क्रिएटर:** {vanie_info['creator']}
+**वर्जन:** {vanie_info['version']}
+
+**क्षमताएं:**
+{capabilities}
+
+मैं आपको real-time information, system monitoring, weather updates, programming help, और natural conversation में मदद कर सकती हूँ! कुछ भी पूछने के लिए तैयार हूँ! ✨"""
+    
+    def _handle_programming_help(self, message: str) -> str:
+        """Handle programming help requests"""
+        languages = self.knowledge_base['general_knowledge']['programming_languages']
+        frameworks = self.knowledge_base['general_knowledge']['frameworks']
+        algorithms = self.knowledge_base['general_knowledge']['algorithms']
+        
+        return f"""💻 **प्रोग्रामिंग मदद!**
+
+मैं निम्नलिखित में विशेषज्ञता रखती हूँ:
+
+**प्रोग्रामिंग भाषाएं:**
+{', '.join(languages)}
+
+**फ्रेमवर्क:**
+{', '.join(frameworks)}
+
+**एल्गोरिदम:**
+{', '.join(algorithms)}
+
+कौन सा टॉपिक चाहिए? Algorithm explanation, code example, debugging help - कुछ भी पूछ सकते हैं! 🚀"""
+    
+    def _handle_math_calculation(self, message: str) -> str:
+        """Handle mathematical calculations"""
+        try:
+            # Safe math evaluation (basic operations only)
+            allowed_chars = set('0123456789+-*/().^ ')
+            if not all(c in allowed_chars for c in message):
+                return "केवल basic mathematical operations (+, -, *, /, ^, parentheses) की अनुमति है।"
+            
+            # Replace ^ with ** for power
+            expression = message.replace('^', '**')
+            result = eval(expression)
+            
+            return f"""🧮 **गणितीय गणना:**
+
+**व्यंजक:** {message}
+**परिणाम:** {result}
+
+विस्तृत गणना चाहिए? Step-by-step explanation दे सकती हूँ! 📚"""
+            
+        except Exception as e:
+            return f"गणना में त्रुटि: {str(e)}. कृपया correct mathematical expression डालें।"
+    
+    def _handle_general_conversation(self, message: str) -> str:
+        """Handle general conversation"""
+        general_responses = [
+            "यह दिलचस्प बातचीत है! मुझे और बताएं। 😊",
+            "मैं आपकी बात समझ गई। और क्या जानना चाहते हैं?",
+            "Great point! क्या मैं आपको किसी specific topic में मदद कर सकती हूँ?",
+            "मैं आपकी मदद के लिए यहाँ हूँ! Programming, math, weather, system info - कुछ भी पूछें! 🤖"
+        ]
+        
+        return random.choice(general_responses)
+
+# Initialize VANIE Engine
+vanie_engine = VANIEEngine()
+
+@app.route('/')
+def index():
+    """Serve the main HTML page"""
+    return render_template('VANIE.html')
+
 @app.route('/chat', methods=['POST'])
 def chat():
+    """Main chat endpoint"""
     try:
         data = request.get_json()
+        
         if not data or 'message' not in data:
-            return jsonify({'status': 'error', 'error': 'Message is required'}), 400
+            return jsonify({'error': 'No message provided'}), 400
         
         user_message = data['message']
-        session_id = data.get('session_id', 'default')
+        user_context = data.get('context', {})
         
-        # Get response from the AI algorithm
-        response = get_ai_response(user_message)
+        # Update user name if provided
+        if 'user_name' in user_context:
+            vanie_engine.user_name = user_context['user_name']
+        
+        # Generate response
+        response = vanie_engine.generate_response(user_message, user_context)
         
         return jsonify({
-            'status': 'success',
-            'response': response,
-            'session_id': session_id
+            'response': response['response'],
+            'intent': response['intent'],
+            'data': response.get('data', {}),
+            'timestamp': response['timestamp']
         })
         
     except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500)
+        logger.error(f"Chat endpoint error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/info/datetime', methods=['GET'])
+def get_datetime():
+    """Get current date and time"""
+    return jsonify(vanie_engine.get_current_datetime())
+
+@app.route('/info/system', methods=['GET'])
+def get_system():
+    """Get system information"""
+    return jsonify(vanie_engine.get_system_info())
+
+@app.route('/info/weather', methods=['GET'])
+def get_weather():
+    """Get weather information"""
+    location = request.args.get('location', 'Delhi')
+    return jsonify(vanie_engine.get_weather_info(location))
+
+@app.route('/info/vanie', methods=['GET'])
+def get_vanie_info():
+    """Get VANIE information"""
+    return jsonify(vanie_engine.knowledge_base['vanie_info'])
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    return jsonify({'status': 'healthy', 'service': 'VANIE AI Backend'})
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.datetime.now().isoformat(),
+        'version': vanie_engine.knowledge_base['vanie_info']['version']
+    })
+
+def start_server(host='127.0.0.1', port=5000, debug=False):
+    """Start the VANIE server"""
+    print(f"""
+🚀 VANIE Server Starting...
+📍 Host: {host}
+🔌 Port: {port}
+🤖 Version: {vanie_engine.knowledge_base['vanie_info']['version']}
+📅 Started at: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    """)
+    
+    app.run(host=host, port=port, debug=debug)
 
 if __name__ == '__main__':
-    print("🚀 VANIE Backend is running perfectly! Waiting for HTML to connect...")
-    print("📡 Server running at: http://localhost:5000") 
-    print("🔗 API Endpoint: http://localhost:5000/chat")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    start_server(debug=True)

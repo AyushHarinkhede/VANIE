@@ -338,10 +338,13 @@
             background: #000000;
             color: #ffffff;
             height: 100vh;
+            width: 100vw;
             display: flex;
             transition: all 0.5s ease-in-out;
             overflow: hidden;
             position: relative;
+            margin: 0;
+            padding: 0;
         }
 
         * {
@@ -406,9 +409,8 @@
 
         .header {
             background: transparent;
-            background: rgba(0, 0, 0, 0);
             backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid transparent;
             padding: 20px 32px;
             display: flex;
             justify-content: space-between;
@@ -510,18 +512,6 @@
         .search-container #searchBtn {
             position: relative;
             z-index: 101;
-            transition: all 0.3s ease;
-        }
-
-        .search-container #searchBtn:hover {
-            transform: scale(1.1);
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .search-container #searchBtn.active {
-            background: var(--primary-color);
-            color: white;
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
         }
 
         .search-bar {
@@ -543,18 +533,16 @@
         }
 
         .search-bar.expanded {
-            width: 320px;
+            width: 300px;
             opacity: 1;
             transform: translateY(-50%) scale(1.02);
-            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
         }
 
         .search-bar:focus-within {
-            width: 380px;
-            border-color: var(--primary-color);
-            background: rgba(255, 255, 255, 0.12);
+            width: 350px;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
             transform: translateY(-50%) scale(1.05);
-            box-shadow: 0 16px 48px rgba(102, 126, 234, 0.3);
         }
 
         .search-input {
@@ -572,86 +560,6 @@
 
         .search-input::placeholder {
             color: rgba(255, 255, 255, 0.5);
-            font-style: italic;
-            transition: opacity 0.3s ease;
-        }
-
-        .search-input:focus::placeholder {
-            opacity: 0.7;
-        }
-
-        .search-input.searching {
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .search-status {
-            position: absolute;
-            right: 40px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 12px;
-            color: var(--text-secondary);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .search-status.visible {
-            opacity: 1;
-        }
-
-        .search-status.loading {
-            color: var(--primary-color);
-        }
-
-        .search-status.results {
-            color: #4ade80;
-        }
-
-        .search-status.no-results {
-            color: #f87171;
-        }
-
-        .no-recent-searches {
-            color: var(--text-secondary);
-            font-style: italic;
-            font-size: 12px;
-            padding: 8px 12px;
-            opacity: 0.7;
-        }
-
-        .recent-search {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .remove-recent-search {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 2px;
-            opacity: 0;
-            transition: all 0.3s ease;
-            font-size: 10px;
-        }
-
-        .recent-search:hover .remove-recent-search {
-            opacity: 1;
-            color: #f87171;
-            background: rgba(248, 113, 113, 0.1);
-        }
-
-        .remove-recent-search:hover {
-            transform: scale(1.1);
         }
 
         .search-close-btn {
@@ -1006,12 +914,11 @@
             padding: 16px 24px;
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(25px);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 1px solid transparent;
             display: flex;
             align-items: center;
             gap: 12px;
             position: relative;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
         }
         
         .input-container::before {
@@ -2480,7 +2387,7 @@
                 <i class="fas fa-python"></i> Python Help
             </div>
             <div class="history-item" onclick="loadChat('algorithm-question')">
-                <img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px; border-radius: 2px; object-fit: cover;"> Algorithm Question
+                <img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px;"> Algorithm Question
             </div>
             <div class="history-item" onclick="loadChat('general-chat')">
                 <i class="fas fa-comments"></i> General Chat
@@ -2507,7 +2414,7 @@
                     <i class="fas fa-bars"></i>
                 </div>
                 <div class="bot-avatar">
-                    <img src="VANIE.png" alt="VANIE" style="width: 100%; height: 100%; border-radius: 12px; object-fit: cover;">   </div>
+                    <img src="VANIE.png" alt="VANIE" style="width: 100%; height: 100%;">   </div>
                 <div class="bot-info">
                     <h2>VANIE</h2>
               <div class="bot-status">
@@ -2520,17 +2427,12 @@
                         <i class="fas fa-search"></i>
                     </button>
                     <div class="search-bar" id="searchBar">
-                        <input type="text" class="search-input" id="searchInput" placeholder="Search chat history, commands, settings...">
-                        <span class="search-status" id="searchStatus"></span>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search chat history...">
                         <button class="search-close-btn" id="searchCloseBtn" title="Close Search">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                     <div class="search-suggestions" id="searchSuggestions">
-                        <div class="suggestion-category">
-                            <h4><i class="fas fa-clock"></i> Recent Searches</h4>
-                            <div class="suggestion-items" id="recentSearches"></div>
-                        </div>
                         <div class="suggestion-category">
                             <h4><i class="fas fa-comments"></i> Chats</h4>
                             <div class="suggestion-items" id="chatSuggestions"></div>
@@ -2575,7 +2477,7 @@
             
             <div class="welcome-screen" id="welcomeScreen">
                 <div class="welcome-icon">
-                    <img src="VANIE.png" alt="VANIE" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+                    <img src="VANIE.png" alt="VANIE" style="width: 80px; height: 80px;">
                 </div>
                 <h1>Namaste! Main VANIE hoon</h1>
                 <p style="color: var(--text-secondary); max-width: 500px;">
@@ -3063,11 +2965,7 @@
                 conversationContext: [],
                 searchQuery: '',
                 searchResults: [],
-                isSearchMode: false,
-                recentSearches: [],
-                maxRecentSearches: 5,
-                searchHistory: [],
-                isSearching: false
+                isSearchMode: false
             },
             
             searchSuggestionsData: {
@@ -3799,7 +3697,11 @@
                         },
                         body: JSON.stringify({
                             message: userInput,
-                            session_id: this.state.userId || 'default'
+                            context: {
+                                user_name: this.state.userName || 'Guest',
+                                session_id: this.state.userId || 'default',
+                                conversation_history: this.state.conversationContext.slice(-5)
+                            }
                         })
                     });
                     
@@ -3808,23 +3710,33 @@
                     // Hide typing indicator
                     this.hideTyping();
                     
-                    if (data.status === 'success') {
+                    if (response.ok && data.response) {
                         // Display user message
                         this.addMessage(userInput, 'user');
                         
-                        // Display AI response
+                        // Display AI response with enhanced formatting
                         this.addMessage(data.response, 'bot');
                         
                         // Update conversation context
                         this.state.conversationContext.push({role: 'user', text: userInput});
                         this.state.conversationContext.push({role: 'bot', text: data.response});
                         
+                        // Update user name if detected
+                        if (data.data && data.data.user_name) {
+                            this.state.userName = data.data.user_name;
+                        }
+                        
                         // Limit context size
                         if (this.state.conversationContext.length > 10) {
                             this.state.conversationContext = this.state.conversationContext.slice(-10);
                         }
+                        
+                        // Update status based on intent
+                        if (data.intent) {
+                            this.updateIntentStatus(data.intent);
+                        }
                     } else {
-                        console.error('Backend error:', data.error);
+                        console.error('Backend error:', data.error || 'Unknown error');
                         this.addMessage('Sorry, I had trouble connecting to the server. Please try again.', 'bot');
                     }
                     
@@ -3991,6 +3903,28 @@
                 document.getElementById('statusText').textContent = status;
             },
 
+            updateIntentStatus(intent) {
+                const statusMap = {
+                    'name_query': 'Identity Check 🤖',
+                    'time_query': 'Time Service ⏰',
+                    'date_query': 'Date Service 📅',
+                    'weather_query': 'Weather Service 🌤️',
+                    'system_query': 'System Monitor 🖥️',
+                    'vanie_query': 'About VANIE ℹ️',
+                    'programming_help': 'Programming Help 💻',
+                    'math_calculation': 'Math Calculator 🧮',
+                    'general_conversation': 'Chatting 💬'
+                };
+                
+                const status = statusMap[intent] || 'Processing...';
+                this.updateStatus(status);
+                
+                // Reset to Online after 3 seconds
+                setTimeout(() => {
+                    this.updateStatus('Online');
+                }, 3000);
+            },
+
             showTyping() {
                 this.state.isTyping = true;
                 document.getElementById('typingWrapper').style.display = 'flex';
@@ -4128,124 +4062,14 @@
             },
 
             handleSearchInput(query) {
-                const searchInput = document.getElementById('searchInput');
-                const searchStatus = document.getElementById('searchStatus');
-                
                 if (!query.trim()) {
                     this.hideSearchSuggestions();
-                    this.clearSearchResults();
-                    searchStatus.classList.remove('visible');
-                    searchInput.classList.remove('searching');
+                    this.clearSearchResults(); // Clear results when input is empty
                     return;
                 }
 
-                // Show searching status
-                this.state.isSearching = true;
-                searchInput.classList.add('searching');
-                searchStatus.textContent = 'Searching...';
-                searchStatus.className = 'search-status visible loading';
-
-                // Simulate search delay for better UX
-                setTimeout(() => {
-                    this.performSearch(query);
-                    this.updateSearchStatus(query);
-                }, 300);
-            },
-
-            updateSearchStatus(query) {
-                const searchStatus = document.getElementById('searchStatus');
-                const searchInput = document.getElementById('searchInput');
-                
-                this.state.isSearching = false;
-                searchInput.classList.remove('searching');
-                
-                const resultsCount = this.state.searchResults.length;
-                if (resultsCount > 0) {
-                    searchStatus.textContent = `${resultsCount} result${resultsCount > 1 ? 's' : ''}`;
-                    searchStatus.className = 'search-status visible results';
-                } else {
-                    searchStatus.textContent = 'No results';
-                    searchStatus.className = 'search-status visible no-results';
-                }
-
-                // Hide status after 3 seconds
-                setTimeout(() => {
-                    searchStatus.classList.remove('visible');
-                }, 3000);
-            },
-
-            addRecentSearch(query) {
-                const trimmedQuery = query.trim();
-                if (!trimmedQuery) return;
-
-                // Remove if already exists
-                this.state.recentSearches = this.state.recentSearches.filter(search => search !== trimmedQuery);
-                
-                // Add to beginning
-                this.state.recentSearches.unshift(trimmedQuery);
-                
-                // Keep only max recent searches
-                if (this.state.recentSearches.length > this.state.maxRecentSearches) {
-                    this.state.recentSearches = this.state.recentSearches.slice(0, this.state.maxRecentSearches);
-                }
-
-                // Save to localStorage
-                localStorage.setItem('vanieRecentSearches', JSON.stringify(this.state.recentSearches));
-            },
-
-            loadRecentSearches() {
-                const saved = localStorage.getItem('vanieRecentSearches');
-                if (saved) {
-                    try {
-                        this.state.recentSearches = JSON.parse(saved);
-                    } catch (e) {
-                        this.state.recentSearches = [];
-                    }
-                }
-            },
-
-            populateRecentSearches() {
-                const container = document.getElementById('recentSearches');
-                container.innerHTML = '';
-
-                if (this.state.recentSearches.length === 0) {
-                    container.innerHTML = '<div class="no-recent-searches">No recent searches</div>';
-                    return;
-                }
-
-                this.state.recentSearches.forEach((search, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'suggestion-item recent-search';
-                    item.innerHTML = `
-                        <i class="fas fa-clock"></i> 
-                        ${search}
-                        <button class="remove-recent-search" data-search="${search}" title="Remove">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    `;
-                    
-                    item.querySelector('.suggestion-item, .remove-recent-search').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.removeRecentSearch(search);
-                    });
-                    
-                    item.addEventListener('click', () => {
-                        document.getElementById('searchInput').value = search;
-                        this.handleSearchInput(search);
-                    });
-                    
-                    container.appendChild(item);
-                });
-            },
-
-            removeRecentSearch(searchToRemove) {
-                this.state.recentSearches = this.state.recentSearches.filter(search => search !== searchToRemove);
-                localStorage.setItem('vanieRecentSearches', JSON.stringify(this.state.recentSearches));
-                this.populateRecentSearches();
-            },
-
-            // Only show suggestions while typing, don't perform search until Enter is pressed
-            showSearchSuggestions(query) {
+                // Only show suggestions while typing, don't perform search until Enter is pressed
+                this.showSearchSuggestions();
                 this.filterSuggestions(query);
             },
 
@@ -4308,7 +4132,7 @@
                     
                     // Check if icon is VANIE.png
                     if (suggestion.icon === 'VANIE.png') {
-                        item.innerHTML = `<img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px; border-radius: 2px; object-fit: cover;"> ${suggestion.text}`;
+                        item.innerHTML = `<img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px;"> ${suggestion.text}`;
                     } else {
                         item.innerHTML = `<i class="${suggestion.icon}"></i> ${suggestion.text}`;
                     }
@@ -4349,7 +4173,7 @@
                             
                             // Check if icon is VANIE.png
                             if (suggestion.icon === 'VANIE.png') {
-                                item.innerHTML = `<img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px; border-radius: 2px; object-fit: cover;"> ${highlightedText}`;
+                                item.innerHTML = `<img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px;"> ${highlightedText}`;
                             } else {
                                 item.innerHTML = `<i class="${suggestion.icon}"></i> ${highlightedText}`;
                             }
@@ -4497,7 +4321,6 @@
             toggleSearchBar() {
                 const searchBar = document.getElementById('searchBar');
                 const searchInput = document.getElementById('searchInput');
-                const searchBtn = document.getElementById('searchBtn');
                 const headerActions = document.querySelector('.header-actions');
                 
                 if (searchBar.classList.contains('expanded')) {
@@ -4505,23 +4328,12 @@
                 } else {
                     // Expand search bar
                     searchBar.classList.add('expanded');
-                    searchBtn.classList.add('active');
-                    searchInput.focus();
+                    headerActions.classList.add('search-expanded');
                     
-                    // Load recent searches
-                    this.loadRecentSearches();
-                    this.populateRecentSearches();
-                    
-                    // Show suggestions
+                    // Focus input after animation
                     setTimeout(() => {
-                        this.showSearchSuggestions(searchInput.value);
-                    }, 100);
-                    
-                    // Close settings modal if open
-                    const settingsModal = document.getElementById('settingsModal');
-                    if (settingsModal.classList.contains('open')) {
-                        this.toggleSettingsModal(false);
-                    }
+                        searchInput.focus();
+                    }, 400);
                 }
             },
 
@@ -4544,9 +4356,6 @@
                     this.clearSearchResults();
                     return;
                 }
-
-                // Add to recent searches
-                this.addRecentSearch(query);
 
                 // Get all message elements from the chat
                 const messageElements = document.querySelectorAll('.message-wrapper');
