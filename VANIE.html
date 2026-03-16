@@ -655,26 +655,42 @@
             font-size: 10px;
         }
 
-        .suggestion-items {
-            display: flex;
-            flex-direction: column;
-        }
-
         .suggestion-item {
             padding: 10px 16px;
-            color: var(--text-primary);
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            border-left: 2px solid transparent;
+            gap: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
         }
 
         .suggestion-item:hover {
             background: rgba(255, 255, 255, 0.05);
-            border-left-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .suggestion-item.active {
+            background: rgba(102, 126, 234, 0.2);
+            color: var(--primary-color);
+        }
+
+        .suggestion-item i {
+            width: 16px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .suggestion-highlight {
+            background: rgba(255, 255, 100, 0.3);
+            color: #fff;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        .suggestion-items {
+            display: flex;
+            flex-direction: column;
         }
 
         .suggestion-item.active {
@@ -2759,18 +2775,85 @@
             createSounds() {
                 if (!this.audioContext) return;
                 
-                // Create sound configurations
+                // Create pleasant, musical sound configurations
                 this.soundConfigs = {
-                    click: { frequency: 800, duration: 0.1, type: 'sine', volume: 0.3 },
-                    send: { frequency: 1200, duration: 0.15, type: 'square', volume: 0.4 },
-                    receive: { frequency: 600, duration: 0.2, type: 'triangle', volume: 0.3 },
-                    notification: { frequency: 1000, duration: 0.3, type: 'sawtooth', volume: 0.5 },
-                    hover: { frequency: 400, duration: 0.05, type: 'sine', volume: 0.1 },
-                    error: { frequency: 300, duration: 0.4, type: 'sawtooth', volume: 0.6 },
-                    success: { frequency: 1500, duration: 0.25, type: 'sine', volume: 0.4 },
-                    typing: { frequency: 500, duration: 0.08, type: 'triangle', volume: 0.2 },
-                    clear: { frequency: 200, duration: 0.5, type: 'sawtooth', volume: 0.5 },
-                    modal: { frequency: 700, duration: 0.2, type: 'sine', volume: 0.3 }
+                    click: { 
+                        frequencies: [800, 1000], 
+                        duration: 0.08, 
+                        type: 'sine', 
+                        volume: 0.2,
+                        envelope: { attack: 0.01, decay: 0.05, sustain: 0.1, release: 0.1 }
+                    },
+                    send: { 
+                        frequencies: [523, 659, 784], // C-E-G chord
+                        duration: 0.2, 
+                        type: 'sine', 
+                        volume: 0.3,
+                        envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.2 }
+                    },
+                    receive: { 
+                        frequencies: [392, 523, 659], // G-C-E chord
+                        duration: 0.25, 
+                        type: 'sine', 
+                        volume: 0.25,
+                        envelope: { attack: 0.02, decay: 0.1, sustain: 0.2, release: 0.3 }
+                    },
+                    notification: { 
+                        frequencies: [440, 554, 659], // A-C#-E chord
+                        duration: 0.3, 
+                        type: 'triangle', 
+                        volume: 0.3,
+                        envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.2 }
+                    },
+                    hover: { 
+                        frequencies: [600, 800], 
+                        duration: 0.04, 
+                        type: 'sine', 
+                        volume: 0.08,
+                        envelope: { attack: 0.01, decay: 0.02, sustain: 0.05, release: 0.05 }
+                    },
+                    error: { 
+                        frequencies: [200, 150], // Descending tones
+                        duration: 0.3, 
+                        type: 'triangle', 
+                        volume: 0.2,
+                        envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.2 }
+                    },
+                    success: { 
+                        frequencies: [523, 659, 784, 1047], // C-E-G-C chord (ascending)
+                        duration: 0.4, 
+                        type: 'sine', 
+                        volume: 0.3,
+                        envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.3 }
+                    },
+                    typing: { 
+                        frequencies: [440, 554], // A-C# notes
+                        duration: 0.05, 
+                        type: 'sine', 
+                        volume: 0.05,
+                        envelope: { attack: 0.01, decay: 0.02, sustain: 0.03, release: 0.02 }
+                    },
+                    search_typing: { 
+                        frequencies: [523, 659], // C-E notes
+                        duration: 0.04, 
+                        type: 'sine', 
+                        volume: 0.04,
+                        envelope: { attack: 0.01, decay: 0.02, sustain: 0.02, release: 0.02 }
+                    },
+                    clear: { 
+                        frequencies: [784, 659, 523, 392], // Descending G-E-C-G
+                        duration: 0.4, 
+                        type: 'sine', 
+                        volume: 0.25,
+                        envelope: { attack: 0.02, decay: 0.1, sustain: 0.2, release: 0.3 }
+                    },
+                    modal: { 
+                        frequencies: [440, 523], // A-C notes
+                        duration: 0.15, 
+                        type: 'sine', 
+                        volume: 0.15,
+                        envelope: { attack: 0.01, decay: 0.05, sustain: 0.1, release: 0.1 }
+                    }
                 };
             }
             
@@ -2788,31 +2871,44 @@
                     const config = this.soundConfigs[soundName];
                     const volume = customVolume !== null ? customVolume : config.volume;
                     
-                    // Create audio nodes
-                    const oscillator = this.audioContext.createOscillator();
-                    const gainNode = this.audioContext.createGain();
-                    
-                    // Configure oscillator
-                    oscillator.type = config.type;
-                    oscillator.frequency.setValueAtTime(config.frequency, this.audioContext.currentTime);
-                    
-                    // Configure gain (volume)
-                    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.01);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + config.duration);
-                    
-                    // Connect nodes
-                    oscillator.connect(gainNode);
-                    gainNode.connect(this.audioContext.destination);
-                    
-                    // Play sound
-                    oscillator.start(this.audioContext.currentTime);
-                    oscillator.stop(this.audioContext.currentTime + config.duration);
+                    // Handle chord sounds (multiple frequencies)
+                    if (config.frequencies && config.frequencies.length > 1) {
+                        config.frequencies.forEach((freq, index) => {
+                            this.playNote(freq, config.duration, config.type, volume, index * 0.01); // Slight delay for chord effect
+                        });
+                    } else if (config.frequencies) {
+                        // Single frequency
+                        this.playNote(config.frequencies[0], config.duration, config.type, volume, 0);
+                    }
                     
                 } catch (error) {
                     // Silent fail to avoid breaking the app
                     console.log('Sound play error:', error);
                 }
+            }
+            
+            playNote(frequency, duration, type, volume, delay = 0) {
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                // Configure oscillator
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime + delay);
+                
+                // Configure gain with envelope
+                const now = this.audioContext.currentTime + delay;
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(volume * 0.3, now + 0.01); // Quick attack
+                gainNode.gain.exponentialRampToValueAtTime(volume * 0.1, now + duration * 0.8); // Decay
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration); // Release
+                
+                // Connect nodes
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                // Play sound
+                oscillator.start(now);
+                oscillator.stop(now + duration);
             }
             
             toggle() {
@@ -2870,6 +2966,70 @@
                 isSearchMode: false
             },
             
+            searchSuggestionsData: {
+                chats: [
+                    { text: 'health metrics bmi blood pressure heart rate', icon: 'fas fa-heartbeat', action: 'search' },
+                    { text: 'emergency help chest pain breathing difficulty', icon: 'fas fa-exclamation-triangle', action: 'search' },
+                    { text: 'diet exercise nutrition workout', icon: 'fas fa-dumbbell', action: 'search' },
+                    { text: 'mental health stress anxiety depression', icon: 'fas fa-brain', action: 'search' },
+                    { text: 'sleep fatigue tired energy', icon: 'fas fa-bed', action: 'search' },
+                    { text: 'symptoms headache fever cough pain', icon: 'fas fa-thermometer', action: 'search' },
+                    { text: 'medicines treatment doctor hospital', icon: 'fas fa-pills', action: 'search' },
+                    { text: 'hello hi greetings good morning', icon: 'fas fa-comments', action: 'search' },
+                    { text: 'jokes entertainment funny stories', icon: 'fas fa-laugh', action: 'search' },
+                    { text: 'weather today temperature climate', icon: 'fas fa-cloud-sun', action: 'search' },
+                    { text: ' VANIE AI assistant help commands', icon: 'fas fa-robot', action: 'search' },
+                    { text: 'profile settings account privacy', icon: 'fas fa-user-cog', action: 'search' }
+                ],
+                settings: [
+                    { text: 'Profile Settings Name Age Blood Group', icon: 'fas fa-user', action: 'setting' },
+                    { text: 'Privacy Settings Data Security Encryption', icon: 'fas fa-lock', action: 'setting' },
+                    { text: 'Theme Settings Dark Light Mode Colors', icon: 'fas fa-palette', action: 'setting' },
+                    { text: 'Notification Settings Alerts Sounds Reminders', icon: 'fas fa-bell', action: 'setting' },
+                    { text: 'Chat Settings Font Size History Export', icon: 'fas fa-cog', action: 'setting' },
+                    { text: 'Voice Settings Microphone Language Speed', icon: 'fas fa-microphone', action: 'setting' }
+                ],
+                options: [
+                    { text: 'Export Chat Download PDF TXT', icon: 'fas fa-download', action: 'option' },
+                    { text: 'Clear History Delete Messages Reset', icon: 'fas fa-trash', action: 'option' },
+                    { text: 'Search Chat Find Messages Filter', icon: 'fas fa-search', action: 'option' },
+                    { text: 'Voice Input Microphone Recording', icon: 'fas fa-microphone', action: 'option' },
+                    { text: 'File Upload Documents Images PDF', icon: 'fas fa-paperclip', action: 'option' },
+                    { text: 'Print Chat Save as PDF', icon: 'fas fa-print', action: 'option' }
+                ],
+                features: [
+                    { text: 'Voice Commands Microphone Control', icon: 'fas fa-microphone', action: 'feature' },
+                    { text: 'Smart Suggestions Auto Complete', icon: 'fas fa-lightbulb', action: 'feature' },
+                    { text: 'Health Tracking BMI BP Monitor', icon: 'fas fa-heartbeat', action: 'feature' },
+                    { text: 'Emergency Alerts Quick Help', icon: 'fas fa-exclamation-triangle', action: 'feature' },
+                    { text: 'Chat History Save Conversations', icon: 'fas fa-history', action: 'feature' },
+                    { text: 'Multi Language Support Translation', icon: 'fas fa-language', action: 'feature' },
+                    { text: 'Dark Light Theme Switch', icon: 'fas fa-moon', action: 'feature' },
+                    { text: 'Real Time Chat Response', icon: 'fas fa-comments', action: 'feature' }
+                ],
+                commands: [
+                    { text: '/help commands list instructions', icon: 'fas fa-question-circle', action: 'command' },
+                    { text: '/clear chat delete reset', icon: 'fas fa-eraser', action: 'command' },
+                    { text: '/export download save chat', icon: 'fas fa-download', action: 'command' },
+                    { text: '/settings preferences configuration', icon: 'fas fa-cog', action: 'command' },
+                    { text: '/login signin account access', icon: 'fas fa-sign-in-alt', action: 'command' },
+                    { text: '/logout signout exit session', icon: 'fas fa-sign-out-alt', action: 'command' },
+                    { text: '/voice microphone input recording', icon: 'fas fa-microphone', action: 'command' },
+                    { text: '/search find messages filter', icon: 'fas fa-search', action: 'command' },
+                    { text: '/profile user settings account', icon: 'fas fa-user', action: 'command' },
+                    { text: '/theme dark light mode switch', icon: 'fas fa-palette', action: 'command' }
+                ],
+                shortcuts: [
+                    { text: 'Ctrl+K Open Search Bar', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Ctrl+M Voice Input Microphone', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Ctrl+/ Show Commands List', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Escape Close Search Modal', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Enter Send Message Search', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Arrow Up Down Navigate Suggestions', icon: 'fas fa-keyboard', action: 'shortcut' },
+                    { text: 'Ctrl+Enter New Line Message', icon: 'fas fa-keyboard', action: 'shortcut' }
+                ]
+            },
+
             // 1. Sidebar Management
             toggleSidebar() {
                 const sidebar = document.getElementById('sidebar');
@@ -3169,8 +3329,8 @@
                     sendBtn.disabled = e.target.value.trim() === '';
                     
                     // Debounced typing sound - only play occasionally
-                    if (Math.random() > 0.7) { // 30% chance to play sound
-                        soundEffects.play('typing', 0.05);
+                    if (Math.random() > 0.85) { // 15% chance to play sound (less frequent)
+                        soundEffects.play('typing', 0.04);
                     }
                 });
 
@@ -3300,6 +3460,10 @@
                 });
 
                 document.getElementById('searchInput').addEventListener('input', (e) => {
+                    // Play typing sound for search bar
+                    if (Math.random() > 0.8) { // 20% chance to play sound (less frequent than message typing)
+                        soundEffects.play('search_typing', 0.03);
+                    }
                     this.handleSearchInput(e.target.value);
                 });
 
@@ -3523,61 +3687,48 @@
                     // Show typing indicator
                     this.showTyping();
                     
-                    // Try Enhanced Python Backend API first
-                    try {
-                        const response = await fetch('http://localhost:5000/api/chat', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                message: userInput,
-                                session_id: this.state.userId || 'default'
-                            })
-                        });
+                    // Send to Python backend
+                    const response = await fetch('http://127.0.0.1:5000/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: userInput,
+                            session_id: this.state.userId || 'default'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Hide typing indicator
+                    this.hideTyping();
+                    
+                    if (data.status === 'success') {
+                        // Display user message
+                        this.addMessage(userInput, 'user');
                         
-                        const data = await response.json();
+                        // Display AI response
+                        this.addMessage(data.response, 'bot');
                         
-                        // Hide typing indicator
-                        this.hideTyping();
+                        // Update conversation context
+                        this.state.conversationContext.push({role: 'user', text: userInput});
+                        this.state.conversationContext.push({role: 'bot', text: data.response});
                         
-                        if (data.status === 'success') {
-                            // Enhanced logging for debugging
-                            console.log('🚀 Enhanced AI Response:', {
-                                response: data.response,
-                                detected_intents: data.metadata?.detected_intents || [],
-                                emotion: data.metadata?.emotion || {},
-                                session_id: data.metadata?.session_id || 'default',
-                                status: data.status
-                            });
-                            
-                            // Show category indicator if available
-                            if (data.metadata?.detected_intents && data.metadata.detected_intents.length > 0) {
-                                const mainIntent = data.metadata.detected_intents[0];
-                                this.showNotification(`🎯 ${mainIntent.toUpperCase()} - VANIE AI Response`, 'info', 2000);
-                            }
-                            
-                            return data.response;
-                        } else {
-                            console.error('Backend error:', data.error);
-                            throw new Error(data.error || 'Backend error');
+                        // Limit context size
+                        if (this.state.conversationContext.length > 10) {
+                            this.state.conversationContext = this.state.conversationContext.slice(-10);
                         }
-                    } catch (backendError) {
-                        console.log('Backend not available, using fallback responses');
-                        throw backendError;
+                    } else {
+                        console.error('Backend error:', data.error);
+                        this.addMessage('Sorry, I had trouble connecting to the server. Please try again.', 'bot');
                     }
                     
                 } catch (error) {
                     console.error('Network error:', error);
                     this.hideTyping();
-                    
-                    // Enhanced error handling
-                    if (error.message.includes('Failed to fetch')) {
-                        this.showNotification('🔴 Backend not available. Using smart responses. ⚠️', 'error', 2000);
-                    }
-                    
-                    // Use smart fallback responses
-                    return this.getSmartFallbackResponse(userInput);
+                    this.addMessage('Network error. Please check if the backend server is running.', 'bot');
+                    document.getElementById('sendBtn').disabled = false;
                 }
             },
 
@@ -3875,10 +4026,12 @@
             handleSearchInput(query) {
                 if (!query.trim()) {
                     this.hideSearchSuggestions();
+                    this.clearSearchResults(); // Clear results when input is empty
                     return;
                 }
 
-                this.performSearch(query);
+                // Only show suggestions while typing, don't perform search until Enter is pressed
+                this.showSearchSuggestions();
                 this.filterSuggestions(query);
             },
 
@@ -3947,32 +4100,55 @@
             filterSuggestions(query) {
                 const lowerQuery = query.toLowerCase();
                 
+                // Don't filter if query is too short (less than 2 characters)
+                if (lowerQuery.length < 2) {
+                    this.populateAllSuggestions();
+                    return;
+                }
+                
                 ['chatSuggestions', 'settingsSuggestions', 'optionsSuggestions', 'featuresSuggestions', 'commandsSuggestions', 'shortcutsSuggestions'].forEach((containerId, categoryIndex) => {
                     const container = document.getElementById(containerId);
                     const categoryData = Object.values(this.searchSuggestionsData)[categoryIndex];
-                    const filtered = categoryData.filter(item => 
-                        item.text.toLowerCase().includes(lowerQuery)
-                    );
+                    
+                    // More intelligent filtering - match any word in the suggestion
+                    const filtered = categoryData.filter(item => {
+                        const words = item.text.toLowerCase().split(' ');
+                        return words.some(word => word.startsWith(lowerQuery) || word.includes(lowerQuery));
+                    });
                     
                     container.innerHTML = '';
-                    filtered.forEach(suggestion => {
-                        const item = document.createElement('div');
-                        item.className = 'suggestion-item';
-                        
-                        // Highlight matching text
-                        const highlightedText = this.highlightText(suggestion.text, query);
-                        item.innerHTML = `<i class="${suggestion.icon}"></i> ${highlightedText}`;
-                        
-                        item.addEventListener('click', () => this.selectSuggestion(suggestion));
-                        container.appendChild(item);
-                    });
+                    
+                    if (filtered.length > 0) {
+                        filtered.forEach(suggestion => {
+                            const item = document.createElement('div');
+                            item.className = 'suggestion-item';
+                            
+                            // Better highlighting
+                            const highlightedText = this.highlightText(suggestion.text, query);
+                            item.innerHTML = `<i class="${suggestion.icon}"></i> ${highlightedText}`;
+                            
+                            item.addEventListener('click', () => this.selectSuggestion(suggestion));
+                            container.appendChild(item);
+                        });
+                    }
                 });
             },
 
             highlightText(text, query) {
-                if (!query) return text;
-                const regex = new RegExp(`(${query})`, 'gi');
-                return text.replace(regex, '<span class="suggestion-highlight">$1</span>');
+                if (!query || query.length < 2) return text;
+                
+                // Highlight each word in the query separately
+                const queryWords = query.toLowerCase().split(' ');
+                let highlightedText = text;
+                
+                queryWords.forEach(word => {
+                    if (word.length >= 2) {
+                        const regex = new RegExp(`\\b(${word})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<span class="suggestion-highlight">$1</span>');
+                    }
+                });
+                
+                return highlightedText;
             },
 
             navigateSuggestions(direction) {
@@ -4130,9 +4306,27 @@
                     return;
                 }
 
-                const results = this.state.messages.filter(msg => 
-                    msg.text.toLowerCase().includes(query.toLowerCase())
-                );
+                // Get all message elements from the chat
+                const messageElements = document.querySelectorAll('.message-wrapper');
+                const results = [];
+                
+                messageElements.forEach(element => {
+                    const content = element.querySelector('.message-content');
+                    if (content) {
+                        const text = content.textContent.toLowerCase();
+                        if (text.includes(query.toLowerCase())) {
+                            // Get message type and timestamp from the element
+                            const messageType = element.classList.contains('user') ? 'user' : 'bot';
+                            const timestamp = Date.now(); // Use current time as fallback
+                            results.push({
+                                element: element,
+                                text: content.textContent,
+                                type: messageType,
+                                timestamp: timestamp
+                            });
+                        }
+                    }
+                });
                 
                 this.displaySearchResults(results, query);
             },
@@ -4142,7 +4336,8 @@
                 this.clearSearchResults();
                 
                 if (results.length === 0) {
-                    this.showNotification(`No results found for "${query}"`);
+                    // Only show "no results" if user explicitly pressed Enter to search
+                    // Don't show for automatic searches
                     return;
                 }
 
@@ -4153,38 +4348,55 @@
                 this.showNotification(`Found ${results.length} message${results.length > 1 ? 's' : ''} for "${query}"`);
                 
                 // Scroll to first result
-                if (results.length > 0) {
-                    const firstResult = document.querySelector(`[data-message-id="${results[0].timestamp}"]`);
-                    if (firstResult) {
-                        firstResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+                if (results.length > 0 && results[0].element) {
+                    results[0].element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             },
 
             highlightSearchResults(results, query) {
                 results.forEach(result => {
-                    const messageElements = document.querySelectorAll('.message-wrapper');
-                    messageElements.forEach(element => {
-                        const content = element.querySelector('.message-content');
-                        if (content && content.textContent.toLowerCase().includes(query.toLowerCase())) {
-                            element.style.background = 'rgba(255, 255, 100, 0.1)';
-                            element.style.border = '1px solid rgba(255, 255, 100, 0.3)';
-                            element.style.borderRadius = '8px';
-                            element.style.padding = '4px';
-                            element.setAttribute('data-message-id', result.timestamp);
-                        }
-                    });
+                    if (result.element) {
+                        result.element.style.background = 'rgba(255, 255, 100, 0.1)';
+                        result.element.style.border = '1px solid rgba(255, 255, 100, 0.3)';
+                        result.element.style.borderRadius = '8px';
+                        result.element.style.padding = '4px';
+                        result.element.style.margin = '4px 0';
+                        
+                        // Add a search result indicator
+                        const indicator = document.createElement('div');
+                        indicator.className = 'search-indicator';
+                        indicator.innerHTML = `<i class="fas fa-search"></i> Search result`;
+                        indicator.style.cssText = `
+                            position: absolute;
+                            top: -8px;
+                            right: 8px;
+                            background: rgba(255, 255, 100, 0.8);
+                            color: #333;
+                            padding: 2px 8px;
+                            border-radius: 12px;
+                            font-size: 11px;
+                            font-weight: bold;
+                        `;
+                        result.element.style.position = 'relative';
+                        result.element.appendChild(indicator);
+                    }
                 });
             },
 
             clearSearchResults() {
-                const messageElements = document.querySelectorAll('.message-wrapper[data-message-id]');
+                const messageElements = document.querySelectorAll('.message-wrapper');
                 messageElements.forEach(element => {
+                    // Reset styles
                     element.style.background = '';
                     element.style.border = '';
                     element.style.borderRadius = '';
                     element.style.padding = '';
-                    element.removeAttribute('data-message-id');
+                    element.style.margin = '';
+                    element.style.position = '';
+                    
+                    // Remove search indicators
+                    const indicators = element.querySelectorAll('.search-indicator');
+                    indicators.forEach(indicator => indicator.remove());
                 });
             },
 

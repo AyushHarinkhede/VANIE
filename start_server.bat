@@ -1,0 +1,9 @@
+@echo off
+echo Starting VANIE AI Backend Server...
+echo.
+echo Installing dependencies...
+pip install flask flask-cors
+echo.
+echo Starting Python server...
+python VANIE.py
+pause
