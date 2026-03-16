@@ -3017,75 +3017,7 @@
                 selectedSuggestionIndex: -1
             },
 
-            searchSuggestionsData: {
-                chats: [
-                    { text: 'hello', icon: 'fas fa-comment', action: 'search' },
-                    { text: 'namaste', icon: 'fas fa-comment', action: 'search' },
-                    { text: 'how are you', icon: 'fas fa-comment', action: 'search' },
-                    { text: 'what is vanie', icon: 'fas fa-comment', action: 'search' },
-                    { text: 'coding help', icon: 'fas fa-code', action: 'search' },
-                    { text: 'python tutorial', icon: 'fas fa-code', action: 'search' },
-                    { text: 'javascript help', icon: 'fas fa-code', action: 'search' },
-                    { text: 'quantum physics', icon: 'fas fa-atom', action: 'search' },
-                    { text: 'math problem', icon: 'fas fa-calculator', action: 'search' },
-                    { text: 'history question', icon: 'fas fa-book', action: 'search' },
-                    { text: 'science explanation', icon: 'fas fa-flask', action: 'search' },
-                    { text: 'algorithm help', icon: 'fas fa-project-diagram', action: 'search' }
-                ],
-                settings: [
-                    { text: 'dark mode', icon: 'fas fa-moon', action: 'setting' },
-                    { text: 'light mode', icon: 'fas fa-sun', action: 'setting' },
-                    { text: 'font size', icon: 'fas fa-text-height', action: 'setting' },
-                    { text: 'language', icon: 'fas fa-language', action: 'setting' },
-                    { text: 'voice settings', icon: 'fas fa-microphone', action: 'setting' },
-                    { text: 'sound effects', icon: 'fas fa-volume-up', action: 'setting' },
-                    { text: 'notifications', icon: 'fas fa-bell', action: 'setting' },
-                    { text: 'theme settings', icon: 'fas fa-palette', action: 'setting' },
-                    { text: 'voice language', icon: 'fas fa-globe', action: 'setting' }
-                ],
-                options: [
-                    { text: 'export chat', icon: 'fas fa-download', action: 'option' },
-                    { text: 'clear history', icon: 'fas fa-trash', action: 'option' },
-                    { text: 'search chat', icon: 'fas fa-search', action: 'option' },
-                    { text: 'voice input', icon: 'fas fa-microphone', action: 'option' },
-                    { text: 'file upload', icon: 'fas fa-paperclip', action: 'option' },
-                    { text: 'user account', icon: 'fas fa-user', action: 'option' },
-                    { text: 'logout', icon: 'fas fa-sign-out-alt', action: 'option' },
-                    { text: 'login', icon: 'fas fa-sign-in-alt', action: 'option' },
-                    { text: 'signup', icon: 'fas fa-user-plus', action: 'option' }
-                ],
-                features: [
-                    { text: 'voice typing', icon: 'fas fa-microphone', action: 'feature' },
-                    { text: 'file sharing', icon: 'fas fa-file', action: 'feature' },
-                    { text: 'authentication', icon: 'fas fa-user-lock', action: 'feature' },
-                    { text: 'chat history', icon: 'fas fa-history', action: 'feature' },
-                    { text: 'smart suggestions', icon: 'fas fa-lightbulb', action: 'feature' },
-                    { text: 'multi-language', icon: 'fas fa-globe', action: 'feature' },
-                    { text: 'real-time search', icon: 'fas fa-search', action: 'feature' },
-                    { text: 'export functionality', icon: 'fas fa-file-export', action: 'feature' },
-                    { text: 'secure login', icon: 'fas fa-shield-alt', action: 'feature' },
-                    { text: 'voice commands', icon: 'fas fa-microphone-alt', action: 'feature' }
-                ],
-                commands: [
-                    { text: '/help', icon: 'fas fa-question-circle', action: 'command' },
-                    { text: '/clear', icon: 'fas fa-eraser', action: 'command' },
-                    { text: '/export', icon: 'fas fa-file-export', action: 'command' },
-                    { text: '/settings', icon: 'fas fa-cog', action: 'command' },
-                    { text: '/login', icon: 'fas fa-sign-in-alt', action: 'command' },
-                    { text: '/logout', icon: 'fas fa-sign-out-alt', action: 'command' },
-                    { text: '/voice', icon: 'fas fa-microphone', action: 'command' },
-                    { text: '/search', icon: 'fas fa-search', action: 'command' }
-                ],
-                shortcuts: [
-                    { text: 'Ctrl+K - Quick search', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Ctrl+M - Voice input', icon: 'fas fa-microphone', action: 'shortcut' },
-                    { text: 'Ctrl+/ - Show commands', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Esc - Close search', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Enter - Select suggestion', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: '↑↓ - Navigate suggestions', icon: 'fas fa-keyboard', action: 'shortcut' }
-                ]
-            },
-
+            
             knowledge: {
                 greetings: ['hello', 'hi', 'namaste', 'hey', 'hola', 'kaise ho', 'how are you'],
                 coding: ['code', 'program', 'algorithm', 'function', 'python', 'javascript', 'java', 'c++', 'c#', 'ruby', 'html', 'css'],
@@ -3103,49 +3035,7 @@
                 this.showWelcomeScreen();
                 this.initVoiceRecognition();
                 this.checkExistingSession();
-            },  knowledge: {
-                greetings: ['hello', 'hi', 'namaste', 'hey', 'hola', 'kaise ho', 'how are you'],
-                coding: ['code', 'program', 'algorithm', 'function', 'python', 'javascript', 'java', 'c++', 'debug', 'error'],
-                science: ['science', 'quantum', 'physics', 'chemistry', 'biology', 'space', 'atom', 'theory'],
-                history: ['history', 'empire', 'samrajya', 'king', 'raja', 'war', 'battle', 'ancient', 'itihas'],
-                math: ['math', 'calculate', 'equation', 'formula', 'solve', 'ganit'],
-                general: ['kya', 'kaise', 'kab', 'kahan', 'kaun', 'what', 'how', 'when', 'where', 'who']
-            },
-
-            responses: {
-                greeting: [
-                    "Namaste! Main VANIE hoon. Aapki kya madad kar sakti hoon?",
-                    "Hello! VANIE yahaan haazir hai. Aapka sawal kya hai?",
-                    "Namaste ji! Main aapki seva mein kaise madad kar sakti hoon?"
-                ],
-                
-                coding: {
-                    general: "Main coding mein aapki madad kar sakti hoon! Kripya apna specific sawal ya problem detail mein batayein.",
-                    python: "Python ek powerful language hai! Aap mujhse koi bhi Python concept, algorithm ya code example maang sakte hain.",
-                    algorithm: "Algorithms computer science ki backbone hain. Sorting, searching, ya koi specific algorithm ke baare mein janiye."
-                },
-                
-                science: {
-                    general: "Science fascinating hai! Physics, Chemistry, Biology - kis topic par janakari chahiye?",
-                    quantum: "Quantum mechanics atoms aur subatomic particles ka study hai. Ye classical physics se bilkul alag hai.",
-                    space: "Space exploration humanity ki sabse badi achievements mein se ek hai. Mars missions se leke black holes tak!"
-                },
-                
-                history: {
-                    general: "Itihas humein apne past se sikhata hai. Ancient civilizations se leke modern era tak, kya janana chahte hain?",
-                    india: "Bharat ka itihas bahut samriddh hai - Indus Valley Civilization se leke modern India tak!",
-                    gupta: "Gupta Samrajya (320-550 CE) India ka Golden Age tha. Science, math, art sabhi mein pragati hui."
-                },
-                
-                math: "Mathematics logic aur patterns ka study hai. Addition se leke calculus tak, kya solve karna hai?",
-                
-                fallback: [
-                    "Interesting sawal hai! Kya aap thoda aur detail de sakte hain?",
-                    "Main samajh rahi hoon. Kripya apne sawal ko thoda elaborate karein.",
-                    "Achha topic hai! Specific kya janana chahte hain iske baare mein?"
-                ]
-            },
-
+            },  
             init() {
                 this.loadSettings();
                 this.loadChatHistory();
