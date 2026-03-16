@@ -17,7 +17,7 @@ if errorlevel 1 (
 echo Python found! Checking dependencies...
 echo.
 
-REM Check if virtual environment exists
+REM Check if virtual environment exists and create if not
 if not exist "venv" (
     echo Creating virtual environment...
     python -m venv venv
