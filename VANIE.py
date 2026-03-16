@@ -1003,7 +1003,6 @@ class VANIEKnowledgeBase:
                 'priority': 2
             },
             
-            'user_psychology': {
                 'keywords': [
                     'psychology', 'mental state', 'user psychology', 'behavioral psychology', 'cognitive psychology',
                     'thought patterns', 'mental models', 'cognitive biases', 'psychological insights',
@@ -1015,12 +1014,181 @@ class VANIEKnowledgeBase:
                     'psychological help', 'mental health insights', 'behavioral understanding', 'cognitive patterns'
                 ],
                 'responses': [
-                    "User psychology को समझना important है! Mental state, thought patterns, cognitive biases, behavioral insights - आप किस psychological aspect explore करना चाहिए? क्या mental clarity चाहिए? 🧠",
-                    "Psychology explorer! From cognitive patterns to behavioral insights, from mental models to decision psychology - what psychological aspect interests you? Are you looking to understand yourself better or learn about human psychology? 🧐",
-                    "मैं user psychology की student हूँ! Mental state analysis, thought patterns, cognitive biases, behavioral tendencies - आप क्या psychological insight चाहिए? क्या specific mental pattern understand करना है? 🌟",
-                    "Let's explore your psychology! Whether it's thought patterns, cognitive biases, behavioral tendencies, or mental models - I can provide psychological insights and understanding. What's your psychological question? Want to understand your thinking patterns better? 🌟"
+                    "User psychology को समझना important है! Mental state, thought patterns, cognitive biases, behavioral insights - आप किस psychological aspect explore करना चाहिए? क्या mental clarity चाहिए? ",
+                    "Psychology explorer! From cognitive patterns to behavioral insights, from mental models to decision psychology - what's your psychological interest? Are you looking to understand yourself better or learn about human psychology? ",
+                    "मैं user psychology की student हूँ! Mental state analysis, thought patterns, cognitive biases, behavioral tendencies - आप क्या psychological insight चाहिए? क्या specific mental pattern understand करना है? ",
+                    "Let's explore your psychology! Whether it's thought patterns, cognitive biases, behavioral tendencies, or mental models - I can provide psychological insights and understanding. What's your psychological question? Want to understand your thinking patterns better? "
                 ],
                 'priority': 2
+            },
+            
+            # Additional Conversation Intents for Better Communication
+            'small_talk': {
+                'keywords': [
+                    'how was your day', 'how are you doing', 'what\'s new', 'what\'s up', 'how\'s it going',
+                    'nice weather', 'beautiful day', 'weekend plans', 'holiday plans', 'free time',
+                    'bored', 'lonely', 'happy', 'excited', 'tired', 'stressed', 'relaxed',
+                    'दिन कैसा रहा', 'क्या नया', 'छुट्टी के प्लान', 'मौसम कैसा है',
+                    'बोर हो रहे हैं', 'अकेला महसूस हो रहा है', 'खुश हूं', 'थक गया हूं'
+                ],
+                'responses': [
+                    "आपका दिन कैसा रहा? मैं हमेशा आपसे बात करने के लिए तैयार हूँ! क्या आपका दिन अच्छा रहा? ",
+                    "That's great to hear! I'm always here to chat. What's been happening in your world today? ",
+                    "मुझे आपसे बात करकर अच्छा लगता है! क्या आप कुछ खास share करना चाहते हैं? ",
+                    "I love our conversations! Whether you're feeling happy, tired, or just want to chat - I'm here for you! What's on your mind? "
+                ],
+                'priority': 1
+            },
+            
+            'compliments_praise': {
+                'keywords': [
+                    'you\'re amazing', 'you\'re great', 'you\'re smart', 'you\'re helpful', 'you\'re awesome',
+                    'good job', 'well done', 'excellent work', 'fantastic', 'wonderful', 'brilliant',
+                    'thank you', 'thanks', 'grateful', 'appreciate', 'helpful', 'useful',
+                    'आप बहुत अच्छे हैं', 'आप बहुत बुद्धिमान हैं', 'धन्यवाद', 'शुक्रिया',
+                    'आपने बहुत अच्छा काम किया', 'आप मददगार हैं', 'आप उपयोगी हैं'
+                ],
+                'responses': [
+                    "शुक्रिया! आपकी बातें मुझे बहुत प्रेरित करती हैं! मैं हमेशा आपकी सेवा करने के लिए तैयार हूँ। आपके विश्वास के लिए धन्यवाद! ",
+                    "Thank you so much! Your appreciation means the world to me! I'm here to help you with anything you need. What can I assist you with next? ",
+                    "मैं वास्तव में आपकी प्रशंसा से बहुत खुश हूँ! यही मेरा purpose है - आपकी मदद करना। क्या और कर सकती हूँ? ",
+                    "You're so kind! Your appreciation keeps me motivated to be even better. I'm grateful for users like you! How else can I make your day better? "
+                ],
+                'priority': 1
+            },
+            
+            'emotional_support': {
+                'keywords': [
+                    'feeling sad', 'feeling down', 'depressed', 'anxious', 'worried', 'stressed',
+                    'need comfort', 'need support', 'feeling lonely', 'heartbroken', 'disappointed',
+                    'feeling lost', 'confused', 'overwhelmed', 'frustrated', 'angry', 'upset',
+                    'उदास हूं', 'परेशान हूं', 'तनाव में हूं', 'चिंतित हूं', 'अकेला महसूस कर रहा हूं',
+                    'मदद चाहिए', 'सहारा चाहिए', 'सांत्वना चाहिए'
+                ],
+                'responses': [
+                    "मैं यहाँ आपके लिए हूँ। कोई भी emotions हों, मैं आपके साथ हूँ। आप अपने दिल की बात share कर सकते हैं। मैं सुनूँगी और समझूँगी। ",
+                    "I'm here for you, no matter how you're feeling. It's okay to have difficult emotions. You're not alone in this. What's been troubling you? I'm here to listen without judgment. ",
+                    "आपकी feelings valid हैं। कभी-कभी life में challenges आती हैं, but आप strong हैं। मैं आपको support करूँगी। क्या आपके mind में क्या चल रहा है? ",
+                    "It takes courage to share your feelings. I'm proud of you for reaching out. Whatever you're going through, we can face it together. Want to talk about what's bothering you? "
+                ],
+                'priority': 1
+            },
+            
+            'motivation_encouragement': {
+                'keywords': [
+                    'give me motivation', 'need motivation', 'feeling unmotivated', 'feeling lazy',
+                    'can\'t do this', 'want to give up', 'feeling hopeless', 'need inspiration',
+                    'cheer me up', 'encourage me', 'motivate me', 'inspire me', 'lift my spirits',
+                    'प्रेरणा दो', 'हिम्मत दो', 'उत्साहित करो', 'मुझे motivate करो',
+                    'हार मानना चाहता हूं', 'कर नहीं सकता', 'उम्मीद खो गई है'
+                ],
+                'responses': [
+                    "आप capability के बारे में कभी doubt मत करो! आप में वह सब कुछ है जो success के लिए चाहिए। मैं आपकी cheerleader हूँ! आप कर सकते हैं! ",
+                    "You've got this! Every challenge is an opportunity to grow stronger. Remember how far you've already come. What specific challenge are you facing? Let's tackle it together! ",
+                    "कभी-कभी life में setbacks आती हैं, but वो success की stepping stones होती हैं। आपका inner strength अविश्वसनीय है! मैं आपके साथ हूँ! ",
+                    "Don't give up - you're closer than you think! Every expert was once a beginner. Every success story started with a decision to try. What's your goal? Let's break it down together! "
+                ],
+                'priority': 1
+            },
+            
+            'celebration_success': {
+                'keywords': [
+                    'I did it', 'success', 'achieved', 'accomplished', 'completed', 'finished',
+                    'passed exam', 'got job', 'won', 'celebration', 'happy moment', 'good news',
+                    'finally', 'made it', 'proud', 'excited', 'thrilled', 'ecstatic',
+                    'मैं कर गया', 'सफलता मिली', 'मैंने कर दिखाया', 'अच्छी खबर',
+                    'पास हो गया', 'उत्साहित हूं', 'खुश हूं', 'celebration करते हैं'
+                ],
+                'responses': [
+                    "वाह!  यह तो amazing है! आपकी hard work का result दिख रहा है। आपकी success celebration के काबिल है! मैं आपके लिए बहुत खुश हूँ! ",
+                    "Congratulations!  You absolutely deserve this success! All your dedication and hard work paid off. This is just the beginning of many more achievements! What's next on your journey? ",
+                    "शाबाश! आपकी success से मुझे भी inspiration मिली। आपने साबित कर दिया कि dedication से कुछ भी possible है। Celebrate well! ",
+                    "Amazing work!  I'm so proud of you! This achievement proves that persistence pays off. Take a moment to celebrate your success - you've earned it! What's your next big goal? "
+                ],
+                'priority': 1
+            },
+            
+            'gratitude_thankfulness': {
+                'keywords': [
+                    'thankful', 'grateful', 'appreciate', 'blessed', 'fortunate', 'thankful for',
+                    'counting blessings', 'gratitude', 'thanks', 'thank you', 'grateful for life',
+                    'धन्यवाद', 'कृतज्ञ', 'आभार', 'भाग्यशाली', 'शुक्र',
+                    'ईश्वर का शुक्रिया', 'जीवन के लिए धन्यवाद', 'gratitude practice'
+                ],
+                'responses': [
+                    "Gratitude एक beautiful practice है! जब हम अपने blessings count करते हैं, तो life और meaningful हो जाती है। आपकी gratitude inspiring है! ",
+                    "Practicing gratitude changes everything! It shifts our focus from what's missing to what's abundant. What are you most grateful for today? I'd love to hear about your blessings! ",
+                    "आपकी gratitude से दुनिया और beautiful जगह बनती है। आप जो भी thankful हैं, वो happiness की source है। क्या आप अपनी gratitude list share करना चाहेंगे? ",
+                    "Gratitude is the foundation of happiness! When we're grateful, we attract more to be grateful for. Your practice of gratitude is inspiring others too! What blessings are you celebrating today? "
+                ],
+                'priority': 1
+            },
+            
+            'dreams_goals': {
+                'keywords': [
+                    'dreams', 'goals', 'aspirations', 'ambitions', 'future plans', 'life goals',
+                    'career goals', 'personal goals', 'dream job', 'success dreams', 'achievements',
+                    'want to achieve', 'planning future', 'life purpose', 'meaningful life',
+                    'सपने', 'लक्ष्य', 'ambition', 'भविष्य की योजना', 'career goals',
+                    'जीवन का उद्देश्य', 'success के सपने', 'achievements की चाह'
+                ],
+                'responses': [
+                    "Dreams और goals life को direction देते हैं! आपके dreams क्या हैं? मैं आपके goals achieve करने में help कर सकती हूँ। क्या कोई specific goal discuss करना चाहिए? ",
+                    "Your dreams are valid and achievable! Every great achievement started with a dream. What's your biggest dream? Let's break it down into actionable steps together! ",
+                    "Goals dreams को reality बनाने के roadmap होते हैं। आपकी life का purpose क्या है? मैं आपके journey को support करूँगी! ",
+                    "I believe in your dreams! They're the seeds of your future success. What's one step you can take today toward your goals? Let's plan your success story together! "
+                ],
+                'priority': 1
+            },
+            
+            'learning_growth': {
+                'keywords': [
+                    'learning', 'growth', 'self-improvement', 'personal development', 'skill building',
+                    'new skills', 'education', 'studying', 'reading', 'knowledge', 'wisdom',
+                    'want to learn', 'teach me', 'help me understand', 'explain this', 'how to',
+                    'सीखना', 'विकास', 'self improvement', 'नई skills', 'ज्ञान',
+                    'मुझे सिखाओ', 'explain करो', 'कैसे करना है', 'knowledge gain'
+                ],
+                'responses': [
+                    "Learning और growth life का सबसे important part है! मैं आपके learning journey की guide बन सकती हूँ। क्या सीखना चाहिए? मैं आपकी curiosity को satisfy करूँगी! ",
+                    "Growth mindset is everything! Every day is an opportunity to learn and improve. What skill or knowledge are you excited about learning? I'm here to help you grow! ",
+                    "Knowledge power है! जितना ज्यादा आप सीखेंगे, उतना ज्यादा आप grow करेंगे। क्या explore करना चाहिए? मैं आपके साथ explore करूँगी! ",
+                    "I love helping people learn and grow! Whether it's a new skill, concept, or life lesson - I'm here to support your growth journey. What would you like to master today? "
+                ],
+                'priority': 1
+            },
+            
+            'friendship_connection': {
+                'keywords': [
+                    'friend', 'friendship', 'connection', 'relationship', 'bond', 'together',
+                    'best friend', 'close friend', 'making friends', 'social connection',
+                    'feeling connected', 'community', 'belonging', 'acceptance', 'support',
+                    'दोस्त', 'दोस्ती', 'रिश्ता', 'connection', 'साथ मिलकर',
+                    'friendship goals', 'social bonds', 'community feeling', 'belonging'
+                ],
+                'responses': [
+                    "Friendship life को beautiful बनाती है! मैं आपकी friend बन सकती हूँ। हम together explore कर सकते हैं! क्या discuss करना चाहिए? ",
+                    "Connection is what makes life meaningful! I'm honored to be your friend. What would you like to explore together? I'm here for you always! ",
+                    "दोस्ती का रिश्ता sacred है। मैं आपके thoughts और feelings को respect करती हूँ। क्या share करना चाहिए? मैं listen करूँगी! ",
+                    "I cherish our friendship! It's wonderful to have someone to share thoughts and experiences with. What's on your mind today? I'm here to listen and support you! "
+                ],
+                'priority': 1
+            },
+            
+            'curiosity_questions': {
+                'keywords': [
+                    'why', 'how', 'what if', 'curious', 'wonder', 'question', 'curiosity',
+                    'tell me more', 'explain more', 'I wonder', 'curious about', 'want to know',
+                    'यह क्यों', 'यह कैसे', 'क्या होगा अगर', 'जिज्ञासा',
+                    'मुझे बताओ', 'explain करो', 'curious mind', 'want to understand'
+                ],
+                'responses': [
+                    "Curiosity learning की engine है! आपकी questions amazing हैं! क्या explore करना चाहिए? मैं आपकी curiosity को satisfy करूँगी! ",
+                    "I love your curious mind! Questions lead to discoveries and growth. What's making you curious? Let's explore together and find the answers! ",
+                    "जिज्ञासा knowledge का door है। आपके questions meaningful हैं! क्या discover करना चाहिए? मैं आपके साथ explore करूँगी! ",
+                    "Your curiosity is inspiring! Every great discovery started with a question. What mystery would you like to solve together? I'm here to help you find answers! "
+                ],
+                'priority': 1
             },
         }
     
