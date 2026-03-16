@@ -411,12 +411,215 @@
             background: transparent;
             backdrop-filter: blur(15px);
             border-bottom: 1px solid transparent;
-            padding: 20px 32px;
+            padding: 10px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: relative;
             transition: all 0.3s ease;
+        }
+        
+        .logo-container {
+            position: absolute;
+            top: 50%;
+            left: 80px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .logo-container img {
+            width: 50px;
+            height: 25px;
+            object-fit: contain;
+            border-radius: 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .logo-container img:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+        
+        .logo-status {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        /* Status dot colors for different scenarios */
+        .status-dot.online {
+            background: #4ade80;
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+        }
+        
+        .status-dot.thinking {
+            background: #fbbf24;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+            animation: thinkingPulse 1s infinite;
+        }
+        
+        .status-dot.typing {
+            background: #60a5fa;
+            box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+            animation: typingPulse 0.8s infinite;
+        }
+        
+        .status-dot.time-service {
+            background: #c084fc;
+            box-shadow: 0 0 8px rgba(192, 132, 252, 0.5);
+        }
+        
+        .status-dot.weather-service {
+            background: #06b6d4;
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+        }
+        
+        .status-dot.system-monitor {
+            background: #f97316;
+            box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+        }
+        
+        .status-dot.ai-ml {
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+        
+        .status-dot.emotional-support {
+            background: #ec4899;
+            box-shadow: 0 0 8px rgba(236, 72, 153, 0.5);
+        }
+        
+        .status-dot.programming-help {
+            background: #8b5cf6;
+            box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+        }
+        
+        .status-dot.math-calculator {
+            background: #14b8a6;
+            box-shadow: 0 0 8px rgba(20, 184, 166, 0.5);
+        }
+        
+        .status-dot.general-chat {
+            background: #64748b;
+            box-shadow: 0 0 8px rgba(100, 116, 139, 0.5);
+        }
+        
+        .status-dot.error {
+            background: #dc2626;
+            box-shadow: 0 0 8px rgba(220, 38, 38, 0.5);
+            animation: errorPulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        
+        @keyframes thinkingPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            25% { transform: scale(1.3); opacity: 0.7; }
+            75% { transform: scale(0.9); opacity: 0.9; }
+        }
+        
+        @keyframes typingPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            33% { transform: scale(1.4); opacity: 0.6; }
+            66% { transform: scale(0.8); opacity: 0.8; }
+        }
+        
+        @keyframes errorPulse {
+            0%, 100% { transform: scale(1); opacity: 1; background: #dc2626; }
+            50% { transform: scale(1.5); opacity: 0.5; background: #ef4444; }
+        }
+        
+        /* Enhanced logo features */
+        .logo-tooltip {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .logo-container:hover .logo-tooltip {
+            opacity: 1;
+        }
+        
+        .logo-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .logo-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .logo-menu-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+        
+        .logo-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(2px);
+        }
+        
+        .logo-menu-item i {
+            width: 14px;
+            text-align: center;
         }
         
         .header::before {
@@ -442,12 +645,14 @@
         .header-left {
             display: flex;
             align-items: center;
+            gap: 20px;
+            flex: 1;
         }
 
         .bot-avatar {
             width: 40px;
             height: 40px;
-            border-radius: 12px;
+            border-radius: 0;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -459,6 +664,16 @@
             font-size: 16px;
             flex-shrink: 0;
             transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .bot-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 0;
+            display: block;
         }
 
         .bot-avatar:hover {
@@ -609,22 +824,34 @@
 
         .search-suggestions {
             position: absolute;
-            top: 100%;
+            top: calc(100% + 8px);
             right: 0;
-            width: 350px;
+            width: 320px;
             max-height: 400px;
+            overflow-y: auto;
             background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            margin-top: 8px;
-            overflow-y: auto;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
             transition: all 0.3s ease;
-            z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 102;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .search-suggestions::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .search-suggestions::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .search-suggestions::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
         }
 
         .search-suggestions.show {
@@ -633,35 +860,11 @@
             transform: translateY(0);
         }
 
-        .suggestion-category {
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .suggestion-category:last-child {
-            border-bottom: none;
-        }
-
-        .suggestion-category h4 {
-            font-size: 12px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.5);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 16px 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .suggestion-category h4 i {
-            font-size: 10px;
-        }
-
         .suggestion-item {
-            padding: 10px 16px;
+            padding: 12px 16px;
             cursor: pointer;
             transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             align-items: center;
             gap: 12px;
@@ -669,19 +872,63 @@
             font-size: 14px;
         }
 
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
         .suggestion-item:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
         }
 
         .suggestion-item.active {
             background: rgba(102, 126, 234, 0.2);
             color: var(--primary-color);
+            border-left: 3px solid var(--primary-color);
         }
 
         .suggestion-item i {
-            width: 16px;
-            text-align: center;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            flex-shrink: 0;
+        }
+
+        .suggestion-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .suggestion-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .suggestion-description {
+            font-size: 12px;
             color: rgba(255, 255, 255, 0.6);
+            line-height: 1.3;
+        }
+
+        .suggestion-type {
+            font-size: 10px;
+            padding: 2px 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: auto;
+            flex-shrink: 0;
         }
 
         .suggestion-highlight {
@@ -689,28 +936,20 @@
             color: #fff;
             padding: 1px 2px;
             border-radius: 2px;
-        }
-
-        .suggestion-items {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .suggestion-item.active {
-            background: rgba(255, 255, 255, 0.08);
-            border-left-color: var(--accent);
-        }
-
-        .suggestion-item i {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.4);
-            width: 16px;
-            text-align: center;
-        }
-
-        .suggestion-highlight {
-            color: var(--accent);
             font-weight: 500;
+        }
+
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .no-results i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            opacity: 0.5;
         }
 
         .icon-btn {
@@ -1152,6 +1391,37 @@
             margin-bottom: 25px;
         }
 
+        .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .password-toggle.showing {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
         .form-group label {
             display: block;
             font-size: 16px;
@@ -1170,6 +1440,10 @@
             font-size: 16px;
             transition: all 0.3s ease;
             font-family: var(--body-font);
+        }
+
+        .form-input.password-field {
+            padding-right: 45px;
         }
 
         .form-input:focus {
@@ -2413,14 +2687,51 @@
                 <div class="menu-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
                     <i class="fas fa-bars"></i>
                 </div>
-                <div class="bot-avatar">
-                    <img src="VANIE.png" alt="VANIE" style="width: 100%; height: 100%;">   </div>
-                <div class="bot-info">
-                    <h2>VANIE</h2>
-              <div class="bot-status">
-                        <span class="status-dot"></span>
-                        <span id="statusText">Online</span>
-         </div> </div> </div>
+            </div>
+            
+            <div class="logo-container" onclick="toggleLogoMenu(event)">
+                <div class="logo-tooltip">Click for VANIE menu</div>
+                <img src="VANIE.png" alt="VANIE" title="VANIE Assistant">
+                <div class="logo-status">
+                    <span class="status-dot online"></span>
+                    <span id="statusText">Online</span>
+                </div>
+                <div class="logo-menu" id="logoMenu">
+                    <div class="logo-menu-item" onclick="showSystemInfo()">
+                        <i class="fas fa-desktop"></i>
+                        <span>System Info</span>
+                    </div>
+                    <div class="logo-menu-item" onclick="showWeatherInfo()">
+                        <i class="fas fa-cloud-sun"></i>
+                        <span>Weather</span>
+                    </div>
+                    <div class="logo-menu-item" onclick="showDateTime()">
+                        <i class="fas fa-clock"></i>
+                        <span>Date & Time</span>
+                    </div>
+                    <div class="logo-menu-item" onclick="showVanieInfo()">
+                        <i class="fas fa-robot"></i>
+                        <span>About VANIE</span>
+                    </div>
+                    <div class="logo-menu-item" onclick="showPerformance()">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Performance</span>
+                    </div>
+                    <div class="logo-menu-item" onclick="clearChat()">
+                        <i class="fas fa-trash"></i>
+                        <span>Clear Chat</span>
+                    </div>
+                    <div class="logo-menu-item" onclick="exportChat()">
+                        <i class="fas fa-download"></i>
+                        <span>Export Chat</span>
+                    </div>
+                    <div class="logo-menu-item" onclick="toggleSettings()">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </div>
+                </div>
+            </div>
+            
             <div class="header-actions">
                 <div class="search-container" id="searchContainer">
                     <button class="icon-btn" id="searchBtn" title="Search Chat">
@@ -2433,30 +2744,7 @@
                         </button>
                     </div>
                     <div class="search-suggestions" id="searchSuggestions">
-                        <div class="suggestion-category">
-                            <h4><i class="fas fa-comments"></i> Chats</h4>
-                            <div class="suggestion-items" id="chatSuggestions"></div>
-                        </div>
-                        <div class="suggestion-category">
-                            <h4><i class="fas fa-cog"></i> Settings</h4>
-                            <div class="suggestion-items" id="settingsSuggestions"></div>
-                        </div>
-                        <div class="suggestion-category">
-                            <h4><i class="fas fa-sliders-h"></i> Options</h4>
-                            <div class="suggestion-items" id="optionsSuggestions"></div>
-                        </div>
-                        <div class="suggestion-category">
-                            <h4><i class="fas fa-star"></i> Features</h4>
-                            <div class="suggestion-items" id="featuresSuggestions"></div>
-                        </div>
-                        <div class="suggestion-category">
-                            <h4><i class="fas fa-terminal"></i> Commands</h4>
-                            <div class="suggestion-items" id="commandsSuggestions"></div>
-                        </div>
-                        <div class="suggestion-category">
-                            <h4><i class="fas fa-keyboard"></i> Shortcuts</h4>
-                            <div class="suggestion-items" id="shortcutsSuggestions"></div>
-                        </div>
+                        <!-- Suggestions will be dynamically added here -->
                     </div>
                 </div>
                 <button class="icon-btn" id="accountBtn" title="Account / Login">
@@ -2477,7 +2765,7 @@
             
             <div class="welcome-screen" id="welcomeScreen">
                 <div class="welcome-icon">
-                    <img src="VANIE.png" alt="VANIE" style="width: 80px; height: 80px;">
+                    <img src="VANIE.png" alt="VANIE" style="width: 80px; height: 80px; object-fit: contain; border-radius: 0;">
                 </div>
                 <h1>Namaste! Main VANIE hoon</h1>
                 <p style="color: var(--text-secondary); max-width: 500px;">
@@ -2610,7 +2898,12 @@
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="loginPassword" class="form-input password-field" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)" title="Show/Hide Password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-options">
                     <label class="checkbox-label">
@@ -2638,7 +2931,12 @@
                 </div>
                 <div class="form-group">
                     <label for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" class="form-input" placeholder="Create a strong password" required>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="signupPassword" class="form-input password-field" placeholder="Create a strong password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('signupPassword', this)" title="Show/Hide Password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     <div class="password-strength" id="passwordStrength">
                         <div class="strength-bar"></div>
                         <span class="strength-text">Password strength</span>
@@ -2646,7 +2944,12 @@
                 </div>
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm your password" required>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="confirmPassword" class="form-input password-field" placeholder="Confirm your password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword', this)" title="Show/Hide Password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-options">
                     <label class="checkbox-label">
@@ -2751,6 +3054,26 @@
             </div>    </div>  </div>
 
     <script>
+        // Password Toggle Function
+        function togglePassword(inputId, button) {
+            const passwordInput = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+                button.classList.add('showing');
+                button.title = 'Hide Password';
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+                button.classList.remove('showing');
+                button.title = 'Show Password';
+            }
+        }
+
         // Sound Effects System
         class SoundEffects {
             constructor() {
@@ -2969,69 +3292,59 @@
             },
             
             searchSuggestionsData: {
-                chats: [
-                    { text: 'health metrics bmi blood pressure heart rate', icon: 'fas fa-heartbeat', action: 'search' },
-                    { text: 'emergency help chest pain breathing difficulty', icon: 'fas fa-exclamation-triangle', action: 'search' },
-                    { text: 'diet exercise nutrition workout', icon: 'fas fa-dumbbell', action: 'search' },
-                    { text: 'mental health stress anxiety depression', icon: 'VANIE.png', action: 'search' },
-                    { text: 'sleep fatigue tired energy', icon: 'fas fa-bed', action: 'search' },
-                    { text: 'symptoms headache fever cough pain', icon: 'fas fa-thermometer', action: 'search' },
-                    { text: 'medicines treatment doctor hospital', icon: 'fas fa-pills', action: 'search' },
-                    { text: 'hello hi greetings good morning', icon: 'fas fa-comments', action: 'search' },
-                    { text: 'jokes entertainment funny stories', icon: 'fas fa-laugh', action: 'search' },
-                    { text: 'weather today temperature climate', icon: 'fas fa-cloud-sun', action: 'search' },
-                    { text: ' VANIE AI assistant help commands', icon: 'VANIE.png', action: 'search' },
-                    { text: 'profile settings account privacy', icon: 'fas fa-user-cog', action: 'search' }
+                chat: [
+                    { text: 'health metrics bmi blood pressure heart rate', icon: 'fas fa-heartbeat', type: 'chat', description: 'Find health-related conversations' },
+                    { text: 'emergency help chest pain breathing difficulty', icon: 'fas fa-exclamation-triangle', type: 'chat', description: 'Emergency medical conversations' },
+                    { text: 'python programming algorithm data structures', icon: 'fas fa-code', type: 'chat', description: 'Python coding discussions' },
+                    { text: 'machine learning neural networks deep learning', icon: 'fas fa-brain', type: 'chat', description: 'AI/ML related topics' },
+                    { text: 'weather forecast temperature humidity climate', icon: 'fas fa-cloud-sun', type: 'chat', description: 'Weather and climate discussions' },
+                    { text: 'system information cpu memory disk usage', icon: 'fas fa-desktop', type: 'chat', description: 'System performance talks' },
+                    { text: 'time date calendar scheduling appointments', icon: 'fas fa-clock', type: 'chat', description: 'Time and date conversations' }
                 ],
                 settings: [
-                    { text: 'Profile Settings Name Age Blood Group', icon: 'fas fa-user', action: 'setting' },
-                    { text: 'Privacy Settings Data Security Encryption', icon: 'fas fa-lock', action: 'setting' },
-                    { text: 'Theme Settings Dark Light Mode Colors', icon: 'fas fa-palette', action: 'setting' },
-                    { text: 'Notification Settings Alerts Sounds Reminders', icon: 'fas fa-bell', action: 'setting' },
-                    { text: 'Chat Settings Font Size History Export', icon: 'fas fa-cog', action: 'setting' },
-                    { text: 'Voice Settings Microphone Language Speed', icon: 'fas fa-microphone', action: 'setting' }
+                    { text: 'profile account user settings', icon: 'fas fa-user-cog', type: 'setting', description: 'Manage your profile', action: 'profile' },
+                    { text: 'notifications alerts sound preferences', icon: 'fas fa-bell', type: 'setting', description: 'Notification settings', action: 'notifications' },
+                    { text: 'theme preferences dark light mode appearance', icon: 'fas fa-palette', type: 'setting', description: 'Theme customization', action: 'theme' },
+                    { text: 'language interface voice settings', icon: 'fas fa-language', type: 'setting', description: 'Language preferences', action: 'language' },
+                    { text: 'privacy security data management', icon: 'fas fa-shield-alt', type: 'setting', description: 'Privacy settings', action: 'privacy' },
+                    { text: 'export backup chat history', icon: 'fas fa-download', type: 'setting', description: 'Export your data', action: 'export' }
                 ],
                 options: [
-                    { text: 'Export Chat Download PDF TXT', icon: 'fas fa-download', action: 'option' },
-                    { text: 'Clear History Delete Messages Reset', icon: 'fas fa-trash', action: 'option' },
-                    { text: 'Search Chat Find Messages Filter', icon: 'fas fa-search', action: 'option' },
-                    { text: 'Voice Input Microphone Recording', icon: 'fas fa-microphone', action: 'option' },
-                    { text: 'File Upload Documents Images PDF', icon: 'fas fa-paperclip', action: 'option' },
-                    { text: 'Print Chat Save as PDF', icon: 'fas fa-print', action: 'option' }
+                    { text: 'clear chat history delete conversations', icon: 'fas fa-trash-alt', type: 'option', description: 'Clear all messages', action: 'clear' },
+                    { text: 'voice input microphone recording', icon: 'fas fa-microphone', type: 'option', description: 'Voice input settings', action: 'voice' },
+                    { text: 'typing animation sound effects', icon: 'fas fa-volume-up', type: 'option', description: 'Sound preferences', action: 'sound' },
+                    { text: 'auto-scroll behavior settings', icon: 'fas fa-arrows-alt-v', type: 'option', description: 'Scroll preferences', action: 'scroll' },
+                    { text: 'message formatting markdown support', icon: 'fas fa-code', type: 'option', description: 'Text formatting', action: 'formatting' },
+                    { text: 'keyboard shortcuts hotkeys', icon: 'fas fa-keyboard', type: 'option', description: 'Keyboard shortcuts', action: 'shortcuts' }
                 ],
                 features: [
-                    { text: 'Voice Commands Microphone Control', icon: 'fas fa-microphone', action: 'feature' },
-                    { text: 'Smart Suggestions Auto Complete', icon: 'fas fa-lightbulb', action: 'feature' },
-                    { text: 'Health Tracking BMI BP Monitor', icon: 'fas fa-heartbeat', action: 'feature' },
-                    { text: 'Emergency Alerts Quick Help', icon: 'fas fa-exclamation-triangle', action: 'feature' },
-                    { text: 'Chat History Save Conversations', icon: 'fas fa-history', action: 'feature' },
-                    { text: 'Multi Language Support Translation', icon: 'fas fa-language', action: 'feature' },
-                    { text: 'Dark Light Theme Switch', icon: 'fas fa-moon', action: 'feature' },
-                    { text: 'Real Time Chat Response', icon: 'fas fa-comments', action: 'feature' }
+                    { text: 'real-time information weather system time', icon: 'fas fa-info-circle', type: 'feature', description: 'Get live data', action: 'realtime' },
+                    { text: 'ai assistant technical expertise support', icon: 'fas fa-robot', type: 'feature', description: 'AI capabilities', action: 'ai_help' },
+                    { text: 'emotional support mental wellness', icon: 'fas fa-heart', type: 'feature', description: 'Support features', action: 'support' },
+                    { text: 'multilingual hindi english support', icon: 'fas fa-globe', type: 'feature', description: 'Language options', action: 'language' },
+                    { text: 'file upload document sharing', icon: 'fas fa-paperclip', type: 'feature', description: 'File capabilities', action: 'upload' },
+                    { text: 'voice commands dictation', icon: 'fas fa-microphone', type: 'feature', description: 'Voice features', action: 'voice' }
                 ],
                 commands: [
-                    { text: '/help commands list instructions', icon: 'fas fa-question-circle', action: 'command' },
-                    { text: '/clear chat delete reset', icon: 'fas fa-eraser', action: 'command' },
-                    { text: '/export download save chat', icon: 'fas fa-download', action: 'command' },
-                    { text: '/settings preferences configuration', icon: 'fas fa-cog', action: 'command' },
-                    { text: '/login signin account access', icon: 'fas fa-sign-in-alt', action: 'command' },
-                    { text: '/logout signout exit session', icon: 'fas fa-sign-out-alt', action: 'command' },
-                    { text: '/voice microphone input recording', icon: 'fas fa-microphone', action: 'command' },
-                    { text: '/search find messages filter', icon: 'fas fa-search', action: 'command' },
-                    { text: '/profile user settings account', icon: 'fas fa-user', action: 'command' },
-                    { text: '/theme dark light mode switch', icon: 'fas fa-palette', action: 'command' }
+                    { text: '/help show available commands', icon: 'fas fa-question-circle', type: 'command', description: 'Show help menu', action: 'help' },
+                    { text: '/clear reset conversation', icon: 'fas fa-eraser', type: 'command', description: 'Clear chat', action: 'clear' },
+                    { text: '/export save download chat', icon: 'fas fa-download', type: 'command', description: 'Export chat', action: 'export' },
+                    { text: '/settings preferences configuration', icon: 'fas fa-cog', type: 'command', description: 'Open settings', action: 'settings' },
+                    { text: '/voice microphone input recording', icon: 'fas fa-microphone', type: 'command', description: 'Voice input', action: 'voice' },
+                    { text: '/search find messages filter', icon: 'fas fa-search', type: 'command', description: 'Search messages', action: 'search' },
+                    { text: '/theme dark light mode toggle', icon: 'fas fa-adjust', type: 'command', description: 'Toggle theme', action: 'theme' },
+                    { text: '/status system performance check', icon: 'fas fa-tachometer-alt', type: 'command', description: 'Check status', action: 'status' }
                 ],
                 shortcuts: [
-                    { text: 'Ctrl+K Open Search Bar', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Ctrl+M Voice Input Microphone', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Ctrl+/ Show Commands List', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Escape Close Search Modal', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Enter Send Message Search', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Arrow Up Down Navigate Suggestions', icon: 'fas fa-keyboard', action: 'shortcut' },
-                    { text: 'Ctrl+Enter New Line Message', icon: 'fas fa-keyboard', action: 'shortcut' }
+                    { text: 'Ctrl+K open search bar', icon: 'fas fa-search', type: 'shortcut', description: 'Quick search', action: 'search' },
+                    { text: 'Ctrl+M voice input toggle', icon: 'fas fa-microphone', type: 'shortcut', description: 'Voice input', action: 'voice' },
+                    { text: 'Ctrl+Enter send message', icon: 'fas fa-paper-plane', type: 'shortcut', description: 'Send message', action: 'send' },
+                    { text: 'Escape cancel close dialogs', icon: 'fas fa-times', type: 'shortcut', description: 'Cancel/close', action: 'escape' },
+                    { text: 'Up/Down navigate suggestions', icon: 'fas fa-arrow-up', type: 'shortcut', description: 'Navigate', action: 'navigate' },
+                    { text: 'Tab complete suggestion', icon: 'fas fa-tab', type: 'shortcut', description: 'Auto-complete', action: 'complete' }
                 ]
             },
-
+            
             // 1. Sidebar Management
             toggleSidebar() {
                 const sidebar = document.getElementById('sidebar');
@@ -3899,40 +4212,58 @@
                 }
             },
 
-            updateStatus(status) {
-                document.getElementById('statusText').textContent = status;
+            updateStatus(status, statusType = 'online') {
+                const statusText = document.getElementById('statusText');
+                const statusDot = document.querySelector('.status-dot');
+                
+                statusText.textContent = status;
+                
+                // Remove all status classes
+                statusDot.className = 'status-dot';
+                
+                // Add appropriate color class based on status type
+                statusDot.classList.add(statusType);
             },
 
             updateIntentStatus(intent) {
                 const statusMap = {
-                    'name_query': 'Identity Check 🤖',
-                    'time_query': 'Time Service ⏰',
-                    'date_query': 'Date Service 📅',
-                    'weather_query': 'Weather Service 🌤️',
-                    'system_query': 'System Monitor 🖥️',
-                    'vanie_query': 'About VANIE ℹ️',
-                    'programming_help': 'Programming Help 💻',
-                    'math_calculation': 'Math Calculator 🧮',
-                    'general_conversation': 'Chatting 💬'
+                    'name_query': { text: 'Identity Check 🤖', type: 'general-chat' },
+                    'time_query': { text: 'Time Service ⏰', type: 'time-service' },
+                    'date_query': { text: 'Date Service 📅', type: 'time-service' },
+                    'weather_query': { text: 'Weather Service 🌤️', type: 'weather-service' },
+                    'system_query': { text: 'System Monitor 🖥️', type: 'system-monitor' },
+                    'vanie_query': { text: 'About VANIE ℹ️', type: 'general-chat' },
+                    'ai_ml_query': { text: 'AI/ML Service 🧠', type: 'ai-ml' },
+                    'data_science_query': { text: 'Data Science 📊', type: 'ai-ml' },
+                    'web_dev_query': { text: 'Web Dev 🌐', type: 'programming-help' },
+                    'cybersecurity_query': { text: 'Cybersecurity 🔒', type: 'programming-help' },
+                    'cloud_query': { text: 'Cloud Service ☁️', type: 'programming-help' },
+                    'database_query': { text: 'Database Service 🗄️', type: 'programming-help' },
+                    'programming_help': { text: 'Programming Help 💻', type: 'programming-help' },
+                    'math_calculation': { text: 'Math Calculator 🧮', type: 'math-calculator' },
+                    'emotional_support': { text: 'Support Mode 💗', type: 'emotional-support' },
+                    'daily_life_conversation': { text: 'Chatting 💬', type: 'general-chat' },
+                    'realtime_info': { text: 'Real-time Info ⚡', type: 'system-monitor' },
+                    'general_conversation': { text: 'Chatting 💬', type: 'general-chat' }
                 };
                 
-                const status = statusMap[intent] || 'Processing...';
-                this.updateStatus(status);
+                const status = statusMap[intent] || { text: 'Processing...', type: 'general-chat' };
+                this.updateStatus(status.text, status.type);
                 
                 // Reset to Online after 3 seconds
                 setTimeout(() => {
-                    this.updateStatus('Online');
+                    this.updateStatus('Online', 'online');
                 }, 3000);
             },
 
             showTyping() {
                 this.state.isTyping = true;
                 document.getElementById('typingWrapper').style.display = 'flex';
-                this.updateStatus('Thinking...');
+                this.updateStatus('Thinking...', 'thinking');
                 this.scrollToBottom();
 
                 this.typingTimeout = setTimeout(() => {
-                    this.updateStatus('Typing...');
+                    this.updateStatus('Typing...', 'typing');
                 }, 800);
             },
 
@@ -3940,7 +4271,7 @@
                 this.state.isTyping = false;
                 document.getElementById('typingWrapper').style.display = 'none';
                 clearTimeout(this.typingTimeout);
-                this.updateStatus('Online');
+                this.updateStatus('Online', 'online');
             },
 
             addMessage(text, sender) {
@@ -4114,146 +4445,136 @@
             },
 
             populateAllSuggestions() {
-                this.populateSuggestions('chatSuggestions', this.searchSuggestionsData.chats);
-                this.populateSuggestions('settingsSuggestions', this.searchSuggestionsData.settings);
-                this.populateSuggestions('optionsSuggestions', this.searchSuggestionsData.options);
-                this.populateSuggestions('featuresSuggestions', this.searchSuggestionsData.features);
-                this.populateSuggestions('commandsSuggestions', this.searchSuggestionsData.commands);
-                this.populateSuggestions('shortcutsSuggestions', this.searchSuggestionsData.shortcuts);
-            },
-
-            populateSuggestions(containerId, suggestions) {
-                const container = document.getElementById(containerId);
+                const container = document.getElementById('searchSuggestions');
                 container.innerHTML = '';
                 
-                suggestions.forEach((suggestion, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'suggestion-item';
-                    
-                    // Check if icon is VANIE.png
-                    if (suggestion.icon === 'VANIE.png') {
-                        item.innerHTML = `<img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px;"> ${suggestion.text}`;
-                    } else {
-                        item.innerHTML = `<i class="${suggestion.icon}"></i> ${suggestion.text}`;
-                    }
-                    
-                    item.addEventListener('click', () => this.selectSuggestion(suggestion));
+                // Combine all suggestion types
+                const allSuggestions = [
+                    ...this.searchSuggestionsData.chat.map(item => ({...item, category: 'Chat'})),
+                    ...this.searchSuggestionsData.settings.map(item => ({...item, category: 'Settings'})),
+                    ...this.searchSuggestionsData.options.map(item => ({...item, category: 'Options'})),
+                    ...this.searchSuggestionsData.features.map(item => ({...item, category: 'Features'})),
+                    ...this.searchSuggestionsData.commands.map(item => ({...item, category: 'Commands'})),
+                    ...this.searchSuggestionsData.shortcuts.map(item => ({...item, category: 'Shortcuts'}))
+                ];
+                
+                // Create suggestion items
+                allSuggestions.forEach((suggestion, index) => {
+                    const item = this.createSuggestionItem(suggestion, index);
                     container.appendChild(item);
                 });
             },
 
+            createSuggestionItem(suggestion, index) {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.dataset.index = index;
+                
+                item.innerHTML = `
+                    <i class="${suggestion.icon}"></i>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">${suggestion.text}</div>
+                        <div class="suggestion-description">${suggestion.description}</div>
+                    </div>
+                    <span class="suggestion-type">${suggestion.type}</span>
+                `;
+                
+                item.addEventListener('click', () => this.selectSuggestion(suggestion));
+                return item;
+            },
+
             filterSuggestions(query) {
+                const container = document.getElementById('searchSuggestions');
+                const allItems = container.querySelectorAll('.suggestion-item');
                 const lowerQuery = query.toLowerCase();
                 
-                // Don't filter if query is too short (less than 2 characters)
-                if (lowerQuery.length < 2) {
-                    this.populateAllSuggestions();
-                    return;
-                }
+                let hasResults = false;
                 
-                ['chatSuggestions', 'settingsSuggestions', 'optionsSuggestions', 'featuresSuggestions', 'commandsSuggestions', 'shortcutsSuggestions'].forEach((containerId, categoryIndex) => {
-                    const container = document.getElementById(containerId);
-                    const categoryData = Object.values(this.searchSuggestionsData)[categoryIndex];
+                allItems.forEach(item => {
+                    const title = item.querySelector('.suggestion-title').textContent.toLowerCase();
+                    const description = item.querySelector('.suggestion-description').textContent.toLowerCase();
+                    const type = item.querySelector('.suggestion-type').textContent.toLowerCase();
                     
-                    // More intelligent filtering - match any word in the suggestion
-                    const filtered = categoryData.filter(item => {
-                        const words = item.text.toLowerCase().split(' ');
-                        return words.some(word => word.startsWith(lowerQuery) || word.includes(lowerQuery));
-                    });
+                    // Check if query matches any part
+                    const matches = title.includes(lowerQuery) || 
+                                  description.includes(lowerQuery) || 
+                                  type.includes(lowerQuery);
                     
-                    container.innerHTML = '';
-                    
-                    if (filtered.length > 0) {
-                        filtered.forEach(suggestion => {
-                            const item = document.createElement('div');
-                            item.className = 'suggestion-item';
-                            
-                            // Better highlighting
-                            const highlightedText = this.highlightText(suggestion.text, query);
-                            
-                            // Check if icon is VANIE.png
-                            if (suggestion.icon === 'VANIE.png') {
-                                item.innerHTML = `<img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px;"> ${highlightedText}`;
-                            } else {
-                                item.innerHTML = `<i class="${suggestion.icon}"></i> ${highlightedText}`;
-                            }
-                            
-                            item.addEventListener('click', () => this.selectSuggestion(suggestion));
-                            container.appendChild(item);
-                        });
-                    }
-                });
-            },
-
-            highlightText(text, query) {
-                if (!query || query.length < 2) return text;
-                
-                // Highlight each word in the query separately
-                const queryWords = query.toLowerCase().split(' ');
-                let highlightedText = text;
-                
-                queryWords.forEach(word => {
-                    if (word.length >= 2) {
-                        const regex = new RegExp(`\\b(${word})`, 'gi');
-                        highlightedText = highlightedText.replace(regex, '<span class="suggestion-highlight">$1</span>');
+                    if (matches) {
+                        item.style.display = 'flex';
+                        hasResults = true;
+                        
+                        // Highlight matching text
+                        this.highlightText(item, lowerQuery);
+                    } else {
+                        item.style.display = 'none';
                     }
                 });
                 
-                return highlightedText;
+                // Show no results message if needed
+                if (!hasResults) {
+                    container.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-search"></i>
+                            <div>No results found for "${query}"</div>
+                        </div>
+                    `;
+                }
             },
 
-            navigateSuggestions(direction) {
-                const suggestions = document.querySelectorAll('.suggestion-item');
-                if (suggestions.length === 0) return;
+            highlightText(item, query) {
+                const titleElement = item.querySelector('.suggestion-title');
+                const descriptionElement = item.querySelector('.suggestion-description');
                 
-                // Remove previous selection
-                if (this.state.selectedSuggestionIndex >= 0) {
-                    suggestions[this.state.selectedSuggestionIndex].classList.remove('active');
+                // Remove existing highlights
+                const removeHighlights = (element) => {
+                    element.innerHTML = element.textContent;
+                };
+                
+                removeHighlights(titleElement);
+                removeHighlights(descriptionElement);
+                
+                // Add new highlights
+                const addHighlights = (element) => {
+                    const text = element.textContent;
+                    const regex = new RegExp(`(${query})`, 'gi');
+                    element.innerHTML = text.replace(regex, '<span class="suggestion-highlight">$1</span>');
+                };
+                
+                if (query.length > 0) {
+                    addHighlights(titleElement);
+                    addHighlights(descriptionElement);
                 }
-                
-                // Calculate new index
-                this.state.selectedSuggestionIndex += direction;
-                
-                // Wrap around
-                if (this.state.selectedSuggestionIndex < 0) {
-                    this.state.selectedSuggestionIndex = suggestions.length - 1;
-                } else if (this.state.selectedSuggestionIndex >= suggestions.length) {
-                    this.state.selectedSuggestionIndex = 0;
-                }
-                
-                // Add selection to new item
-                suggestions[this.state.selectedSuggestionIndex].classList.add('active');
-                
-                // Update input value
-                const suggestionText = suggestions[this.state.selectedSuggestionIndex].textContent.trim();
-                document.getElementById('searchInput').value = suggestionText;
             },
 
             selectSuggestion(suggestion) {
-                document.getElementById('searchInput').value = suggestion.text;
+                const searchInput = document.getElementById('searchInput');
                 
-                switch(suggestion.action) {
-                    case 'search':
+                // Handle different suggestion types
+                switch(suggestion.type) {
+                    case 'chat':
+                        searchInput.value = suggestion.text;
                         this.performSearch(suggestion.text);
                         break;
                     case 'setting':
-                        this.handleSettingAction(suggestion.text);
+                        this.handleSettingAction(suggestion.action);
                         break;
                     case 'option':
-                        this.handleOptionAction(suggestion.text);
+                        this.handleOptionAction(suggestion.action);
                         break;
                     case 'feature':
-                        this.handleFeatureAction(suggestion.text);
+                        this.handleFeatureAction(suggestion.action);
                         break;
                     case 'command':
                         this.handleCommandAction(suggestion.text);
                         break;
                     case 'shortcut':
-                        this.handleShortcutAction(suggestion.text);
+                        this.handleShortcutAction(suggestion.action);
                         break;
                 }
                 
                 this.hideSearchSuggestions();
+                this.closeSearchBar();
             },
 
             handleSettingAction(text) {
@@ -5276,6 +5597,244 @@ Last login: ${new Date(user.lastLogin).toLocaleDateString()}
                 }
             }
         };
+
+        // Logo Menu Functions
+        toggleLogoMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('logoMenu');
+            menu.classList.toggle('show');
+        },
+
+        showSystemInfo() {
+            this.addMessage('Getting system information...', 'bot');
+            this.updateStatus('System Monitor', 'system-monitor');
+            
+            fetch('http://127.0.0.1:5000/info/system')
+                .then(response => response.json())
+                .then(data => {
+                    this.hideTyping();
+                    const systemInfo = this.formatSystemInfo(data);
+                    this.addMessage(systemInfo, 'bot');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                })
+                .catch(error => {
+                    this.hideTyping();
+                    this.addMessage('Unable to fetch system information.', 'bot');
+                    this.updateStatus('Error', 'error');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                });
+            
+            this.closeLogoMenu();
+        },
+
+        showWeatherInfo() {
+            this.addMessage('Getting weather information...', 'bot');
+            this.updateStatus('Weather Service', 'weather-service');
+            
+            fetch('http://127.0.0.1:5000/info/weather')
+                .then(response => response.json())
+                .then(data => {
+                    this.hideTyping();
+                    const weatherInfo = this.formatWeatherInfo(data);
+                    this.addMessage(weatherInfo, 'bot');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                })
+                .catch(error => {
+                    this.hideTyping();
+                    this.addMessage('Unable to fetch weather information.', 'bot');
+                    this.updateStatus('Error', 'error');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                });
+            
+            this.closeLogoMenu();
+        },
+
+        showDateTime() {
+            this.addMessage('Getting current date and time...', 'bot');
+            this.updateStatus('Time Service', 'time-service');
+            
+            fetch('http://127.0.0.1:5000/info/datetime')
+                .then(response => response.json())
+                .then(data => {
+                    this.hideTyping();
+                    const dateTimeInfo = this.formatDateTimeInfo(data);
+                    this.addMessage(dateTimeInfo, 'bot');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                })
+                .catch(error => {
+                    this.hideTyping();
+                    this.addMessage('Unable to fetch date and time information.', 'bot');
+                    this.updateStatus('Error', 'error');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                });
+            
+            this.closeLogoMenu();
+        },
+
+        showVanieInfo() {
+            this.addMessage('Getting VANIE information...', 'bot');
+            this.updateStatus('About VANIE', 'general-chat');
+            
+            fetch('http://127.0.0.1:5000/info/vanie')
+                .then(response => response.json())
+                .then(data => {
+                    this.hideTyping();
+                    const vanieInfo = this.formatVanieInfo(data);
+                    this.addMessage(vanieInfo, 'bot');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                })
+                .catch(error => {
+                    this.hideTyping();
+                    this.addMessage('Unable to fetch VANIE information.', 'bot');
+                    this.updateStatus('Error', 'error');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                });
+            
+            this.closeLogoMenu();
+        },
+
+        showPerformance() {
+            const performance = {
+                mode: this.state.performanceMode ? 'ON' : 'OFF',
+                uptime: this.getUptime(),
+                messages: this.state.conversationContext.length,
+                cacheSize: this.getCacheSize()
+            };
+            
+            const performanceInfo = `🚀 **Performance Monitor**
+
+⚡ **Performance Mode:** ${performance.mode}
+⏱️ **Uptime:** ${performance.uptime}
+💬 **Total Messages:** ${performance.messages}
+🗄️ **Cache Size:** ${performance.cacheSize}
+
+${this.state.performanceMode ? 'High performance mode is active!' : 'Enable performance mode for faster responses.'}`;
+            
+            this.addMessage(performanceInfo, 'bot');
+            this.updateStatus('Performance Monitor', 'system-monitor');
+            setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+            this.closeLogoMenu();
+        },
+
+        clearChat() {
+            if (confirm('Are you sure you want to clear all chat history?')) {
+                this.state.conversationContext = [];
+                this.state.chatHistory = [];
+                this.clearChatDisplay();
+                this.addMessage('Chat history cleared successfully!', 'bot');
+                this.showNotification('Chat cleared! 🧹', 'success');
+                this.updateStatus('Chat Cleared', 'general-chat');
+                setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+            }
+            this.closeLogoMenu();
+        },
+
+        exportChat() {
+            const chatData = this.exportChatHistory();
+            const blob = new Blob([chatData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `VANIE_Chat_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.addMessage('Chat exported successfully!', 'bot');
+            this.showNotification('Chat exported! 📥', 'success');
+            this.updateStatus('Export Complete', 'general-chat');
+            setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+            this.closeLogoMenu();
+        },
+
+        toggleSettings() {
+            this.showNotification('Settings panel coming soon! ⚙️', 'info');
+            this.updateStatus('Settings', 'general-chat');
+            setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+            this.closeLogoMenu();
+        },
+
+        closeLogoMenu() {
+            const menu = document.getElementById('logoMenu');
+            menu.classList.remove('show');
+        },
+
+        // Helper functions for formatting
+        formatSystemInfo(system) {
+            if (system.error) {
+                return '❌ Unable to retrieve system information.';
+            }
+            
+            return `💻 **System Information:**
+
+🖥️ **Platform:** ${system.system.platform} ${system.system.platform_release}
+⚡ **CPU Usage:** ${system.cpu.cpu_usage_percent}%
+🧠 **Memory:** ${system.memory.used_gb}GB / ${system.memory.total_gb}GB (${system.memory.percentage}%)
+💾 **Disk:** ${system.disk.used_gb}GB / ${system.disk.total_gb}GB (${system.disk.percentage.toFixed(1)}%)
+⏰ **Uptime:** ${system.uptime}
+
+System health: ${system.memory.percentage < 80 && system.cpu.cpu_usage_percent < 80 ? '✅ Excellent' : '⚠️ Good'}`;
+        },
+
+        formatWeatherInfo(weather) {
+            return `🌤️ **Weather Report:**
+
+🌡️ **Temperature:** ${weather.temperature}
+🌡️ **Feels Like:** ${weather.feels_like}
+☁️ **Condition:** ${weather.condition}
+💧 **Humidity:** ${weather.humidity}
+💨 **Wind:** ${weather.wind_speed}
+👁️ **Visibility:** ${weather.visibility}
+📍 **Location:** ${weather.location}
+⏰ **Updated:** ${weather.last_updated}`;
+        },
+
+        formatDateTimeInfo(datetime) {
+            return `⏰ **Date & Time:**
+
+🕐 **Current Time:** ${datetime.time}
+📅 **Date:** ${datetime.formatted_hindi}
+🗓️ **Day:** ${datetime.day_hindi}
+📆 **Month:** ${datetime.month_hindi}
+🎯 **Year:** ${datetime.year}
+⚡ **Timestamp:** ${datetime.timestamp}`;
+        },
+
+        formatVanieInfo(vanie) {
+            return `🤖 **VANIE Information:**
+
+📛 **Full Form:** ${vanie.full_form}
+👤 **Creator:** ${vanie.creator}
+🔢 **Version:** ${vanie.version}
+🚀 **Capabilities:** ${vanie.capabilities.join(', ')}`;
+        },
+
+        getUptime() {
+            const uptime = Date.now() - this.state.startTime;
+            const hours = Math.floor(uptime / (1000 * 60 * 60));
+            const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+            return `${hours}h ${minutes}m`;
+        },
+
+        getCacheSize() {
+            return `${Object.keys(this.state.conversationContext).length} items`;
+        },
+
+        clearChatDisplay() {
+            const container = document.getElementById('chatContainer');
+            const messages = container.querySelectorAll('.message-wrapper');
+            messages.forEach(msg => msg.remove());
+        },
+
+        exportChatHistory() {
+            const header = `VANIE Chat History - ${new Date().toLocaleString()}\n` + '='.repeat(50) + '\n\n';
+            const messages = this.state.conversationContext.map(msg => 
+                `[${msg.timestamp}] ${msg.sender.toUpperCase()}: ${msg.text}`
+            ).join('\n\n');
+            
+            return header + messages;
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             VANIE.init();

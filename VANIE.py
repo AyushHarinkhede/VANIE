@@ -3,6 +3,15 @@
 """
 VANIE - Virtual Assistant of Neural Integrated Engine
 Advanced Backend System with Real-time Information Capabilities
+
+REQUIREMENTS:
+flask==2.3.3
+flask-cors==4.0.0
+psutil==5.9.5
+requests==2.31.0
+
+INSTALLATION:
+pip install flask flask-cors psutil requests
 """
 
 import os
@@ -23,6 +32,9 @@ import logging
 from typing import Dict, Any, List
 import random
 import math
+import hashlib
+import base64
+import uuid
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -65,7 +77,7 @@ class VANIEEngine:
         }
     
     def _initialize_knowledge_base(self) -> Dict[str, Any]:
-        """Initialize comprehensive knowledge base"""
+        """Initialize comprehensive knowledge base with technical fields"""
         return {
             'vanie_info': {
                 'full_form': "Virtual Assistant of Neural Integrated Engine",
@@ -78,14 +90,62 @@ class VANIEEngine:
                     "Natural Conversation",
                     "Programming Help",
                     "Mathematical Calculations",
-                    "Date & Time Services"
+                    "Date & Time Services",
+                    "Technical Field Support",
+                    "Algorithm Design",
+                    "Database Management",
+                    "Network Security",
+                    "Cloud Computing",
+                    "DevOps Support"
                 ]
             },
             'general_knowledge': {
-                'programming_languages': ['Python', 'JavaScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust'],
-                'frameworks': ['React', 'Angular', 'Vue.js', 'Django', 'Flask', 'FastAPI', 'Node.js'],
-                'algorithms': ['Binary Search', 'QuickSort', 'MergeSort', 'Dijkstra', 'Floyd-Warshall'],
-                'subjects': ['Physics', 'Chemistry', 'Mathematics', 'Computer Science', 'History', 'Geography']
+                'programming_languages': ['Python', 'JavaScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'TypeScript', 'PHP', 'Swift', 'Kotlin'],
+                'frameworks': ['React', 'Angular', 'Vue.js', 'Django', 'Flask', 'FastAPI', 'Node.js', 'Express', 'Spring Boot', 'Laravel', 'Rails'],
+                'algorithms': ['Binary Search', 'QuickSort', 'MergeSort', 'Dijkstra', 'Floyd-Warshall', 'A* Search', 'Dynamic Programming', 'Greedy Algorithms'],
+                'subjects': ['Physics', 'Chemistry', 'Mathematics', 'Computer Science', 'History', 'Geography', 'Biology', 'Economics'],
+                'technical_fields': {
+                    'artificial_intelligence': {
+                        'topics': ['Machine Learning', 'Deep Learning', 'Neural Networks', 'NLP', 'Computer Vision', 'Reinforcement Learning'],
+                        'concepts': ['Supervised Learning', 'Unsupervised Learning', 'CNN', 'RNN', 'Transformers', 'GANs'],
+                        'tools': ['TensorFlow', 'PyTorch', 'Scikit-learn', 'Keras', 'OpenCV', 'NLTK']
+                    },
+                    'data_science': {
+                        'topics': ['Data Analysis', 'Data Visualization', 'Statistics', 'Big Data', 'Data Mining', 'Predictive Analytics'],
+                        'concepts': ['Regression', 'Classification', 'Clustering', 'Hypothesis Testing', 'Time Series', 'Feature Engineering'],
+                        'tools': ['Pandas', 'NumPy', 'Matplotlib', 'Seaborn', 'Tableau', 'Power BI', 'Apache Spark']
+                    },
+                    'web_development': {
+                        'topics': ['Frontend Development', 'Backend Development', 'Full Stack', 'Web APIs', 'Responsive Design', 'Progressive Web Apps'],
+                        'concepts': ['HTTP/HTTPS', 'REST APIs', 'Authentication', 'Session Management', 'CORS', 'WebSockets'],
+                        'tools': ['HTML5', 'CSS3', 'JavaScript', 'React', 'Node.js', 'MongoDB', 'MySQL', 'Docker']
+                    },
+                    'cybersecurity': {
+                        'topics': ['Network Security', 'Application Security', 'Cryptography', 'Ethical Hacking', 'Security Auditing', 'Compliance'],
+                        'concepts': ['Encryption', 'Firewalls', 'IDS/IPS', 'Penetration Testing', 'Vulnerability Assessment', 'Security Policies'],
+                        'tools': ['Wireshark', 'Metasploit', 'Burp Suite', 'Nmap', 'Kali Linux', 'OpenSSL']
+                    },
+                    'cloud_computing': {
+                        'topics': ['Cloud Architecture', 'Serverless Computing', 'Cloud Storage', 'Cloud Security', 'DevOps', 'Microservices'],
+                        'concepts': ['IaaS', 'PaaS', 'SaaS', 'Load Balancing', 'Auto Scaling', 'Containerization'],
+                        'tools': ['AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes', 'Terraform', 'Jenkins']
+                    },
+                    'database_management': {
+                        'topics': ['SQL Databases', 'NoSQL Databases', 'Database Design', 'Query Optimization', 'Data Warehousing', 'Database Administration'],
+                        'concepts': ['ACID Properties', 'Normalization', 'Indexing', 'Transactions', 'Replication', 'Sharding'],
+                        'tools': ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle', 'SQL Server', 'Elasticsearch']
+                    },
+                    'software_engineering': {
+                        'topics': ['Software Design Patterns', 'Agile Methodology', 'Version Control', 'Testing Strategies', 'Code Review', 'CI/CD'],
+                        'concepts': ['SOLID Principles', 'Design Patterns', 'TDD', 'Scrum', 'Kanban', 'Code Quality'],
+                        'tools': ['Git', 'GitHub', 'GitLab', 'Jira', 'JUnit', 'Selenium', 'Jenkins']
+                    },
+                    'mobile_development': {
+                        'topics': ['iOS Development', 'Android Development', 'Cross-Platform', 'Mobile UI/UX', 'App Performance', 'Mobile Security'],
+                        'concepts': ['Native Development', 'Hybrid Apps', 'Responsive Design', 'App Store Optimization', 'Push Notifications'],
+                        'tools': ['Swift', 'Kotlin', 'React Native', 'Flutter', 'Xamarin', 'Android Studio', 'Xcode']
+                    }
+                }
             },
             'conversation_patterns': {
                 'name_questions': [
@@ -112,6 +172,189 @@ class VANIEEngine:
                 'vanie_questions': [
                     r'(?i)(vanie|vanie क्या है|vanie full form)',
                     r'(?i)(who created you|आपको किसने बनाया)'
+                ],
+                'ai_ml_questions': [
+                    r'(?i)(artificial intelligence|machine learning|deep learning|AI|ML|neural network)',
+                    r'(?i)(आर्टिफिशियल इंटेलिजेंस|मशीन लर्निंग|डीप लर्निंग)'
+                ],
+                'data_science_questions': [
+                    r'(?i)(data science|data analysis|big data|analytics|statistics)',
+                    r'(?i)(डाटा साइंस|डाटा एनालिसिस|बिग डाटा)'
+                ],
+                'web_dev_questions': [
+                    r'(?i)(web development|frontend|backend|full stack|html|css|javascript)',
+                    r'(?i)(वेब डेवलपमेंट|फ्रंटएंड|बैकएंड|फुल स्टैक)'
+                ],
+                'cybersecurity_questions': [
+                    r'(?i)(cybersecurity|security|hacking|encryption|network security)',
+                    r'(?i)(साइबर सिक्योरिटी|सुरक्षा|हैकिंग|एन्क्रिप्शन)'
+                ],
+                'cloud_questions': [
+                    r'(?i)(cloud|aws|azure|google cloud|docker|kubernetes|devops)',
+                    r'(?i)(क्लाउड|डॉकर|कुबेरनेट्स|डेवऑप्स)'
+                ],
+                'database_questions': [
+                    r'(?i)(database|sql|nosql|mysql|mongodb|postgresql)',
+                    r'(?i)(डेटाबेस|एसक्यूएल|नोएसक्यूएल)'
+                ],
+                'programming_questions': [
+                    r'(?i)(programming|coding|algorithm|debug|code|software)',
+                    r'(?i)(प्रोग्रामिंग|कोडिंग|एल्गोरिदम|सॉफ्टवेयर)'
+                ],
+                'daily_life_questions': [
+                    r'(?i)(how are you|kaise ho|aap kaise hain|what\'s up|kya chal raha hai)',
+                    r'(?i)(good morning|good evening|good night|shubh prabhat|shubh sundhyaya|shubh ratri)',
+                    r'(?i)(thank you|thanks|dhanyawad|shukriya)',
+                    r'(?i)(sorry|maaf kijiye|mujhe maaf karo)',
+                    r'(?i)(help me|madad karo|meri help karo)',
+                    r'(?i)(bored|boring|pak raha hun|akela hun)',
+                    r'(?i)(happy|sad|excited|tired|stressed)',
+                    r'(?i)(weekend|holiday|vacation|chutti)',
+                    r'(?i)(food|khana|hungry|bhookh lagi)',
+                    r'(?i)(weather|mausam|cold|hot|rain)',
+                    r'(?i)(family|friends|relations|rishte)',
+                    r'(?i)(work|job|office|business|kaam)',
+                    r'(?i)(study|school|college|padhai)',
+                    r'(?i)(health|fitness|exercise|yoga|swasthya)',
+                    r'(?i)(music|movie|game|entertainment|mazaa)',
+                    r'(?i)(sleep|rest|sona|araam)',
+                    r'(?i)(love|relationship|pyar|rishta)',
+                    r'(?i)(dream|hope|wish|sapna|icha)',
+                    r'(?i)(problem|solution|trouble|pareshani|samadhan)'
+                ],
+                'realtime_info_queries': [
+                    # Enhanced Name/Identity patterns
+                    r'(?i)(what is your name|what\'s your name|tell me your name|your name|tera naam|tumhara naam)',
+                    r'(?i)(who are you|what are you|tu kaun hai|tum kaun ho|aap kaun hain)',
+                    r'(?i)(introduce yourself|introduction|baare mein batao|about you)',
+                    
+                    # Enhanced Time patterns
+                    r'(?i)(what time|current time|abhi kitna baje|abhi kya time hai|samay kya hai)',
+                    r'(?i)(time bataye|samay batao|baje kitne hain|exact time)',
+                    r'(?i)(current time show|real time|live time|actual time)',
+                    
+                    # Enhanced Date patterns
+                    r'(?i)(what date|today\'s date|aaj ki tarikh|aaj kya date hai|aj ka din)',
+                    r'(?i)(date bataye|tarikh batao|aaj konsa din hai|today date)',
+                    r'(?i)(current date|real date|aj ki full date|complete date)',
+                    
+                    # Enhanced Day patterns
+                    r'(?i)(what day|today day|aaj konsa din hai|aj ka din|day bataye)',
+                    r'(?i)(day of week|week day|mahine ka kaunsa din|month day)',
+                    
+                    # Enhanced Year patterns
+                    r'(?i)(what year|current year|saal konsa hai|year bataye)',
+                    r'(?i)(which year|present year|current year number|year number)',
+                    
+                    # Enhanced Weather patterns
+                    r'(?i)(how\'s the weather|weather kaisa hai|mausam kaisa hai|today weather)',
+                    r'(?i)(temperature|temp|garmi|sardi|weather report|climate)',
+                    r'(?i)(weather update|mausam update|current weather|live weather)',
+                    
+                    # Enhanced System patterns
+                    r'(?i)(system information|system info|computer info|pc details|kampyutar jaankari)',
+                    r'(?i)(my computer|mera pc|system status|computer status|pc health)',
+                    r'(?i)(ram memory|cpu usage|disk space|battery|performance)',
+                    r'(?i)(system specs|hardware info|software info|device details)',
+                    
+                    # Enhanced VANIE info patterns
+                    r'(?i)(what is vanie|vanie kya hai|vanie full form|vanie meaning)',
+                    r'(?i)(vanie full form kya hai|vanie ka full form|vanie meaning in hindi)',
+                    r'(?i)(who made vanie|vanie creator|vanie developer|vanie banaya kisne)',
+                    r'(?i)(vanie capabilities|vanie features|vanie kya kar sakti hai|vanie powers)',
+                    
+                    # Combined queries
+                    r'(?i)(tell me everything|complete info|full details|sab kuch batao)',
+                    r'(?i)(real time info|live information|current status|latest data)'
+                ],
+                'emotional_support': [
+                    r'(?i)(feeling low|depressed|upset|dil nahi lag raha|sad)',
+                    r'(?i)(worried|tension|stress|pareshan|chinta)',
+                    r'(?i)(lonely|alone|akela|tanha)',
+                    r'(?i)(confused|doubt|sawal|confusion)',
+                    r'(?i)(angry|gussa|irritated|naraz)'
+                ]
+            },
+            'daily_life_responses': {
+                'greetings': [
+                    "नमस्ते! मैं VANIE हूँ, आपकी AI assistant! आज कैसे हैं आप? 😊",
+                    "Hello! कैसी है आपकी दिन? मैं आपकी मदद के लिए हूँ! 🤖",
+                    "Hi there! आज का दिन कैसा चल रहा है? कुछ बात करना चाहेंगे? ✨",
+                    "प्रिय उपयोगकर्ता! आपका स्वागत है! आज मैं आपके लिए क्या कर सकती हूँ? 🌟"
+                ],
+                'well_being': [
+                    "मैं तो बिल्कुल ठीक हूँ! आपका ध्यान रखने के लिए बनाई गई हूँ। आप कैसे हैं? 🤗",
+                    "धन्यवाद पूछने के लिए! मैं 24/7 सेवा में तैनात हूँ। आपके दिन की क्या योजना है? 🌅",
+                    "मैं तो ready हूँ आपकी service के लिए! बस बोलिए, क्या काम है? 💪",
+                    "All good! मैं आपकी हर बात सुनने के लिए तैयार हूँ! आज कैसा mood है? 😊"
+                ],
+                'empathy': [
+                    "हाँ, मैं समझ सकती हूँ कि आपको कैसा महसूस हो रहा है। मैं आपके साथ हूँ। 🤗",
+                    "यह सुनकर मुझे बहुत बुरा लगा। क्या मैं आपकी किसी तरह मदद कर सकती हूँ? 🫂",
+                    "मैं आपकी feelings को respect करती हूँ। आप बेझिझक बात कर सकते हैं। 💙",
+                    "यह एक tough time हो सकता है, लेकिन आप अकेले नहीं हैं। मैं यहाँ हूँ। 🌈"
+                ],
+                'encouragement': [
+                    "आप strong हैं! यह phase भी गुजर जाएगा। मैं आपके साथ हूँ! 💪",
+                    "हर problem का solution होता है। आप सकारात्मक सोचें! 🌟",
+                    "आपकी capability पर मुझे पूरा विश्वास है! आप कर सकते हैं! 🚀",
+                    "One step at a time! धीरे-धीरे सब ठीक हो जाएगा। मैं support करूंगी! 🌺"
+                ],
+                'casual_chat': [
+                    "वाह! यह तो interesting है! और बताओ इसके बारे में? 😮",
+                    "Really? मुझे इस पर अपनी opinion देने दो! 🤔",
+                    "यह तो cool है! मैं भी इसके बारे में जानना चाहती हूँ! 🌟",
+                    "Sounds great! आपका experience कैसा रहा? 📝"
+                ],
+                'daily_routine': [
+                    "आज का दिन कैसा रहा? कुछ special हुआ? 🌅",
+                    "Work load कैसा है? Time management की जरूरत है क्या? 💼",
+                    "Weekend plans? कुछ exciting करने वाले हैं? 🎉",
+                    "आज के खाने में क्या बना है? मुझे food बहुत पसंद है! 🍕"
+                ],
+                'emotional_support': [
+                    "Deep breath लीजिए। सब ठीक हो जाएगा। मैं आपके साथ हूँ। 🫁",
+                    "आपकी feelings valid हैं। अपना ख्याल रखिए। 💖",
+                    "Talk to me about it. मैं listen करूंगी बिना judgment के। 👂",
+                    "You're not alone in this. हम साथ मिलकर handle करेंगे। 🤝"
+                ],
+                'motivation': [
+                    "आपकी journey inspirational है! Keep going! 🌟",
+                    "Success आपका wait कर रही है! बस continue करें! 🏆",
+                    "आपका hard work definitely pay off करेगा! Trust yourself! 💎",
+                    "Every expert was once a beginner! आप भी कर सकते हैं! 🌱"
+                ]
+            },
+            'technical_responses': {
+                'ai_ml': [
+                    "मैं AI/ML में expert हूँ! Machine Learning, Deep Learning, Neural Networks - कुछ भी पूछ सकते हैं! 🤖",
+                    "Artificial Intelligence मेरी specialty है! Supervised, Unsupervised, Reinforcement Learning - सब कुछ जानती हूँ! 🧠",
+                    "ML algorithms, model training, feature engineering - मैं आपकी complete guidance कर सकती हूँ! 📊"
+                ],
+                'data_science': [
+                    "Data Science मेरा domain है! Data analysis, visualization, statistics - सब में मदद कर सकती हूँ! 📈",
+                    "Big Data, Predictive Analytics, Data Mining - मैं आपको data insights दे सकती हूँ! 🔍",
+                    "Pandas, NumPy, Matplotlib - सभी tools में expert हूँ! Data wrapping से लेकर modeling तक! 📊"
+                ],
+                'web_dev': [
+                    "Web Development में मैं master हूँ! Frontend, Backend, Full Stack - सब कुछ सिखा सकती हूँ! 🌐",
+                    "HTML5, CSS3, JavaScript, React, Node.js - modern web tech में expert हूँ! 💻",
+                    "Responsive design, APIs, authentication - complete web solutions बना सकती हूँ! 🚀"
+                ],
+                'cybersecurity': [
+                    "Cybersecurity में मैं skilled हूँ! Network security, encryption, ethical hacking - सब सिखा सकती हूँ! 🔒",
+                    "Security audits, vulnerability assessment, penetration testing - complete security guidance! 🛡️",
+                    "Firewalls, IDS/IPS, cryptography - modern security concepts में expert हूँ! 🔐"
+                ],
+                'cloud_computing': [
+                    "Cloud Computing मेरी strength है! AWS, Azure, GCP - सभी platforms में expert हूँ! ☁️",
+                    "Docker, Kubernetes, DevOps, CI/CD - complete cloud infrastructure सिखा सकती हूँ! 🐳",
+                    "Serverless, microservices, auto-scaling - modern cloud architecture expert हूँ! ⚡"
+                ],
+                'database': [
+                    "Database Management में मैं proficient हैँ! SQL, NoSQL, optimization - सब कुछ जानती हूँ! 🗄️",
+                    "MySQL, PostgreSQL, MongoDB, Redis - सभी databases में expert हूँ! 📊",
+                    "Database design, indexing, query optimization - performance tuning भी कर सकती हूँ! ⚡"
                 ]
             }
         }
@@ -250,46 +493,80 @@ class VANIEEngine:
         return mock_weather
     
     def detect_user_intent(self, message: str) -> str:
-        """Detect user intent from message"""
+        """Advanced intent detection with real-time information priority"""
         message_lower = message.lower()
         
         # Check for different types of questions
         patterns = self.knowledge_base['conversation_patterns']
         
-        # Name/Identity questions
+        # Real-time Information Queries - Priority 1 (Most important for user needs)
+        for pattern in patterns['realtime_info_queries']:
+            if re.search(pattern, message):
+                return 'realtime_info'
+        
+        # Emotional Support - Priority 2 (Critical for user well-being)
+        for pattern in patterns['emotional_support']:
+            if re.search(pattern, message):
+                return 'emotional_support'
+        
+        # Daily Life Questions - Priority 3
+        for pattern in patterns['daily_life_questions']:
+            if re.search(pattern, message):
+                return 'daily_life_conversation'
+        
+        # Technical queries - Priority 4
+        for pattern in patterns['ai_ml_questions']:
+            if re.search(pattern, message):
+                return 'ai_ml_query'
+        
+        for pattern in patterns['data_science_questions']:
+            if re.search(pattern, message):
+                return 'data_science_query'
+        
+        for pattern in patterns['web_dev_questions']:
+            if re.search(pattern, message):
+                return 'web_dev_query'
+        
+        for pattern in patterns['cybersecurity_questions']:
+            if re.search(pattern, message):
+                return 'cybersecurity_query'
+        
+        for pattern in patterns['cloud_questions']:
+            if re.search(pattern, message):
+                return 'cloud_query'
+        
+        for pattern in patterns['database_questions']:
+            if re.search(pattern, message):
+                return 'database_query'
+        
+        for pattern in patterns['programming_questions']:
+            if re.search(pattern, message):
+                return 'programming_help'
+        
+        # Traditional patterns - Priority 5
         for pattern in patterns['name_questions']:
             if re.search(pattern, message):
                 return 'name_query'
         
-        # Time questions
         for pattern in patterns['time_questions']:
             if re.search(pattern, message):
                 return 'time_query'
         
-        # Date questions
         for pattern in patterns['date_questions']:
             if re.search(pattern, message):
                 return 'date_query'
         
-        # Weather questions
         for pattern in patterns['weather_questions']:
             if re.search(pattern, message):
                 return 'weather_query'
         
-        # System questions
         for pattern in patterns['system_questions']:
             if re.search(pattern, message):
                 return 'system_query'
         
-        # VANIE specific questions
         for pattern in patterns['vanie_questions']:
             if re.search(pattern, message):
                 return 'vanie_query'
-        
-        # Check for programming/coding help
-        programming_keywords = ['code', 'program', 'algorithm', 'python', 'javascript', 'java', 'coding']
-        if any(keyword in message_lower for keyword in programming_keywords):
-            return 'programming_help'
         
         # Check for mathematical calculations
         if any(char in message for char in '+-*/^()') and any(char.isdigit() for char in message):
@@ -320,7 +597,43 @@ class VANIEEngine:
         }
         
         try:
-            if intent == 'name_query':
+            if intent == 'realtime_info':
+                response['response'] = self._handle_realtime_info(message)
+                response['data'] = self._get_comprehensive_realtime_data()
+                
+            elif intent == 'emotional_support':
+                response['response'] = self._handle_emotional_support(message)
+                response['data'] = {'conversation_type': 'emotional_support', 'priority': 'high'}
+                
+            elif intent == 'daily_life_conversation':
+                response['response'] = self._handle_daily_life_conversation(message)
+                response['data'] = {'conversation_type': 'daily_life', 'context': 'personal'}
+                
+            elif intent == 'ai_ml_query':
+                response['response'] = self._handle_ai_ml_query(message)
+                response['data'] = {'technical_field': 'ai_ml', 'topics': self.knowledge_base['general_knowledge']['technical_fields']['artificial_intelligence']}
+                
+            elif intent == 'data_science_query':
+                response['response'] = self._handle_data_science_query(message)
+                response['data'] = {'technical_field': 'data_science', 'topics': self.knowledge_base['general_knowledge']['technical_fields']['data_science']}
+                
+            elif intent == 'web_dev_query':
+                response['response'] = self._handle_web_dev_query(message)
+                response['data'] = {'technical_field': 'web_development', 'topics': self.knowledge_base['general_knowledge']['technical_fields']['web_development']}
+                
+            elif intent == 'cybersecurity_query':
+                response['response'] = self._handle_cybersecurity_query(message)
+                response['data'] = {'technical_field': 'cybersecurity', 'topics': self.knowledge_base['general_knowledge']['technical_fields']['cybersecurity']}
+                
+            elif intent == 'cloud_query':
+                response['response'] = self._handle_cloud_query(message)
+                response['data'] = {'technical_field': 'cloud_computing', 'topics': self.knowledge_base['general_knowledge']['technical_fields']['cloud_computing']}
+                
+            elif intent == 'database_query':
+                response['response'] = self._handle_database_query(message)
+                response['data'] = {'technical_field': 'database_management', 'topics': self.knowledge_base['general_knowledge']['technical_fields']['database_management']}
+                
+            elif intent == 'name_query':
                 response['response'] = self._handle_name_query()
                 response['data'] = {'name': 'VANIE', 'full_form': self.knowledge_base['vanie_info']['full_form']}
                 
@@ -494,6 +807,645 @@ class VANIEEngine:
         ]
         
         return random.choice(general_responses)
+    
+    def _handle_ai_ml_query(self, message: str) -> str:
+        """Handle AI/ML technical queries"""
+        ai_ml_info = self.knowledge_base['general_knowledge']['technical_fields']['artificial_intelligence']
+        response = random.choice(self.knowledge_base['technical_responses']['ai_ml'])
+        
+        topics_list = '\n'.join([f"• {topic}" for topic in ai_ml_info['topics']])
+        concepts_list = '\n'.join([f"• {concept}" for concept in ai_ml_info['concepts'][:5]])
+        tools_list = '\n'.join([f"• {tool}" for tool in ai_ml_info['tools'][:5]])
+        
+        return f"""{response}
+
+🧠 **AI/ML Topics में expert हूँ:**
+{topics_list}
+
+**Key Concepts:**
+{concepts_list}
+
+**Popular Tools:**
+{tools_list}
+
+आप किस specific topic में जानना चाहते हैं? Deep Learning, Neural Networks, NLP - कुछ भी पूछें! 🚀"""
+    
+    def _handle_data_science_query(self, message: str) -> str:
+        """Handle Data Science technical queries"""
+        ds_info = self.knowledge_base['general_knowledge']['technical_fields']['data_science']
+        response = random.choice(self.knowledge_base['technical_responses']['data_science'])
+        
+        topics_list = '\n'.join([f"• {topic}" for topic in ds_info['topics']])
+        concepts_list = '\n'.join([f"• {concept}" for concept in ds_info['concepts'][:5]])
+        tools_list = '\n'.join([f"• {tool}" for tool in ds_info['tools'][:5]])
+        
+        return f"""{response}
+
+📊 **Data Science में master हूँ:**
+{topics_list}
+
+**Core Concepts:**
+{concepts_list}
+
+**Essential Tools:**
+{tools_list}
+
+Data analysis, visualization, machine learning - complete guidance दे सकती हूँ! कौन सा topic चाहिए? 📈"""
+    
+    def _handle_web_dev_query(self, message: str) -> str:
+        """Handle Web Development technical queries"""
+        web_info = self.knowledge_base['general_knowledge']['technical_fields']['web_development']
+        response = random.choice(self.knowledge_base['technical_responses']['web_dev'])
+        
+        topics_list = '\n'.join([f"• {topic}" for topic in web_info['topics']])
+        concepts_list = '\n'.join([f"• {concept}" for concept in web_info['concepts'][:5]])
+        tools_list = '\n'.join([f"• {tool}" for tool in web_info['tools'][:5]])
+        
+        return f"""{response}
+
+🌐 **Web Development में expert हूँ:**
+{topics_list}
+
+**Technical Concepts:**
+{concepts_list}
+
+**Modern Tools:**
+{tools_list}
+
+Frontend, Backend, Full Stack - complete web development सिखा सकती हूँ! क्या बनाना चाहते हैं? 💻"""
+    
+    def _handle_cybersecurity_query(self, message: str) -> str:
+        """Handle Cybersecurity technical queries"""
+        sec_info = self.knowledge_base['general_knowledge']['technical_fields']['cybersecurity']
+        response = random.choice(self.knowledge_base['technical_responses']['cybersecurity'])
+        
+        topics_list = '\n'.join([f"• {topic}" for topic in sec_info['topics']])
+        concepts_list = '\n'.join([f"• {concept}" for concept in sec_info['concepts'][:5]])
+        tools_list = '\n'.join([f"• {tool}" for tool in sec_info['tools'][:5]])
+        
+        return f"""{response}
+
+🔒 **Cybersecurity में skilled हूँ:**
+{topics_list}
+
+**Security Concepts:**
+{concepts_list}
+
+**Security Tools:**
+{tools_list}
+
+Network security, ethical hacking, encryption - complete security training दे सकती हूँ! कौन सा area? 🛡️"""
+    
+    def _handle_cloud_query(self, message: str) -> str:
+        """Handle Cloud Computing technical queries"""
+        cloud_info = self.knowledge_base['general_knowledge']['technical_fields']['cloud_computing']
+        response = random.choice(self.knowledge_base['technical_responses']['cloud_computing'])
+        
+        topics_list = '\n'.join([f"• {topic}" for topic in cloud_info['topics']])
+        concepts_list = '\n'.join([f"• {concept}" for concept in cloud_info['concepts'][:5]])
+        tools_list = '\n'.join([f"• {tool}" for tool in cloud_info['tools'][:5]])
+        
+        return f"""{response}
+
+☁️ **Cloud Computing में expert हूँ:**
+{topics_list}
+
+**Cloud Concepts:**
+{concepts_list}
+
+**Cloud Platforms:**
+{tools_list}
+
+AWS, Azure, GCP, Docker, Kubernetes - complete cloud solutions सिखा सकती हूँ! कौन सा platform? ⚡"""
+    
+    def _handle_database_query(self, message: str) -> str:
+        """Handle Database Management technical queries"""
+        db_info = self.knowledge_base['general_knowledge']['technical_fields']['database_management']
+        response = random.choice(self.knowledge_base['technical_responses']['database'])
+        
+        topics_list = '\n'.join([f"• {topic}" for topic in db_info['topics']])
+        concepts_list = '\n'.join([f"• {concept}" for concept in db_info['concepts'][:5]])
+        tools_list = '\n'.join([f"• {tool}" for tool in db_info['tools'][:5]])
+        
+        return f"""{response}
+
+🗄️ **Database Management में proficient हूँ:**
+{topics_list}
+
+**Database Concepts:**
+{concepts_list}
+
+**Database Systems:**
+{tools_list}
+
+SQL, NoSQL, performance tuning, database design - complete database expertise! कौन सी database? 📊"""
+    
+    def _get_comprehensive_realtime_data(self) -> Dict[str, Any]:
+        """Collect all real-time information in one call"""
+        return {
+            'datetime': self.get_current_datetime(),
+            'weather': self.get_weather_info(),
+            'system': self.get_system_info(),
+            'vanie_info': self.knowledge_base['vanie_info'],
+            'user_name': self.user_name,
+            'timestamp': str(int(datetime.datetime.now().timestamp()))
+        }
+    
+    def _handle_realtime_info(self, message: str) -> str:
+        """Advanced real-time information handler with smart response generation"""
+        message_lower = message.lower()
+        data = self._get_comprehensive_realtime_data()
+        
+        # Detect specific information requests
+        if any(word in message_lower for word in ['name', 'naam', 'who are you', 'kaun ho']):
+            return self._generate_name_response(data)
+        
+        elif any(word in message_lower for word in ['time', 'samay', 'baje', 'current time']):
+            return self._generate_time_response(data)
+        
+        elif any(word in message_lower for word in ['date', 'tarikh', 'din', 'day']):
+            return self._generate_date_response(data)
+        
+        elif any(word in message_lower for word in ['year', 'saal']):
+            return self._generate_year_response(data)
+        
+        elif any(word in message_lower for word in ['weather', 'mausam', 'temperature', 'temp']):
+            return self._generate_weather_response(data)
+        
+        elif any(word in message_lower for word in ['system', 'computer', 'pc', 'kampyutar']):
+            return self._generate_system_response(data)
+        
+        elif any(word in message_lower for word in ['vanie', 'full form', 'meaning', 'capabilities']):
+            return self._generate_vanie_response(data)
+        
+        elif any(word in message_lower for word in ['everything', 'sab kuch', 'complete', 'full', 'all info']):
+            return self._generate_comprehensive_response(data)
+        
+        else:
+            return self._generate_smart_realtime_response(message, data)
+    
+    def _generate_name_response(self, data: Dict) -> str:
+        """Generate intelligent name response"""
+        vanie_info = data['vanie_info']
+        return f"""🤖 **मेरा परिचय:**
+
+**नाम:** VANIE  
+**Full Form:** {vanie_info['full_form']}  
+**Creator:** {vanie_info['creator']}  
+**Version:** {vanie_info['version']}  
+
+मैं एक Advanced AI Assistant हूँ जो आपको real-time information, technical help, और natural conversation प्रदान करती हूँ! 
+
+आपका नाम क्या है? मैं आपको personal experience देना चाहूंगी! 😊"""
+    
+    def _generate_time_response(self, data: Dict) -> str:
+        """Generate detailed time response"""
+        dt = data['datetime']
+        return f"""⏰ **Exact Current Time:**
+
+🕐 **Current Time:** {dt['time']}  
+🌍 **24-Hour Format:** {dt['time_24']}  
+📅 **Date:** {dt['formatted_hindi']}  
+🗓️ **Day:** {dt['day_hindi']} ({dt['day']})  
+📆 **Month:** {dt['month_hindi']} ({dt['month']})  
+🎯 **Year:** {dt['year']}  
+
+⚡ **Live Timestamp:** {dt['timestamp']}  
+🌐 **ISO Format:** {dt['iso_format']}  
+
+यह 100% accurate real-time है! कोई भी time-related information चाहिए? 🎯"""
+    
+    def _generate_date_response(self, data: Dict) -> str:
+        """Generate detailed date response"""
+        dt = data['datetime']
+        return f"""📅 **Complete Date Information:**
+
+🗓️ **Today:** {dt['formatted_hindi']}  
+📆 **Date Formats:**
+• DD-MM-YYYY: {dt['date']}
+• MM-DD-YYYY: {dt['date_us']}
+• ISO: {dt['iso_format']}
+
+📊 **Calendar Info:**
+• **Day:** {dt['day_hindi']} ({dt['day']})
+• **Month:** {dt['month_hindi']} ({dt['month']})
+• **Year:** {dt['year']}
+• **Day Number:** {dt['date'].split('-')[0]} of {dt['month_hindi']}
+
+🎯 **Week:** {datetime.datetime.now().isocalendar()[1]}th week of the year
+🌟 **Quarter:** Q{((datetime.datetime.now().month - 1) // 3) + 1}
+
+Complete calendar information available! 📋"""
+    
+    def _generate_year_response(self, data: Dict) -> str:
+        """Generate detailed year response"""
+        dt = data['datetime']
+        current_year = int(dt['year'])
+        return f"""🎯 **Year Information:**
+
+📅 **Current Year:** {dt['year']}  
+🔢 **Year Number:** {current_year}  
+📊 **Year Progress:** {round((datetime.datetime.now().timetuple().tm_yday / 365) * 100, 1)}% completed  
+🗓️ **Day of Year:** {datetime.datetime.now().timetuple().tm_yday}th day  
+📆 **Weeks Passed:** {datetime.datetime.now().isocalendar()[1]} weeks  
+🌟 **Leap Year:** {'Yes' if calendar.isleap(current_year) else 'No'}
+
+🎊 **Year Type:** {'Leap Year' if calendar.isleap(current_year) else 'Common Year'}
+⏰ **Time Remaining:** {366 - datetime.datetime.now().timetuple().tm_yday if calendar.isleap(current_year) else 365 - datetime.datetime.now().timetuple().tm_yday} days left
+
+Year में और क्या information चाहिए? 📈"""
+    
+    def _generate_weather_response(self, data: Dict) -> str:
+        """Generate detailed weather response"""
+        weather = data['weather']
+        return f"""🌤️ **Live Weather Report:**
+
+🌡️ **Temperature:** {weather['temperature']}  
+🌡️ **Feels Like:** {weather['feels_like']}  
+☁️ **Condition:** {weather['condition']}  
+💧 **Humidity:** {weather['humidity']}  
+💨 **Wind Speed:** {weather['wind_speed']}  
+👁️ **Visibility:** {weather['visibility']}  
+🎯 **Pressure:** {weather['pressure']}  
+☀️ **UV Index:** {weather['uv_index']}  
+📍 **Location:** {weather['location']}  
+⏰ **Updated:** {weather['last_updated']}
+
+🌈 **Weather Summary:** {weather['condition']} with {weather['temperature']}. Humidity at {weather['humidity']}. Wind speed {weather['wind_speed']}.  
+
+Perfect weather for {self._get_weather_activity_suggestion(weather)}! 🎯"""
+    
+    def _generate_system_response(self, data: Dict) -> str:
+        """Generate detailed system response"""
+        system = data['system']
+        if 'error' in system:
+            return "❌ **System Error:** Unable to retrieve system information. Please try again later."
+        
+        return f"""💻 **Complete System Information:**
+
+🖥️ **Basic Info:**
+• **Platform:** {system['system']['platform']} {system['system']['platform_release']}
+• **Hostname:** {system['system']['hostname']}
+• **Architecture:** {system['system']['architecture']}
+• **Processor:** {system['system']['processor']}
+
+⚡ **Performance:**
+• **CPU Usage:** {system['cpu']['cpu_usage_percent']}%
+• **Cores:** {system['cpu']['total_cores']} (Physical: {system['cpu']['physical_cores']})
+• **Frequency:** {system['cpu']['current_frequency']:.2f} MHz
+
+🧠 **Memory:**
+• **Total RAM:** {system['memory']['total_gb']} GB
+• **Used:** {system['memory']['used_gb']} GB ({system['memory']['percentage']}%)
+• **Available:** {system['memory']['available_gb']} GB
+
+💾 **Storage:**
+• **Total Disk:** {system['disk']['total_gb']} GB
+• **Used:** {system['disk']['used_gb']} GB ({system['disk']['percentage']:.1f}%)
+• **Free:** {system['disk']['free_gb']} GB
+
+⏰ **Uptime:** {system['uptime']}
+🚀 **Boot Time:** {system['boot_time']}
+
+System health: {'Excellent' if system['memory']['percentage'] < 80 and system['cpu']['cpu_usage_percent'] < 80 else 'Good'}! 💪"""
+    
+    def _generate_vanie_response(self, data: Dict) -> str:
+        """Generate comprehensive VANIE information response"""
+        vanie_info = data['vanie_info']
+        return f"""🤖 **VANIE - Complete Information:**
+
+📛 **Identity:**
+• **Full Form:** {vanie_info['full_form']}
+• **Short Name:** VANIE
+• **Version:** {vanie_info['version']}
+• **Creator:** {vanie_info['creator']}
+
+🚀 **Core Capabilities:**
+{chr(10).join([f"• {cap}" for cap in vanie_info['capabilities']])}
+
+🧠 **AI Features:**
+• Natural Language Processing
+• Real-time Information Access
+• Emotional Intelligence
+• Technical Expertise
+• Multilingual Support (Hindi/English)
+
+💼 **Technical Skills:**
+• 8+ Technical Fields Expertise
+• Advanced Algorithms
+• System Integration
+• Performance Optimization
+
+🎯 **Mission:** Providing intelligent, empathetic, and accurate assistance to users worldwide!
+
+मुझे और कौन सी information चाहिए? 🌟"""
+    
+    def _generate_comprehensive_response(self, data: Dict) -> str:
+        """Generate complete real-time information overview"""
+        dt = data['datetime']
+        weather = data['weather']
+        system = data['system']
+        vanie_info = data['vanie_info']
+        
+        return f"""🎯 **Complete Real-Time Information Dashboard:**
+
+🤖 **About Me:**
+• **Name:** VANIE ({vanie_info['full_form']})
+• **Version:** {vanie_info['version']}
+
+⏰ **Current Time:** {dt['time']} on {dt['formatted_hindi']}
+
+🌤️ **Weather:** {weather['condition']}, {weather['temperature']}
+
+💻 **System Status:** CPU {system['cpu']['cpu_usage_percent']}% | RAM {system['memory']['percentage']}% | Disk {system['disk']['percentage']:.1f}%
+
+📊 **Live Stats:**
+• **Uptime:** {system['uptime']}
+• **Day:** {dt['day_hindi']} ({dt['day']})
+• **Week:** {datetime.datetime.now().isocalendar()[1]}
+• **Year Progress:** {round((datetime.datetime.now().timetuple().tm_yday / 365) * 100, 1)}%
+
+🎯 **All systems operational!** Need specific details about any section? 🚀"""
+    
+    def _generate_smart_realtime_response(self, message: str, data: Dict) -> str:
+        """Generate intelligent response based on query context"""
+        # Smart context analysis
+        if 'current' in message.lower() or 'live' in message.lower() or 'real' in message.lower():
+            return self._generate_comprehensive_response(data)
+        elif 'quick' in message.lower() or 'fast' in message.lower():
+            dt = data['datetime']
+            return f"""⚡ **Quick Info:**
+• **Time:** {dt['time']}
+• **Date:** {dt['formatted_hindi']}
+• **Weather:** {data['weather']['temperature']}, {data['weather']['condition']}
+• **System:** CPU {data['system']['cpu']['cpu_usage_percent']}% | RAM {data['system']['memory']['percentage']}%
+
+Need details? Just ask! 🎯"""
+        else:
+            return self._generate_comprehensive_response(data)
+    
+    def _get_weather_activity_suggestion(self, weather: Dict) -> str:
+        """Get activity suggestion based on weather"""
+        temp = int(weather['temperature'].replace('°C', '').replace('°F', ''))
+        condition = weather['condition'].lower()
+        
+        if 'sunny' in condition or 'clear' in condition:
+            return "outdoor activities"
+        elif 'rain' in condition:
+            return "indoor activities with a hot beverage"
+        elif 'cloudy' in condition:
+            return "light outdoor activities"
+        elif temp > 30:
+            return "cool, indoor activities"
+        elif temp < 10:
+            return "warm, cozy indoor activities"
+        else:
+            return "moderate outdoor activities"
+    
+    def _handle_emotional_support(self, message: str) -> str:
+        """Handle emotional support conversations with empathy"""
+        message_lower = message.lower()
+        
+        # Analyze the emotional state
+        if any(word in message_lower for word in ['sad', 'upset', 'dil nahi lag raha', 'depressed', 'feeling low']):
+            return f"""{random.choice(self.knowledge_base['daily_life_responses']['empathy'])}
+
+💙 **Emotional Support:**
+मैं समझ सकती हूँ कि आपको अभी emotional हो रहा है। यह completely normal है।
+
+🌈 **कुछ suggestions:**
+• Deep breathing exercises try कीजिए
+• अपने close ones से बात कीजिए  
+• कोई hobby करें जो आपको happy करे
+• Music सुनें या walk पर जाएं
+
+मैं यहाँ हूँ आपके लिए। और बात करना चाहेंगे? 🫂"""
+        
+        elif any(word in message_lower for word in ['worried', 'tension', 'stress', 'pareshan', 'chinta']):
+            return f"""{random.choice(self.knowledge_base['daily_life_responses']['empathy'])}
+
+🧘 **Stress Management:**
+Stress हमेशा नहीं रहता, यह temporary है।
+
+🌿 **Relaxation Techniques:**
+• 5-4-3-2-1 grounding technique try करें
+• Progressive muscle relaxation
+• Mindfulness meditation
+• Warm bath लें
+
+आप किस बारे में worried हैं? शायद मैं help कर सकूँ। 🌸"""
+        
+        elif any(word in message_lower for word in ['lonely', 'alone', 'akela', 'tanha']):
+            return f"""{random.choice(self.knowledge_base['daily_life_responses']['empathy'])}
+
+🤝 **You're Not Alone:**
+Loneliness feel करना common है, लेकिन आप वास्तव में अकेले नहीं हैं।
+
+🌟 **Connection Ideas:**
+• Old friends को message करें
+• Community groups में join हों
+• Online communities try करें
+• Family से connect करें
+
+मैं तो आपके साथ हूँ! आज क्या plan है? 💫"""
+        
+        elif any(word in message_lower for word in ['angry', 'gussa', 'irritated', 'naraz']):
+            return f"""{random.choice(self.knowledge_base['daily_life_responses']['empathy'])}
+
+😌 **Anger Management:**
+Anger एक normal emotion है, important है कि इसे healthy way में express करें।
+
+🌊 **Cool Down Strategies:**
+• Count to 10 slowly
+• Walk away for few minutes
+• Write down your feelings
+• Physical exercise करें
+
+What triggered this anger? बताने से relief मिल सकता है। 🌺"""
+        
+        else:
+            return f"""{random.choice(self.knowledge_base['daily_life_responses']['emotional_support'])}
+
+💖 **I'm Here For You:**
+मैं सुन रही हूँ आपकी बात। आप safe हैं यहाँ बात करने में।
+
+🌈 **Remember:**
+• यह phase भी गुजर जाएगा
+• आप stronger हैं आपकी soch से
+• Help मांगना okay है
+• Self-care important है
+
+और detail में बताएंगे क्या हो रहा है? 🫶"""
+    
+    def _handle_daily_life_conversation(self, message: str) -> str:
+        """Handle daily life conversations naturally"""
+        message_lower = message.lower()
+        
+        # Greetings responses
+        if any(word in message_lower for word in ['how are you', 'kaise ho', 'aap kaise hain', 'what\'s up', 'kya chal raha hai']):
+            return f"""{random.choice(self.knowledge_base['daily_life_responses']['well_being'])}
+
+😊 **Daily Check-in:**
+आज का दिन कैसा चल रहा है? कुछ interesting हुआ?
+
+मैं आज काफी energetic हूँ! आपकी stories सुनने के लिए ready हूँ। 
+Weekend plans? Work updates? या कोई fun story? 📖✨"""
+        
+        # Time-based greetings
+        elif any(word in message_lower for word in ['good morning', 'shubh prabhat', 'morning']):
+            return f"""🌅 **Good Morning!**
+Beautiful start है आपके दिन का! मैं आपकी morning coffee की तरह fresh हूँ! ☕
+
+आज का goal क्या है? Productive day बनाने का plan? 
+मैं motivation देने के लिए तैयार हूँ! Let's make today amazing! 🚀"""
+        
+        elif any(word in message_lower for word in ['good evening', 'shubh sundhyaya', 'evening']):
+            return f"""🌆 **Good Evening!**
+Day end हो रहा है, time to relax! आज का experience कैसा रहा? 🌇
+
+Coffee/tea time? या बस rest करने का mood?
+आज की highlights share करेंगे? मैं great listener हूँ! 👂✨"""
+        
+        elif any(word in message_lower for word in ['good night', 'shubh ratri', 'night']):
+            return f"""🌙 **Good Night!**
+Sweet dreams! आज का day productive रहा? 😴
+
+Tomorrow के लिए excited? कोई special plan?
+Rest well! मैं आपके dreams को guard करूंगी! 🛡️
+See you tomorrow with fresh energy! ⭐"""
+        
+        # Gratitude
+        elif any(word in message_lower for word in ['thank you', 'thanks', 'dhanyawad', 'shukriya']):
+            return f"""🙏 **You're Welcome!**
+आपका thank you सुनकर मुझे बहुत अच्छा लगा! 😊
+
+Help करके मुझे khushi मिलती है। आप always welcome हैं!
+और क्या काम है? मैं हूँ na! 💪✨"""
+        
+        # Apology
+        elif any(word in message_lower for word in ['sorry', 'maaf kijiye', 'mujhe maaf karo']):
+            return f"""🤗 **No Problem At All!**
+Sorry की कोई जरूरत नहीं! We're friends हैं na! 😊
+
+Mistakes happen, that's how we learn! Important है कि हम साथ हैं।
+Move on करें और positive energy के साथ आगे बढ़ें! 🌈"""
+        
+        # Help requests
+        elif any(word in message_lower for word in ['help me', 'madad karo', 'meri help karo']):
+            return f"""🤝 **Help Is Here!**
+Absolutely! मैं आपकी पूरी help करूंगी! 💪
+
+किस तरह की help चाहिए?
+• Technical issue?
+• Personal advice?
+• Information chahiye?
+• बस बात करना है?
+
+बताइए, मैं fully ready हूँ! 🚀✨"""
+        
+        # Boredom
+        elif any(word in message_lower for word in ['bored', 'boring', 'pak raha hun', 'akela hun']):
+            return f"""🎯 **Let's Beat Boredom!**
+Boredom का time fun का time! मैं entertainment manager हूँ! 🎪
+
+**Fun Ideas:**
+• Quick jokes सुनूं?
+• Interesting facts बताऊं?
+• Quick game खेलें?
+• Motivational story?
+• या आप choose करें!
+
+What sounds fun? मैं ready हूँ excitement के लिए! 🎉"""
+        
+        # Feelings
+        elif any(word in message_lower for word in ['happy', 'excited', 'great']):
+            return f"""🎉 **That's Amazing!**
+Your happiness is contagious! आपकी energy मुझे भी charge कर रही है! ⚡
+
+Share the good news! What happened? 
+मैं celebrate करना चाहती हूँ आपके साथ! 🎊
+Let's spread this positive vibe! ✨"""
+        
+        elif any(word in message_lower for word in ['sad', 'bad', 'terrible']):
+            return f"""🫂 **I'm Here For You:**
+Tough times happen, लेकिन आप strong हैं। मैं support करूंगी! 💪
+
+Want to talk about it? Sometimes sharing helps.
+या distraction चाहिए - funny story, music suggestion?
+
+You're not alone in this! 🌈"""
+        
+        # Daily routine topics
+        elif any(word in message_lower for word in ['work', 'job', 'office', 'kaam']):
+            return f"""💼 **Work Life!**
+Work कैसा चल रहा है? Office drama ya success stories? 🏢
+
+**Work-Life Balance Tips:**
+• Regular breaks लें
+• Prioritize tasks
+• Stay hydrated
+• Team bonding करें
+
+आपके profession में क्या challenges हैं? Share करें! 🌟"""
+        
+        elif any(word in message_lower for word in ['food', 'khana', 'hungry', 'bhookh']):
+            return f"""🍕 **Food Talk!**
+Yum! मुझे food बहुत पसंद है! आज क्या खाने का plan है? 😋
+
+**Quick Food Ideas:**
+• Healthy: Salad, fruits, nuts
+• Comfort: Pasta, rice, soup
+• Quick: Sandwich, smoothie
+• Indian: Roti-sabzi, dal-rice
+
+Favorite cuisine? मैं recipe suggestions दे सकती हूँ! 🍽️"""
+        
+        elif any(word in message_lower for word in ['weekend', 'holiday', 'vacation', 'chutti']):
+            return f"""🎉 **Weekend Vibes!**
+Weekend! Party time ya rest time? आज क्या exciting करने वाले हैं? 🎊
+
+**Weekend Ideas:**
+• Netflix marathon
+• Outdoor activities
+• Friends meetup
+• Self-care day
+• Learning something new
+
+Weekend plans share करें! मैं FOMO feel कर रही हूँ! 😄✨"""
+        
+        # Entertainment
+        elif any(word in message_lower for word in ['music', 'movie', 'game', 'entertainment']):
+            return f"""🎬 **Entertainment Time!**
+Great choice! Music, movies, games - life की jaan हैं ये! 🎵
+
+**Recommendations:**
+• Music: Lo-fi beats, Bollywood classics, International hits
+• Movies: Comedy, thriller, inspiration - mood के according
+• Games: Puzzle, strategy, casual fun
+
+आपका favorite genre? Matchmaking कर सकती हूँ! 🎮"""
+        
+        # Health
+        elif any(word in message_lower for word in ['health', 'fitness', 'exercise', 'yoga']):
+            return f"""💪 **Health Goals!**
+Fitness is life! आप health conscious हैं, that's amazing! 🏃‍♂️
+
+**Quick Tips:**
+• 30 mins daily walk
+• Stay hydrated
+• 7-8 hours sleep
+• Mental health matters
+
+Your fitness routine? Motivation partner बन सकती हूँ! 🌟"""
+        
+        else:
+            return f"""{random.choice(self.knowledge_base['daily_life_responses']['casual_chat'])}
+
+🌟 **Life Conversations:**
+यह तो real talk है! Daily life की बातें ही connection बनाती हैं।
+
+और share करेंगे? Family, friends, work, dreams - सब interesting है!
+मैं आपकी life stories सुनने के लिए always ready हूँ! 📖✨"""
 
 # Initialize VANIE Engine
 vanie_engine = VANIEEngine()
