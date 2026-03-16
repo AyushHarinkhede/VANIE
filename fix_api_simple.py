@@ -1,8 +1,8 @@
 # Simple fix for API section
-
+import re
 
 # Read the file
-$content = $content'VANIE.py', 'r', encoding='utf-8') as f:
+with open('VANIE.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # Remove broken API section
@@ -122,8 +122,7 @@ def not_found(error):
 content = content.replace('# 5. Run Server', new_api + '\n\n# 5. Run Server')
 
 # Write back to file
-$content = $content'VANIE.py', 'w', encoding='utf-8') as f:
-    $content = $content
+with open('VANIE.py', 'w', encoding='utf-8') as f:
+    f.write(content)
 
 print("API section fixed successfully!")
-

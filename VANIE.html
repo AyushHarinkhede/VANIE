@@ -3533,24 +3533,22 @@
                         // Enhanced logging for debugging
                         console.log('🚀 Enhanced AI Response:', {
                             response: data.response,
-                            category: data.category,
-                            confidence: data.confidence,
-                            matched_keywords: data.matched_keywords,
-                            complexity_score: data.complexity_score,
-                            word_count: data.word_count,
-                            has_multiple_keywords: data.has_multiple_keywords,
-                            context_length: data.context_length
+                            detected_intents: data.metadata?.detected_intents || [],
+                            emotion: data.metadata?.emotion || {},
+                            session_id: data.metadata?.session_id || 'default',
+                            status: data.status
                         });
                         
-                        // Show category indicator
-                        if (data.category) {
-                            this.showNotification(`🎯 ${data.category.toUpperCase()} - Confidence: ${Math.round(data.confidence * 100)}%`, 'info', 2000);
+                        // Show category indicator if available
+                        if (data.metadata?.detected_intents && data.metadata.detected_intents.length > 0) {
+                            const mainIntent = data.metadata.detected_intents[0];
+                            this.showNotification(`🎯 ${mainIntent.toUpperCase()} - VANIE AI Response`, 'info', 2000);
                         }
                         
                         return data.response;
                     } else {
                         console.error('Backend error:', data.error);
-                        this.showNotification('Backend error: ' + data.error, 'error');
+                        this.showNotification('Backend error: ' + (data.error || 'Unknown error'), 'error');
                         return this.getRandomResponse(this.responses.fallback);
                     }
                 } catch (error) {

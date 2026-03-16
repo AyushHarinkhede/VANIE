@@ -1,18 +1,19 @@
-# Simple fix for API section
-
+# Fix API by removing broken section and adding new one
+import re
 
 # Read the file
-$content = $content'VANIE.py', 'r', encoding='utf-8') as f:
+with open('VANIE.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
-# Remove broken API section
-content = re.sub(r'# Enhanced API Endpoints.*?# 5\. Run Server', '# 5. Run Server', content, flags=re.DOTALL)
+# Remove broken section from "Enhanced API Endpoints" to "Run Server"
+pattern = r'# Enhanced API Endpoints.*?# 5\. Run Server'
+content = re.sub(pattern, '# 5. Run Server', content, flags=re.DOTALL)
 
-# Add new API section
+# Add new API section before "Run Server"
 new_api = '''# Enhanced API Endpoints
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """Enhanced Chat API with better error handling and response structure"""
+    """Enhanced Chat API with better error handling"""
     try:
         data = request.get_json()
         
@@ -107,23 +108,13 @@ def chat_legacy():
     except Exception as e:
         return jsonify({"response": f"Error: {str(e)}"})
 
-# Error handlers
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({
-        'error': 'Endpoint not found',
-        'message': 'The requested endpoint does not exist',
-        'status': 'error'
-    }), 404
-
 '''
 
-# Insert new API section before "Run Server"
+# Insert new API section
 content = content.replace('# 5. Run Server', new_api + '\n\n# 5. Run Server')
 
 # Write back to file
-$content = $content'VANIE.py', 'w', encoding='utf-8') as f:
-    $content = $content
+with open('VANIE.py', 'w', encoding='utf-8') as f:
+    f.write(content)
 
 print("API section fixed successfully!")
-
