@@ -425,16 +425,16 @@
             left: 80px;
             transform: translateY(-50%);
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 12px;
             z-index: 10;
         }
         
         .logo-container img {
-            width: 50px;
-            height: 25px;
+            width: 80px;
+            height: 40px;
             object-fit: contain;
             border-radius: 0;
             transition: all 0.3s ease;
@@ -448,18 +448,18 @@
         
         .logo-status {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: 4px;
-            font-size: 10px;
+            gap: 8px;
+            font-size: 11px;
             color: var(--text-secondary);
             background: rgba(0, 0, 0, 0.3);
-            padding: 4px 8px;
+            padding: 6px 12px;
             border-radius: 8px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            min-width: 80px;
+            min-width: auto;
             text-align: center;
+            border: none;
         }
         
         .status-dot {
@@ -2649,21 +2649,21 @@
     <!-- 1. Collapsible Chat History Sidebar -->
     <div id="sidebar" class="sidebar collapsed">
         <div class="sidebar-header">
-            <button class="new-chat-btn" onclick="startNewChat()">
+            <button class="new-chat-btn" title="Start New Chat">
                 <i class="fas fa-plus"></i> New Chat
             </button>
         </div>
         <div class="chat-history">
-            <div class="history-item" onclick="loadChat('react-js-doubts')">
+            <div class="history-item" data-chat="react-js-doubts">
                 <i class="fas fa-code"></i> React JS doubts
             </div>
-            <div class="history-item" onclick="loadChat('python-help')">
+            <div class="history-item" data-chat="python-help">
                 <i class="fas fa-python"></i> Python Help
             </div>
-            <div class="history-item" onclick="loadChat('algorithm-question')">
+            <div class="history-item" data-chat="algorithm-question">
                 <img src="VANIE.png" alt="VANIE" style="width: 16px; height: 16px; margin-right: 8px;"> Algorithm Question
             </div>
-            <div class="history-item" onclick="loadChat('general-chat')">
+            <div class="history-item" data-chat="general-chat">
                 <i class="fas fa-comments"></i> General Chat
             </div>
         </div>
@@ -2697,35 +2697,35 @@
                     <span id="statusText">Online</span>
                 </div>
                 <div class="logo-menu" id="logoMenu">
-                    <div class="logo-menu-item" onclick="showSystemInfo()">
+                    <div class="logo-menu-item" data-action="showSystemInfo">
                         <i class="fas fa-desktop"></i>
                         <span>System Info</span>
                     </div>
-                    <div class="logo-menu-item" onclick="showWeatherInfo()">
+                    <div class="logo-menu-item" data-action="showWeatherInfo">
                         <i class="fas fa-cloud-sun"></i>
                         <span>Weather</span>
                     </div>
-                    <div class="logo-menu-item" onclick="showDateTime()">
+                    <div class="logo-menu-item" data-action="showDateTime">
                         <i class="fas fa-clock"></i>
                         <span>Date & Time</span>
                     </div>
-                    <div class="logo-menu-item" onclick="showVanieInfo()">
+                    <div class="logo-menu-item" data-action="showVanieInfo">
                         <i class="fas fa-robot"></i>
                         <span>About VANIE</span>
                     </div>
-                    <div class="logo-menu-item" onclick="showPerformance()">
+                    <div class="logo-menu-item" data-action="showPerformance">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Performance</span>
                     </div>
-                    <div class="logo-menu-item" onclick="clearChat()">
+                    <div class="logo-menu-item" data-action="clearChat">
                         <i class="fas fa-trash"></i>
                         <span>Clear Chat</span>
                     </div>
-                    <div class="logo-menu-item" onclick="exportChat()">
+                    <div class="logo-menu-item" data-action="exportChat">
                         <i class="fas fa-download"></i>
                         <span>Export Chat</span>
                     </div>
-                    <div class="logo-menu-item" onclick="toggleSettings()">
+                    <div class="logo-menu-item" data-action="toggleSettings">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
                     </div>
@@ -3514,25 +3514,13 @@
 
             init() {
                 this.cacheElements();
-                this.bindEvents();
+                this.setupEventListeners();
                 this.loadSettings();
                 this.updateFontSize();
                 this.updateLanguage();
                 this.showWelcomeScreen();
                 this.initVoiceRecognition();
                 this.checkExistingSession();
-            },  
-            init() {
-                this.loadSettings();
-                this.loadChatHistory();
-                this.initVoiceRecognition();
-                this.setupEventListeners();
-                this.sendInitialMessage();
-                
-                // Handle window resize for mobile sidebar
-                window.addEventListener('resize', () => {
-                    this.handleWindowResize();
-                });
             },
 
             loadSettings() {
@@ -3617,35 +3605,17 @@
                 const input = document.getElementById('messageInput');
                 const sendBtn = document.getElementById('sendBtn');
                 
-                // Sound toggle event listener
-                document.getElementById('soundToggle').addEventListener('click', () => {
-                    const isEnabled = soundEffects.toggle();
-                    const soundIcon = document.getElementById('soundIcon');
-                    const soundToggle = document.getElementById('soundToggle');
-                    const soundText = document.getElementById('soundText');
-                    
-                    if (isEnabled) {
-                        soundIcon.className = 'fas fa-volume-up';
-                        soundToggle.classList.remove('muted');
-                        soundText.textContent = 'Sound On';
-                    } else {
-                        soundIcon.className = 'fas fa-volume-mute';
-                        soundToggle.classList.add('muted');
-                        soundText.textContent = 'Sound Off';
-                    }
-                    
-                    this.config.soundEnabled = isEnabled;
-                    this.saveSettings();
-                });
-                
+                // Message input and send
                 input.addEventListener('input', (e) => {
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.min(e.target.scrollHeight, 156) + 'px';
                     sendBtn.disabled = e.target.value.trim() === '';
                     
-                    // Debounced typing sound - only play occasionally
-                    if (Math.random() > 0.85) { // 15% chance to play sound (less frequent)
-                        soundEffects.play('typing', 0.04);
+                    // Auto-resize textarea
+                    if (e.target.value.trim()) {
+                        sendBtn.disabled = false;
+                    } else {
+                        sendBtn.disabled = true;
                     }
                 });
 
@@ -3658,6 +3628,7 @@
 
                 sendBtn.addEventListener('click', () => this.sendMessage());
 
+                // File upload
                 document.getElementById('uploadBtn').addEventListener('click', () => {
                     soundEffects.play('click');
                     document.getElementById('fileInput').click();
@@ -3668,16 +3639,18 @@
                     this.handleFileUpload(e.target.files);
                 });
 
+                // Voice recording
                 document.getElementById('voiceBtn').addEventListener('click', () => {
                     soundEffects.play('click');
                     this.toggleVoiceRecording();
                 });
 
+                // Settings
                 document.getElementById('settingsBtn').addEventListener('click', () => this.toggleSettingsModal(true));
                 document.getElementById('closeSettingsBtn').addEventListener('click', () => this.toggleSettingsModal(false));
                 document.getElementById('modalOverlay').addEventListener('click', () => this.toggleSettingsModal(false));
 
-                // Confirmation modal event listeners
+                // Clear chat confirmation
                 document.getElementById('cancelClearBtn').addEventListener('click', () => {
                     soundEffects.play('click');
                     this.hideClearChatConfirmation();
@@ -3694,6 +3667,7 @@
                     }
                 });
 
+                // Account button
                 document.getElementById('accountBtn').addEventListener('click', () => {
                     if (this.state.isLoggedIn) {
                         this.showUserMenu();
@@ -3727,56 +3701,17 @@
                     this.handleSignup();
                 });
 
-                document.getElementById('showTerms').addEventListener('click', (e) => {
-                    soundEffects.play('click');
-                    e.preventDefault();
-                    this.showTermsModal('terms');
-                });
-
-                document.getElementById('showPrivacy').addEventListener('click', (e) => {
-                    soundEffects.play('click');
-                    e.preventDefault();
-                    this.showTermsModal('privacy');
-                });
-
-                document.getElementById('closeTermsBtn').addEventListener('click', () => {
-                    soundEffects.play('click');
-                    this.hideTermsModal();
-                });
-
-                // Password strength indicator
-                document.getElementById('signupPassword').addEventListener('input', (e) => {
-                    this.checkPasswordStrength(e.target.value);
-                });
-
-                // Form validation
-                document.getElementById('confirmPassword').addEventListener('input', (e) => {
-                    this.validatePasswordConfirmation();
-                });
-                
-                document.getElementById('clearChat').addEventListener('click', () => {
-                    soundEffects.play('click');
-                    this.showClearChatConfirmation();
-                });
-
-                document.getElementById('clearHistory').addEventListener('click', () => {
-                    soundEffects.play('click');
-                    this.showClearChatConfirmation();
-                });
-
+                // Search functionality
                 document.getElementById('searchBtn').addEventListener('click', () => {
-                    soundEffects.play('click');
                     this.toggleSearchBar();
                 });
 
                 document.getElementById('searchCloseBtn').addEventListener('click', () => {
-                    soundEffects.play('click');
                     this.closeSearchBar();
                 });
 
                 document.getElementById('searchInput').addEventListener('input', (e) => {
-                    // Play typing sound for search bar
-                    if (Math.random() > 0.8) { // 20% chance to play sound (less frequent than message typing)
+                    if (Math.random() > 0.8) {
                         soundEffects.play('search_typing', 0.03);
                     }
                     this.handleSearchInput(e.target.value);
@@ -4002,62 +3937,209 @@
                     // Show typing indicator
                     this.showTyping();
                     
-                    // Send to Python backend
-                    const response = await fetch('http://127.0.0.1:5000/chat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            message: userInput,
-                            context: {
-                                user_name: this.state.userName || 'Guest',
-                                session_id: this.state.userId || 'default',
-                                conversation_history: this.state.conversationContext.slice(-5)
+                    // Try to connect to Python backend first
+                    try {
+                        const response = await fetch('http://127.0.0.1:5000/chat', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                message: userInput,
+                                context: {
+                                    user_name: this.state.userName || 'Guest',
+                                    session_id: this.state.userId || 'default',
+                                    conversation_history: this.state.conversationContext.slice(-5)
+                                }
+                            }),
+                            signal: AbortSignal.timeout(5000) // 5 second timeout
+                        });
+                        
+                        const data = await response.json();
+                        
+                        // Hide typing indicator
+                        this.hideTyping();
+                        
+                        if (response.ok && data.response) {
+                            // Display user message
+                            this.addMessage(userInput, 'user');
+                            
+
+                            // Display AI response with enhanced formatting
+                            this.addMessage(data.response, 'bot');
+                            
+
+                            // Update conversation context
+                            this.state.conversationContext.push({role: 'user', text: userInput});
+                            this.state.conversationContext.push({role: 'bot', text: data.response});
+                            
+
+                            // Update user name if detected
+                            if (data.data && data.data.user_name) {
+                                this.state.userName = data.data.user_name;
                             }
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    // Hide typing indicator
-                    this.hideTyping();
-                    
-                    if (response.ok && data.response) {
-                        // Display user message
-                        this.addMessage(userInput, 'user');
-                        
-                        // Display AI response with enhanced formatting
-                        this.addMessage(data.response, 'bot');
-                        
-                        // Update conversation context
-                        this.state.conversationContext.push({role: 'user', text: userInput});
-                        this.state.conversationContext.push({role: 'bot', text: data.response});
-                        
-                        // Update user name if detected
-                        if (data.data && data.data.user_name) {
-                            this.state.userName = data.data.user_name;
+                            
+
+                            // Limit context size
+                            if (this.state.conversationContext.length > 10) {
+                                this.state.conversationContext = this.state.conversationContext.slice(-10);
+                            }
+                            
+
+                            // Update status based on intent
+                            if (data.intent) {
+                                this.updateIntentStatus(data.intent);
+                            }
+                            
+
+                            return data.response;
                         }
-                        
-                        // Limit context size
-                        if (this.state.conversationContext.length > 10) {
-                            this.state.conversationContext = this.state.conversationContext.slice(-10);
-                        }
-                        
-                        // Update status based on intent
-                        if (data.intent) {
-                            this.updateIntentStatus(data.intent);
-                        }
-                    } else {
-                        console.error('Backend error:', data.error || 'Unknown error');
-                        this.addMessage('Sorry, I had trouble connecting to the server. Please try again.', 'bot');
+                    } catch (backendError) {
+                        console.log('Backend not available, using fallback responses');
+                        // Continue to fallback system
                     }
                     
-                } catch (error) {
-                    console.error('Network error:', error);
+                    // Fallback response system when backend is not available
                     this.hideTyping();
-                    this.addMessage('Network error. Please check if the backend server is running.', 'bot');
-                    document.getElementById('sendBtn').disabled = false;
+                    this.addMessage(userInput, 'user');
+                    
+                    // Generate contextual fallback response
+                    const fallbackResponse = this.generateFallbackResponse(userInput);
+                    this.addMessage(fallbackResponse, 'bot');
+                    
+                    // Update conversation context
+                    this.state.conversationContext.push({role: 'user', text: userInput});
+                    this.state.conversationContext.push({role: 'bot', text: fallbackResponse});
+                    
+                    // Limit context size
+                    if (this.state.conversationContext.length > 10) {
+                        this.state.conversationContext = this.state.conversationContext.slice(-10);
+                    }
+                    
+                    // Update status based on detected intent
+                    const intent = this.detectIntent(userInput);
+                    this.updateIntentStatus(intent);
+                    
+                    return fallbackResponse;
+                    
+                } catch (error) {
+                    this.handleError(error, 'generateResponse');
+                    this.hideTyping();
+                    
+                    // Final fallback - show error message
+                    const errorMessage = "Maaf kijiye, main abhi response generate nahi kar sakti. Python backend available nahi hai. Kripya VANIE.py backend start karein.";
+                    this.addMessage(errorMessage, 'bot');
+                    return errorMessage;
+                }
+            },
+
+            generateFallbackResponse(userInput) {
+                const lowerInput = userInput.toLowerCase();
+                
+                // Greetings
+                if (this.knowledge.greetings.some(greeting => lowerInput.includes(greeting))) {
+                    return "Namaste! 🙏 Main VANIE hoon. Aap kaise hain? Main aapki kya madad kar sakti hoon?";
+                }
+                
+                // Programming/Coding
+                if (this.knowledge.coding.some(coding => lowerInput.includes(coding))) {
+                    if (lowerInput.includes('python')) {
+                        return "Python ek powerful programming language hai. Main aapko Python mein help kar sakti hoon. Kya specific topic chahiye?";
+                    } else if (lowerInput.includes('javascript')) {
+                        return "JavaScript web development ke liye use hoti hai. Main aapko JavaScript concepts explain kar sakti hoon.";
+                    } else if (lowerInput.includes('algorithm')) {
+                        return "Algorithms problem solving ke liye important hain. Common algorithms: Sorting, Searching, Dynamic Programming, Graph algorithms.";
+                    } else {
+                        return "Programming mein aapki kya help chahiye? Main coding concepts, algorithms, aur specific languages mein help kar sakti hoon.";
+                    }
+                }
+                
+                // Science
+                if (this.knowledge.science.some(science => lowerInput.includes(science))) {
+                    if (lowerInput.includes('physics')) {
+                        return "Physics natural science hai jo matter aur energy ke sath deal karti hai. Kya specific physics topic discuss karna chahte hain?";
+                    } else if (lowerInput.includes('chemistry')) {
+                        return "Chemistry substances ke composition, structure, aur properties ke baare mein hoti hai.";
+                    } else if (lowerInput.includes('biology')) {
+                        return "Biology living organisms ke study hai. Main biology concepts explain kar sakti hoon.";
+                    } else {
+                        return "Science mein aapki kya interest hai? Main science topics explain kar sakti hoon.";
+                    }
+                }
+                
+                // History
+                if (this.knowledge.history.some(history => lowerInput.includes(history))) {
+                    return "History ek interesting subject hai! Kaunsa time period ya event discuss karna chahte hain?";
+                }
+                
+                // General questions
+                if (this.knowledge.general.some(general => lowerInput.includes(general))) {
+                    return "Yeh ek interesting question hai! Main aapki is topic mein detail se help kar sakti hoon. Kya specific information chahiye?";
+                }
+                
+                // Time/Date queries
+                if (lowerInput.includes('time') || lowerInput.includes('date')) {
+                    const now = new Date();
+                    return `Current time: ${now.toLocaleTimeString('hi-IN')} | Date: ${now.toLocaleDateString('hi-IN')}`;
+                }
+                
+                // Weather queries
+                if (lowerInput.includes('weather') || lowerInput.includes('mausam')) {
+                    return "Weather check karne ke liye Python backend chahiye. Currently backend available nahi hai, lekin main aapko weather update de sakti hoon jab backend start hoga.";
+                }
+                
+                // System info
+                if (lowerInput.includes('system') || lowerInput.includes('computer')) {
+                    return `System Info: Browser: ${navigator.userAgent} | Platform: ${navigator.platform} | Language: ${navigator.language}`;
+                }
+                
+                // Math problems
+                if (lowerInput.match(/\d+[\+\-\*\/]\d+/)) {
+                    try {
+                        const result = eval(lowerInput);
+                        return `${userInput} = ${result}`;
+                    } catch (e) {
+                        return "Math calculation mein problem hai. Kripya proper format mein likhiye.";
+                    }
+                }
+                
+                // Help command
+                if (lowerInput.includes('help') || lowerInput.includes('madad')) {
+                    return `Main aapki help kar sakti hoon in topics mein:
+📚 Education: Science, History, Math
+💻 Programming: Python, JavaScript, Algorithms
+🌐 General Knowledge: Various topics
+⏰ Time & Date queries
+💻 System information
+Type "/help" for commands ya direct question puchiye!`;
+                }
+                
+                // Default response
+                return "Yeh ek interesting topic hai! Main aapki is topic mein detail se help kar sakti hoon. Kripya thoda detail batayein ki aapki kya specific requirement hai?";
+            },
+
+            detectIntent(userInput) {
+                const lowerInput = userInput.toLowerCase();
+                
+                // Detect intent based on keywords
+                if (this.knowledge.greetings.some(greeting => lowerInput.includes(greeting))) {
+                    return 'greeting';
+                } else if (this.knowledge.coding.some(coding => lowerInput.includes(coding))) {
+                    return 'programming_help';
+                } else if (this.knowledge.science.some(science => lowerInput.includes(science))) {
+                    return 'science_help';
+                } else if (this.knowledge.history.some(history => lowerInput.includes(history))) {
+                    return 'history_help';
+                } else if (lowerInput.includes('time') || lowerInput.includes('date')) {
+                    return 'time_service';
+                } else if (lowerInput.includes('weather') || lowerInput.includes('mausam')) {
+                    return 'weather_service';
+                } else if (lowerInput.includes('system') || lowerInput.includes('computer')) {
+                    return 'system_info';
+                } else if (lowerInput.includes('help') || lowerInput.includes('madad')) {
+                    return 'general_chat';
+                } else {
+                    return 'general_chat';
                 }
             },
 
