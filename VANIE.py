@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 VANIE - Virtual Assistant of Neural Integrated Engine
-Advanced Backend System with Real-time Information Capabilities
+Advanced Backend System with Real-time Information Capabilities 
 
 REQUIREMENTS:
 flask==2.3.3
