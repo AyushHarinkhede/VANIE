@@ -36,12 +36,13 @@ import math
 import hashlib
 import base64
 import uuid
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from difflib import SequenceMatcher
 import statistics
 import heapq
 import itertools
 import fractions
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
