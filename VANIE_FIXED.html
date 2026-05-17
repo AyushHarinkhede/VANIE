@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VANIE - Virtual Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #764ba2;
+            --bg-dark: #1a1a2e;
+            --bg-secondary: #2d3748;
+            --text-primary: #e2e8f0;
+            --text-secondary: #a0aec0;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d3748 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-dark);
+            box-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .chat-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title h1 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        .header-title p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.bot .message-content {
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--primary);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 10px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 25px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .welcome-message h2 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-message p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .feature {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 3px solid var(--primary);
+        }
+
+        .feature i {
+            font-size: 1.5em;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            background: rgba(245, 101, 101, 0.1);
+            border-left: 3px solid var(--danger);
+            padding: 12px;
+            border-radius: 5px;
+            color: #fca5a5;
+            margin: 10px 0;
+        }
+
+        .info-box {
+            background: rgba(72, 187, 120, 0.1);
+            border-left: 3px solid var(--success);
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .message-content {
+                max-width: 85%;
+            }
+
+            .header-title h1 {
+                font-size: 1.3em;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-window">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <div>
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="header-title">
+                        <h1>🤖 VANIE</h1>
+                        <p>Virtual Assistant of Neural Integrated Engine</p>
+                    </div>
+                </div>
+                <div id="connectionStatus" style="text-align: right;">
+                    <span id="statusText" style="font-size: 0.9em;">Connecting...</span>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="chat-messages scrollbar-hide" id="chatMessages">
+                <div class="welcome-message">
+                    <h2>नमस्ते! 👋</h2>
+                    <p>Welcome to VANIE - Your Intelligent AI Assistant</p>
+                    <div class="feature-list">
+                        <div class="feature">
+                            <i class="fas fa-comments"></i>
+                            <p><strong>Natural Chat</strong></p>
+                            <p style="font-size: 0.9em;">Real conversations</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-code"></i>
+                            <p><strong>Code Help</strong></p>
+                            <p style="font-size: 0.9em;">Programming assistance</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-calculator"></i>
+                            <p><strong>Math & Calc</strong></p>
+                            <p style="font-size: 0.9em;">Quick calculations</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-desktop"></i>
+                            <p><strong>System Info</strong></p>
+                            <p style="font-size: 0.9em;">Real-time monitoring</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-cloud-sun"></i>
+                            <p><strong>Weather</strong></p>
+                            <p style="font-size: 0.9em;">Live updates</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-heart"></i>
+                            <p><strong>Support</strong></p>
+                            <p style="font-size: 0.9em;">Emotional AI</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="Type your message here... (नमस्ते या Hello से शुरू करें)"
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        let isConnected = false;
+
+        // Check backend connection
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    isConnected = true;
+                    updateStatus('Connected ✅', 'green');
+                    console.log('✅ VANIE Backend Connected!');
+                    addBotMessage('✅ Backend connected successfully! Type your message to start.');
+                } else {
+                    isConnected = false;
+                    updateStatus('Backend Error ⚠️', 'orange');
+                }
+            } catch (error) {
+                isConnected = false;
+                updateStatus('Offline Mode ⚠️', 'red');
+                console.error('❌ Cannot connect to backend:', error);
+                addBotMessage('⚠️ Backend is not running. Using offline mode. Start VANIE_FIXED.py to enable full features.');
+            }
+        }
+
+        function updateStatus(text, color) {
+            const statusText = document.getElementById('statusText');
+            if (statusText) {
+                statusText.textContent = text;
+                statusText.style.color = color;
+            }
+        }
+
+        function addBotMessage(text) {
+            const chatDiv = document.getElementById('chatMessages');
+            
+            // Remove welcome message if it exists
+            const welcome = chatDiv.querySelector('.welcome-message');
+            if (welcome) {
+                welcome.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${escapeHtml(text)}
+                </div>
+            `;
+            
+            chatDiv.appendChild(messageDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        function addUserMessage(text) {
+            const chatDiv = document.getElementById('chatMessages');
+            
+            // Remove welcome message if it exists
+            const welcome = chatDiv.querySelector('.welcome-message');
+            if (welcome) {
+                welcome.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${escapeHtml(text)}
+                </div>
+            `;
+            
+            chatDiv.appendChild(messageDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        function showTyping() {
+            const chatDiv = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            
+            chatDiv.appendChild(typingDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        function removeTyping() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+
+            if (!message) {
+                alert('कृपया कोई संदेश लिखें!');
+                return;
+            }
+
+            // Add user message
+            addUserMessage(message);
+            input.value = '';
+
+            // Show typing indicator
+            showTyping();
+
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: {
+                            timestamp: new Date().toISOString()
+                        }
+                    })
+                });
+
+                removeTyping();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addBotMessage(data.response || 'कोई प्रतिक्रिया नहीं मिली');
+                } else {
+                    const error = await response.json();
+                    addBotMessage(`❌ Error: ${error.response || 'Server error'}`);
+                }
+            } catch (error) {
+                removeTyping();
+                console.error('Error:', error);
+                addBotMessage(`❌ Connection Error: ${error.message}\n\nसुनिश्चित करें कि VANIE_FIXED.py चल रहा है!`);
+            }
+
+            input.focus();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 VANIE Chat Interface Loaded');
+            checkConnection();
+            document.getElementById('userInput').focus();
+        });
+
+        // Reconnect every 10 seconds
+        setInterval(checkConnection, 10000);
+    </script>
+</body>
+</html>

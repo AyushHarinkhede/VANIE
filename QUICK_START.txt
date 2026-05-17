@@ -1,0 +1,68 @@
+# 🚀 VANIE QUICK START GUIDE
+
+## ⚡ 3-Step Quick Start
+
+### Step 1: Install Dependencies (First time only)
+```
+pip install flask flask-cors psutil requests
+```
+
+### Step 2: Start the Backend
+```
+python VANIE_FIXED.py
+```
+
+### Step 3: Open in Browser
+```
+http://localhost:5000
+```
+
+That's it! Start chatting! 🎉
+
+---
+
+## 💬 Try These Messages:
+
+1. "नमस्ते" or "Hello"
+2. "What time is it?"
+3. "System information"
+4. "Weather today"
+5. "10 + 20"
+6. "Who are you?"
+7. "I'm sad" (emotional support)
+
+---
+
+## ⚠️ If Something Goes Wrong:
+
+**Backend won't start?**
+```bash
+# Make sure dependencies are installed
+pip install -r requirements.txt
+
+# Try running directly
+python VANIE_FIXED.py
+```
+
+**Can't connect?**
+- Make sure VANIE_FIXED.py is running
+- Try refreshing the browser (F5)
+- Check if port 5000 is available
+
+**Still not working?**
+- Check the Python version: `python --version` (should be 3.7+)
+- Open Command Prompt and run from the VANIE folder
+- Make sure no antivirus is blocking port 5000
+
+---
+
+## 📝 File Description
+
+- **VANIE_FIXED.py** = Backend server (handles all logic)
+- **VANIE_FIXED.html** = Web interface (what you see)
+- **run_vanie.bat** = Auto-launcher (easiest way to start)
+- **README_FIXED.md** = Full documentation
+
+---
+
+**Made with ❤️ by Ayush Harinkhede**
