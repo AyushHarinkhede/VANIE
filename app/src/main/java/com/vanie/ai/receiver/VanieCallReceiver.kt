@@ -1,0 +1,78 @@
+package com.vanie.ai.receiver
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.speech.tts.TextToSpeech
+import android.telecom.TelecomManager
+import android.telephony.TelephonyManager
+import android.util.Log
+import com.vanie.ai.telephony.VanieTelephonyController
+import java.util.Locale
+
+class VanieCallReceiver : BroadcastReceiver() {
+
+    companion object {
+        private const val TAG = "VanieCallReceiver"
+        private var tts: TextToSpeech? = null
+    }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == TelephonyManager.ACTION_PHONE_STATE_CHANGED) {
+            val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+            val incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
+
+            if (state == TelephonyManager.EXTRA_STATE_RINGING) {
+                Log.d(TAG, "Incoming call ringing: $incomingNumber")
+                val telephonyController = VanieTelephonyController(context)
+                val contactName = if (!incomingNumber.isNull_or_blank()) {
+                    telephonyController.resolvePhoneNumber(incomingNumber) ?: incomingNumber
+                } else {
+                    "Unknown Caller"
+                }
+
+                announceCaller(context, contactName)
+            }
+        }
+    }
+
+    private fun announceCaller(context: Context, callerName: String) {
+        tts = TextToSpeech(context.applicationContext) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.language = Locale.US
+                tts?.speak("Incoming call from $callerName. Say Hey VANIE Pickup call or Cut call.", TextToSpeech.QUEUE_FLUSH, null, "CALL_ID")
+            }
+        }
+    }
+
+    fun answerCall(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+            return try {
+                telecomManager.acceptRingingCall()
+                true
+            } catch (e: SecurityException) {
+                Log.e(TAG, "Permission required to accept ringing call: ${e.message}")
+                false
+            }
+        }
+        return false
+    }
+
+    fun cutCall(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+            return try {
+                telecomManager.endCall()
+                true
+            } catch (e: SecurityException) {
+                Log.e(TAG, "Permission required to end call: ${e.message}")
+                false
+            }
+        }
+        return false
+    }
+
+    private fun String?.isNull_or_blank(): Boolean = this == null || this.trim().isEmpty()
+}

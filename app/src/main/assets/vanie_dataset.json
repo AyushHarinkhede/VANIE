@@ -1,0 +1,102 @@
+{
+  "version": "3.0-ENHANCED",
+  "name": "VANIE - Virtual Agent of Neural Integrated Engine",
+  "intents": {
+    "greeting": "(नमस्ते|hello|hi|hey|कैसे हो|what's up|greetings|welcome)",
+    "help": "(help|मदद|सहायता|assistance|support)",
+    "bye": "(bye|अलविदा|goodbye|बाय|see you|farewell)",
+    "thanks": "(thanks|धन्यवाद|शुक्रिया|thank you)",
+    "time": "(time|समय|बजा|current time|अभी|what time)",
+    "date": "(date|तारीख|आज|when|calendar)",
+    "weather": "(weather|मौसम|temperature|तापमान|rain)",
+    "system": "(system|computer|pc|कंप्यूटर|memory|cpu|specs)",
+    "vanie": "(vanie|तुम कौन|who are you|आपका नाम|about|yourself)",
+    "math": "(\\d+\\.?\\d*\\s*[\\+\\-\\*/]\\s*\\d+\\.?\\d*|calculate|गणना)",
+    "code": "(code|python|javascript|java|cpp|प्रोग्रामिंग|programming)",
+    "emotional": "(sad|happy|excited|उदास|खुश|परेशान|feeling)",
+    "joke": "(joke|मजाक|हंसाओ|funny|laugh|चुटकुले)",
+    "riddle": "(riddle|पहेली|guess|सवाल)",
+    "trivia": "(trivia|क्विज़|facts|interesting|fact)",
+    "game": "(game|खेल|play|word game)",
+    "motivation": "(motivation|inspire|courage|strength|confidence|प्रेरणा)",
+    "quote": "(quote|famous|कहावत|wisdom|advice)",
+    "conversion": "(convert|conversion|transform|unit)",
+    "search": "(search|find|look for|खोजो)",
+    "torch_on": "(torch on|flashlight on|flash on|लाइट चालू|लाइट ऑन|टॉर्च ऑन|टॉर्च चालू)",
+    "torch_off": "(torch off|flashlight off|flash off|लाइट बंद|लाइट ऑफ|टॉर्च ऑफ|टॉर्च बंद)",
+    "wifi_on": "(wifi on|turn on wifi|enable wifi|वाईफाई ऑन|वाईफाई चालू)",
+    "wifi_off": "(wifi off|turn off wifi|disable wifi|वाईफाई ऑफ|वाईफाई बंद)",
+    "bluetooth_on": "(bluetooth on|turn on bluetooth|enable bluetooth|ब्लूटूथ ऑन|ब्लूटूथ चालू)",
+    "bluetooth_off": "(bluetooth off|turn off bluetooth|disable bluetooth|ब्लूटूथ ऑफ|ब्लूटूथ बंद)",
+    "dnd_on": "(dnd on|do not disturb on|डीएनडी चालू|डिस्टर्ब न करें)",
+    "dnd_off": "(dnd off|do not disturb off|डीएनडी बंद)",
+    "mode_silent": "(silent mode|phone silent|साइलेंट मोड|साइलेंट करो)",
+    "mode_vibrate": "(vibrate mode|phone vibrate|वाइब्रेट मोड|वाइब्रेट करो)",
+    "mode_ring": "(ring mode|normal mode|रिंग मोड|रिंगर ऑन)",
+    "make_call": "(call|make a call|dial|फोन करो|कॉल करो|कॉल लगाओ)",
+    "send_sms": "(text|send text|send sms|message|मैसेज करो|एसएमएस भेजो)",
+    "send_whatsapp": "(whatsapp|send whatsapp|व्हाट्सएप करो|व्हाट्सएप मैसेज)",
+    "answer_call": "(pickup call|receive call|answer call|कॉल उठाओ|कॉल पिकअप|पिकअप करो)",
+    "reject_call": "(cut call|hangup|reject call|end call|कॉल काटो|कॉल कट|कॉल रिजेक्ट)"
+  },
+  "jokes": [
+    {"joke": "Why did the Python programmer go broke? Because he lost his class!"},
+    {"joke": "How many programmers does it take to change a light bulb? None, that's a hardware problem!"},
+    {"joke": "Why do programmers prefer dark mode? Because light attracts bugs!"},
+    {"joke": "क्या आप जानते हैं? AI को भी कभी-कभी hang हो जाता है... जब उसे अपने सॉकेट का पता न चले! 😄"},
+    {"joke": "एक आदमी ने डॉक्टर से पूछा: मेरा कंप्यूटर सिर्फ फिल्मों में काम करता है। डॉक्टर बोला: यह तो perfectly normal है! 😂"}
+  ],
+  "riddles": [
+    {"riddle": "मेरे पास चेहरा तो है पर मुझे देखा नहीं जा सकता। मैं कौन हूँ?", "answer": "mirror"},
+    {"riddle": "What has keys but no locks?", "answer": "keyboard"},
+    {"riddle": "जो चीज जितनी अधिक हटाते हो, वह उतनी बड़ी हो जाती है। यह क्या है?", "answer": "hole"},
+    {"riddle": "मेरे बिना आप नहीं रह सकते, पर मुझे कभी देखते नहीं। मैं कौन हूँ?", "answer": "air"}
+  ],
+  "quotes": [
+    "बड़ेसपने देखो, मेहनत करो और सफलता निश्चित है! 💪",
+    "हर असफलता आपको एक नई सीख सिखाती है। आगे बढ़ते रहो! 🚀",
+    "आपकी क्षमता से कहीं अधिक आप कर सकते हो। खुद पर विश्वास करो! 🌟",
+    "The only way to do great work is to love what you do. - Steve Jobs",
+    "Success is not final, failure is not fatal. - Winston Churchill",
+    "जो आज करते हो, कल का परिणाम निर्धारित करता है।"
+  ],
+  "facts": [
+    "क्या आप जानते हैं? पहला computer ENIAC था जो 30 टन वजन का था! 🖥️",
+    "दुनिया का पहला SMS 1992 में भेजा गया था।",
+    "Internet हर सेकंड 100,000 Gbps डेटा transmit करता है!",
+    "Python का नाम 'Monty Python' के नाम पर रखा गया था।",
+    "Artificial Intelligence का field 1956 में शुरू हुआ था।"
+  ],
+  "trivia": [
+    {
+      "question": "Python किस साल में बनाया गया था?",
+      "options": ["1989", "1991", "1995", "2000"],
+      "answer": "1991"
+    },
+    {
+      "question": "AI का full form क्या है?",
+      "options": ["Automated Intelligence", "Artificial Intelligence", "Advanced Information", "Adaptive Interface"],
+      "answer": "Artificial Intelligence"
+    },
+    {
+      "question": "Internet का inventor कौन था?",
+      "options": ["Steve Jobs", "Tim Berners-Lee", "Bill Gates", "Linus Torvalds"],
+      "answer": "Tim Berners-Lee"
+    }
+  ],
+  "sentiment": {
+    "positive": {
+      "good": 2, "great": 3, "excellent": 3, "amazing": 3, "wonderful": 3,
+      "perfect": 3, "love": 2, "like": 1, "happy": 2, "excited": 2,
+      "awesome": 3, "fantastic": 3, "brilliant": 3, "beautiful": 2,
+      "best": 3, "nice": 1, "cool": 1, "interesting": 1, "fun": 1,
+      "खुश": 2, "शानदार": 3, "बढ़िया": 2, "अच्छा": 1, "सुंदर": 2
+    },
+    "negative": {
+      "bad": 2, "terrible": 3, "awful": 3, "horrible": 3, "hate": 3,
+      "dislike": 2, "sad": 2, "upset": 2, "angry": 2, "frustrated": 2,
+      "worst": 3, "poor": 2, "boring": 1, "stupid": 2, "annoying": 2,
+      "बुरा": 2, "भयानक": 3, "दुःख": 2, "गुस्सा": 2, "परेशान": 2
+    }
+  }
+}
