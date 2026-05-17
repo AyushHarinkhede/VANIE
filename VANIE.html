@@ -5736,66 +5736,66 @@ Last login: ${new Date(user.lastLogin).toLocaleDateString()}
                     .catch(error => {
                         this.hideTyping();
                         this.addMessage('Unable to fetch weather information.', 'bot');
-                    this.updateStatus('Error', 'error');
-                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-                });
-            
-            this.closeLogoMenu();
-        },
+                        this.updateStatus('Error', 'error');
+                        setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                    });
+                
+                this.closeLogoMenu();
+            },
 
-        showDateTime() {
-            this.addMessage('Getting current date and time...', 'bot');
-            this.updateStatus('Time Service', 'time-service');
-            
-            fetch('http://127.0.0.1:5000/info/datetime')
-                .then(response => response.json())
-                .then(data => {
-                    this.hideTyping();
-                    const dateTimeInfo = this.formatDateTimeInfo(data);
-                    this.addMessage(dateTimeInfo, 'bot');
-                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-                })
-                .catch(error => {
-                    this.hideTyping();
-                    this.addMessage('Unable to fetch date and time information.', 'bot');
-                    this.updateStatus('Error', 'error');
-                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-                });
-            
-            this.closeLogoMenu();
-        },
+            showDateTime() {
+                this.addMessage('Getting current date and time...', 'bot');
+                this.updateStatus('Time Service', 'time-service');
+                
+                fetch('http://127.0.0.1:5000/info/datetime')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.hideTyping();
+                        const dateTimeInfo = this.formatDateTimeInfo(data);
+                        this.addMessage(dateTimeInfo, 'bot');
+                        setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                    })
+                    .catch(error => {
+                        this.hideTyping();
+                        this.addMessage('Unable to fetch date and time information.', 'bot');
+                        this.updateStatus('Error', 'error');
+                        setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                    });
+                
+                this.closeLogoMenu();
+            },
 
-        showVanieInfo() {
-            this.addMessage('Getting VANIE information...', 'bot');
-            this.updateStatus('About VANIE', 'general-chat');
-            
-            fetch('http://127.0.0.1:5000/info/vanie')
-                .then(response => response.json())
-                .then(data => {
-                    this.hideTyping();
-                    const vanieInfo = this.formatVanieInfo(data);
-                    this.addMessage(vanieInfo, 'bot');
-                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-                })
-                .catch(error => {
-                    this.hideTyping();
-                    this.addMessage('Unable to fetch VANIE information.', 'bot');
-                    this.updateStatus('Error', 'error');
-                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-                });
-            
-            this.closeLogoMenu();
-        },
+            showVanieInfo() {
+                this.addMessage('Getting VANIE information...', 'bot');
+                this.updateStatus('About VANIE', 'general-chat');
+                
+                fetch('http://127.0.0.1:5000/info/vanie')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.hideTyping();
+                        const vanieInfo = this.formatVanieInfo(data);
+                        this.addMessage(vanieInfo, 'bot');
+                        setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                    })
+                    .catch(error => {
+                        this.hideTyping();
+                        this.addMessage('Unable to fetch VANIE information.', 'bot');
+                        this.updateStatus('Error', 'error');
+                        setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                    });
+                
+                this.closeLogoMenu();
+            },
 
-        showPerformance() {
-            const performance = {
-                mode: this.state.performanceMode ? 'ON' : 'OFF',
-                uptime: this.getUptime(),
-                messages: this.state.conversationContext.length,
-                cacheSize: this.getCacheSize()
-            };
-            
-            const performanceInfo = `🚀 **Performance Monitor**
+            showPerformance() {
+                const performance = {
+                    mode: this.state.performanceMode ? 'ON' : 'OFF',
+                    uptime: this.getUptime(),
+                    messages: this.state.conversationContext.length,
+                    cacheSize: this.getCacheSize()
+                };
+                
+                const performanceInfo = `🚀 **Performance Monitor**
 
 ⚡ **Performance Mode:** ${performance.mode}
 ⏱️ **Uptime:** ${performance.uptime}
@@ -5803,75 +5803,163 @@ Last login: ${new Date(user.lastLogin).toLocaleDateString()}
 🗄️ **Cache Size:** ${performance.cacheSize}
 
 ${this.state.performanceMode ? 'High performance mode is active!' : 'Enable performance mode for faster responses.'}`;
-            
-            this.addMessage(performanceInfo, 'bot');
-            this.updateStatus('Performance Monitor', 'system-monitor');
-            setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-            this.closeLogoMenu();
-        },
-
-        clearChat() {
-            if (confirm('Are you sure you want to clear all chat history?')) {
-                this.state.conversationContext = [];
-                this.state.chatHistory = [];
-                this.clearChatDisplay();
-                this.addMessage('Chat history cleared successfully!', 'bot');
-                this.showNotification('Chat cleared! 🧹', 'success');
-                this.updateStatus('Chat Cleared', 'general-chat');
+                
+                this.addMessage(performanceInfo, 'bot');
+                this.updateStatus('Performance Monitor', 'system-monitor');
                 setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                this.closeLogoMenu();
+            },
+
+            clearChat() {
+                if (confirm('Are you sure you want to clear all chat history?')) {
+                    this.state.conversationContext = [];
+                    this.state.chatHistory = [];
+                    this.clearChatDisplay();
+                    this.addMessage('Chat history cleared successfully!', 'bot');
+                    this.showNotification('Chat cleared! 🧹', 'success');
+                    this.updateStatus('Chat Cleared', 'general-chat');
+                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                }
+                this.closeLogoMenu();
+            },
+
+            exportChat() {
+                const chatData = this.exportChatHistory();
+                const blob = new Blob([chatData], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `VANIE_Chat_${new Date().toISOString().split('T')[0]}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showNotification('Chat exported successfully! 📁', 'success');
+                this.closeLogoMenu();
+            },
+
+            closeLogoMenu() {
+                const menu = document.getElementById('logoMenu');
+                menu.classList.remove('show');
+            },
+
+            handleLogoMenuAction(action) {
+                switch(action) {
+                    case 'new chat':
+                        this.startNewChat();
+                        break;
+                    case 'clear history':
+                        this.showClearChatConfirmation();
+                        break;
+                    case 'search chat':
+                        // Already in search
+                        this.toggleSearchBar();
+                        break;
+                    case 'system monitor':
+                        this.showSystemInfo();
+                        break;
+                    case 'weather':
+                        this.showWeatherInfo();
+                        break;
+                    case 'datetime':
+                        this.showDateTime();
+                        break;
+                    case 'about vanie':
+                        this.showVanieInfo();
+                        break;
+                    case 'performance':
+                        this.showPerformance();
+                        break;
+                    case 'export':
+                        this.exportChat();
+                        break;
+                    default:
+                        console.log('Unknown action:', action);
+                }
+                this.closeLogoMenu();
+            },
+
+            formatSystemInfo(data) {
+                return `💻 **System Information**
+
+🖥️ **System:** ${data.system.os} ${data.system.architecture}
+⚙️ **Processor:** ${data.cpu.processor}
+💾 **Memory:** ${data.memory.total} (Available: ${data.memory.available})
+💿 **Disk:** ${data.disk.total} (Free: ${data.disk.free})
+🌐 **Network:** ${data.network.ip_address}
+⏰ **Boot Time:** ${data.boot_time}
+⏱️ **Uptime:** ${data.uptime}`;
+            },
+
+            formatWeatherInfo(data) {
+                return `🌤️ **Weather Report**
+
+🌡️ **Temperature:** ${data.temperature}
+🌡️ **Feels Like:** ${data.feels_like}
+☁️ **Condition:** ${data.condition}
+💧 **Humidity:** ${data.humidity}
+💨 **Wind Speed:** ${data.wind_speed}
+👁️ **Visibility:** ${data.visibility}
+🎯 **Pressure:** ${data.pressure}
+☀️ **UV Index:** ${data.uv_index}
+📍 **Location:** ${data.location}
+⏰ **Updated:** ${data.last_updated}`;
+            },
+
+            formatDateTimeInfo(data) {
+                return `📅 **Date & Time Information**
+
+⏰ **Current Time:** ${data.time}
+📅 **Date:** ${data.date}
+🗓️ **Day:** ${data.day}
+📆 **Month:** ${data.month}
+🎯 **Year:** ${data.year}
+🌍 **Timezone:** ${data.timezone}
+⚡ **Timestamp:** ${data.timestamp}`;
+            },
+
+            formatVanieInfo(vanie) {
+                return `🤖 **VANIE Information**
+
+📛 **Full Form:** ${vanie.full_form}
+👤 **Creator:** ${vanie.creator}
+🔢 **Version:** ${vanie.version}
+🚀 **Capabilities:** ${vanie.capabilities.join(', ')}`;
+            },
+
+            getUptime() {
+                const uptime = Date.now() - this.state.startTime;
+                const hours = Math.floor(uptime / (1000 * 60 * 60));
+                const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+                return `${hours}h ${minutes}m`;
+            },
+
+            getCacheSize() {
+                return `${Object.keys(this.state.conversationContext).length} items`;
+            },
+
+            clearChatDisplay() {
+                const container = document.getElementById('chatContainer');
+                const messages = container.querySelectorAll('.message-wrapper');
+                messages.forEach(msg => msg.remove());
+            },
+
+            exportChatHistory() {
+                const header = `VANIE Chat History - ${new Date().toLocaleString()}\n` + '='.repeat(50) + '\n\n';
+                const messages = this.state.conversationContext.map(msg => 
+                    `[${msg.timestamp}] ${msg.sender.toUpperCase()}: ${msg.text}`
+                ).join('\n\n');
+                
+                return header + messages;
             }
-            this.closeLogoMenu();
-        },
+        };
 
-        exportChat() {
-            const chatData = this.exportChatHistory();
-            const blob = new Blob([chatData], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `VANIE_Chat_${new Date().toISOString().split('T')[0]}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            this.addMessage('Chat exported successfully!', 'bot');
-            this.showNotification('Chat exported! 📥', 'success');
-            this.updateStatus('Export Complete', 'general-chat');
-            setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-            this.closeLogoMenu();
-        },
-
-        toggleSettings() {
-            this.showNotification('Settings panel coming soon! ⚙️', 'info');
-            this.updateStatus('Settings', 'general-chat');
-            setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-            this.closeLogoMenu();
-        },
-
-        closeLogoMenu() {
-            const menu = document.getElementById('logoMenu');
-            menu.classList.remove('show');
-        },
-
-        // Helper functions for formatting
-        formatSystemInfo(system) {
-            if (system.error) {
-                return '❌ Unable to retrieve system information.';
-            }
-            
-            return `💻 **System Information:**
-
-🖥️ **Platform:** ${system.system.platform} ${system.system.platform_release}
-⚡ **CPU Usage:** ${system.cpu.cpu_usage_percent}%
-🧠 **Memory:** ${system.memory.used_gb}GB / ${system.memory.total_gb}GB (${system.memory.percentage}%)
-💾 **Disk:** ${system.disk.used_gb}GB / ${system.disk.total_gb}GB (${system.disk.percentage.toFixed(1)}%)
-⏰ **Uptime:** ${system.uptime}
-
-System health: ${system.memory.percentage < 80 && system.cpu.cpu_usage_percent < 80 ? '✅ Excellent' : '⚠️ Good'}`;
-        },
-
-        formatWeatherInfo(weather) {
+    window.addEventListener('DOMContentLoaded', () => {
+        VANIE.init();
+    });
+</script>
+</body>
+</html>
             return `🌤️ **Weather Report:**
 
 🌡️ **Temperature:** ${weather.temperature}
@@ -5929,10 +6017,11 @@ System health: ${system.memory.percentage < 80 && system.cpu.cpu_usage_percent <
             
             return header + messages;
         }
+    };
 
-        window.addEventListener('DOMContentLoaded', () => {
-            VANIE.init();
-        });
-    </script>
+    window.addEventListener('DOMContentLoaded', () => {
+        VANIE.init();
+    });
+</script>
 </body>
 </html>
