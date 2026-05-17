@@ -8253,6 +8253,332 @@ def kg_reasoning():
         logger.error(f"Error in KG reasoning: {e}")
         return jsonify({'error': str(e)}), 500
 
+# Additional ML Algorithms Endpoints
+@app.route('/algorithms/knn', methods=['POST'])
+def knn_classify():
+    """K-Nearest Neighbors classification"""
+    try:
+        data = request.get_json()
+        X_train = data.get('X_train', [])
+        y_train = data.get('y_train', [])
+        X_test = data.get('X_test', [])
+        k = data.get('k', 3)
+        
+        if not X_train or not y_train or not X_test:
+            return jsonify({'error': 'Training data and test data required'}), 400
+        
+        predictions = vanie_engine.advanced_algorithms.knn_classifier(X_train, y_train, X_test, k)
+        return jsonify({'predictions': predictions, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in KNN: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/svm', methods=['POST'])
+def svm_classify():
+    """Simplified SVM training"""
+    try:
+        data = request.get_json()
+        X = data.get('X', [])
+        y = data.get('y', [])
+        learning_rate = data.get('learning_rate', 0.01)
+        iterations = data.get('iterations', 1000)
+        
+        if not X or not y:
+            return jsonify({'error': 'Training data required'}), 400
+        
+        weights = vanie_engine.advanced_algorithms.simple_svm(X, y, learning_rate, iterations)
+        return jsonify({'weights': weights, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in SVM: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Advanced NLP Endpoints
+@app.route('/algorithms/summarize', methods=['POST'])
+def summarize_text():
+    """Extractive text summarization"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        num_sentences = data.get('num_sentences', 3)
+        
+        if not text:
+            return jsonify({'error': 'Text is required'}), 400
+        
+        summary = vanie_engine.advanced_algorithms.extractive_summarization(text, num_sentences)
+        return jsonify({'summary': summary, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in summarization: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/qa', methods=['POST'])
+def question_answer():
+    """Simple question answering"""
+    try:
+        data = request.get_json()
+        question = data.get('question', '')
+        context = data.get('context', '')
+        
+        if not question or not context:
+            return jsonify({'error': 'Question and context required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.question_answering_simple(question, context)
+        return jsonify({'qa_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in QA: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/sentiment_advanced', methods=['POST'])
+def advanced_sentiment():
+    """Advanced sentiment analysis with emotion detection"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        
+        if not text:
+            return jsonify({'error': 'Text is required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.sentiment_analysis_advanced(text)
+        return jsonify({'sentiment_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in advanced sentiment: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Memory System Endpoints
+@app.route('/algorithms/forgetting_curve', methods=['POST'])
+def calculate_forgetting():
+    """Calculate memory retention using forgetting curve"""
+    try:
+        data = request.get_json()
+        memory_strength = data.get('memory_strength', 1.0)
+        time_elapsed = data.get('time_elapsed', 0)
+        
+        retention = vanie_engine.advanced_algorithms.forgetting_curve(memory_strength, time_elapsed)
+        return jsonify({'retention': retention, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in forgetting curve: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/memory_consolidation', methods=['POST'])
+def consolidate_memories():
+    """Consolidate important memories"""
+    try:
+        data = request.get_json()
+        memories = data.get('memories', [])
+        importance_threshold = data.get('importance_threshold', 0.7)
+        
+        result = vanie_engine.advanced_algorithms.memory_consolidation(memories, importance_threshold)
+        return jsonify({'consolidation_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in memory consolidation: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Advanced Reasoning Endpoints
+@app.route('/algorithms/temporal_reasoning', methods=['POST'])
+def temporal_reason():
+    """Temporal reasoning about events"""
+    try:
+        data = request.get_json()
+        events = data.get('events', [])
+        
+        result = vanie_engine.advanced_algorithms.temporal_reasoning(events)
+        return jsonify({'temporal_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in temporal reasoning: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/spatial_reasoning', methods=['POST'])
+def spatial_reason():
+    """Spatial reasoning about objects"""
+    try:
+        data = request.get_json()
+        objects = data.get('objects', [])
+        
+        result = vanie_engine.advanced_algorithms.spatial_reasoning(objects)
+        return jsonify({'spatial_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in spatial reasoning: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Emotional Features Endpoints
+@app.route('/algorithms/emotional_regulation', methods=['POST'])
+def regulate_emotion():
+    """Emotional regulation strategies"""
+    try:
+        data = request.get_json()
+        current_emotion = data.get('current_emotion', 'neutral')
+        intensity = data.get('intensity', 0.5)
+        context = data.get('context', {})
+        
+        result = vanie_engine.advanced_algorithms.emotional_regulation(current_emotion, intensity, context)
+        return jsonify({'regulation_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in emotional regulation: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/empathy_modeling', methods=['POST'])
+def model_empathy():
+    """Empathy modeling for responses"""
+    try:
+        data = request.get_json()
+        speaker_emotion = data.get('speaker_emotion', 'neutral')
+        listener_state = data.get('listener_state', {})
+        
+        result = vanie_engine.advanced_algorithms.empathy_modeling(speaker_emotion, listener_state)
+        return jsonify({'empathy_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in empathy modeling: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Dialogue Strategy Endpoints
+@app.route('/conversation/turn_taking', methods=['POST'])
+def analyze_turns():
+    """Analyze turn-taking patterns"""
+    try:
+        data = request.get_json()
+        conversation = data.get('conversation', [])
+        
+        result = vanie_engine.advanced_algorithms.turn_taking(conversation)
+        return jsonify({'turn_analysis': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in turn taking: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/floor_management', methods=['POST'])
+def manage_floor():
+    """Manage conversation floor"""
+    try:
+        data = request.get_json()
+        conversation_state = data.get('conversation_state', {})
+        
+        result = vanie_engine.advanced_algorithms.floor_management(conversation_state)
+        return jsonify({'floor_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in floor management: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Cross-Lingual Endpoints
+@app.route('/algorithms/cross_lingual', methods=['POST'])
+def cross_lingual():
+    """Cross-lingual transfer"""
+    try:
+        data = request.get_json()
+        source_text = data.get('source_text', '')
+        source_lang = data.get('source_lang', 'english')
+        target_lang = data.get('target_lang', 'hindi')
+        
+        result = vanie_engine.advanced_algorithms.cross_lingual_transfer(source_text, source_lang, target_lang)
+        return jsonify({'translation_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in cross-lingual: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Advanced Persona Endpoints
+@app.route('/conversation/value_response', methods=['POST'])
+def value_based():
+    """Value-based response generation"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        values = data.get('values', {})
+        
+        result = vanie_engine.advanced_algorithms.value_based_response(message, values)
+        return jsonify({'value_response': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in value response: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/belief_integration', methods=['POST'])
+def belief_integrate():
+    """Belief system integration"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        beliefs = data.get('beliefs', {})
+        
+        result = vanie_engine.advanced_algorithms.belief_system_integration(message, beliefs)
+        return jsonify({'belief_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in belief integration: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Knowledge Graph Enhancement Endpoints
+@app.route('/algorithms/entity_linking', methods=['POST'])
+def link_entities():
+    """Entity linking to knowledge graph"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        knowledge_graph = data.get('knowledge_graph', {})
+        
+        result = vanie_engine.advanced_algorithms.entity_linking(text, knowledge_graph)
+        return jsonify({'linked_entities': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in entity linking: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/relation_extraction', methods=['POST'])
+def extract_relations():
+    """Relation extraction between entities"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        entity1 = data.get('entity1', '')
+        entity2 = data.get('entity2', '')
+        
+        result = vanie_engine.advanced_algorithms.relation_extraction(text, entity1, entity2)
+        return jsonify({'relation_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in relation extraction: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Advanced Optimization Endpoints
+@app.route('/algorithms/simulated_annealing', methods=['POST'])
+def simulated_annealing_opt():
+    """Simulated annealing optimization"""
+    try:
+        data = request.get_json()
+        # Note: objective_func needs to be defined or passed as a string
+        initial_solution = data.get('initial_solution', [])
+        temperature = data.get('temperature', 1000)
+        cooling_rate = data.get('cooling_rate', 0.95)
+        iterations = data.get('iterations', 1000)
+        
+        # Simplified - in real implementation, you'd need to handle the objective function
+        result = {'error': 'Objective function handling not implemented in API'}
+        return jsonify({'optimization_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in simulated annealing: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Pattern Recognition Endpoints
+@app.route('/algorithms/sequence_patterns', methods=['POST'])
+def mine_sequences():
+    """Sequence pattern mining"""
+    try:
+        data = request.get_json()
+        sequences = data.get('sequences', [])
+        min_support = data.get('min_support', 0.5)
+        
+        result = vanie_engine.advanced_algorithms.sequence_pattern_mining(sequences, min_support)
+        return jsonify({'patterns': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in sequence mining: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/anomaly_detection', methods=['POST'])
+def detect_anomalies():
+    """Statistical anomaly detection"""
+    try:
+        data = request.get_json()
+        data_points = data.get('data', [])
+        threshold = data.get('threshold', 2.0)
+        
+        result = vanie_engine.advanced_algorithms.anomaly_detection_statistical(data_points, threshold)
+        return jsonify({'anomaly_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in anomaly detection: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     logger.info("Starting VANIE Backend Server...")
     logger.info(f"VANIE Version: {vanie_engine.knowledge_base['vanie_info']['version']}")
