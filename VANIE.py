@@ -6078,6 +6078,380 @@ def suggest_topic_realignment():
         logger.error(f"Error suggesting topic realignment: {e}")
         return jsonify({'error': str(e)}), 500
 
+# Additional Advanced Algorithms API Endpoints
+
+@app.route('/algorithms/pca', methods=['POST'])
+def perform_pca():
+    """Perform Principal Component Analysis"""
+    try:
+        data = request.get_json()
+        X = data.get('X', [])
+        n_components = data.get('n_components', 2)
+        
+        if not X:
+            return jsonify({'error': 'X is required'}), 400
+        
+        reduced_data = vanie_engine.advanced_algorithms.pca_simplified(X, n_components)
+        
+        return jsonify({
+            'reduced_data': reduced_data,
+            'original_dimensions': len(X[0]) if X else 0,
+            'reduced_dimensions': n_components,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error performing PCA: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/hierarchical_clustering', methods=['POST'])
+def perform_hierarchical_clustering():
+    """Perform hierarchical clustering"""
+    try:
+        data = request.get_json()
+        X = data.get('X', [])
+        linkage = data.get('linkage', 'single')
+        
+        if not X:
+            return jsonify({'error': 'X is required'}), 400
+        
+        clusters = vanie_engine.advanced_algorithms.hierarchical_clustering(X, linkage)
+        
+        return jsonify({
+            'clusters': clusters,
+            'num_clusters': len(clusters),
+            'linkage_method': linkage,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error performing hierarchical clustering: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/dbscan', methods=['POST'])
+def perform_dbscan():
+    """Perform DBSCAN clustering"""
+    try:
+        data = request.get_json()
+        X = data.get('X', [])
+        epsilon = data.get('epsilon', 0.5)
+        min_points = data.get('min_points', 3)
+        
+        if not X:
+            return jsonify({'error': 'X is required'}), 400
+        
+        clusters = vanie_engine.advanced_algorithms.dbscan_clustering(X, epsilon, min_points)
+        
+        return jsonify({
+            'clusters': clusters,
+            'num_clusters': len(clusters) - 1,  # Exclude noise
+            'noise_points': len(clusters.get('noise', [])),
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error performing DBSCAN: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/markov_chain', methods=['POST'])
+def generate_markov_text():
+    """Generate text using Markov chain"""
+    try:
+        data = request.get_json()
+        corpus = data.get('corpus', [])
+        start_word = data.get('start_word')
+        length = data.get('length', 50)
+        
+        if not corpus:
+            return jsonify({'error': 'Corpus is required'}), 400
+        
+        generated_text = vanie_engine.advanced_algorithms.markov_chain_text_generation(corpus, start_word, length)
+        
+        return jsonify({
+            'generated_text': generated_text,
+            'length': len(generated_text.split()),
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error generating Markov chain text: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/ngram_model', methods=['POST'])
+def build_ngram_model():
+    """Build n-gram language model"""
+    try:
+        data = request.get_json()
+        corpus = data.get('corpus', [])
+        n = data.get('n', 2)
+        
+        if not corpus:
+            return jsonify({'error': 'Corpus is required'}), 400
+        
+        ngram_model = vanie_engine.advanced_algorithms.n_gram_language_model(corpus, n)
+        
+        return jsonify({
+            'ngram_model': ngram_model,
+            'n_value': n,
+            'vocabulary_size': len(ngram_model),
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error building n-gram model: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/abductive_reasoning', methods=['POST'])
+def perform_abductive_reasoning():
+    """Perform abductive reasoning"""
+    try:
+        data = request.get_json()
+        observations = data.get('observations', [])
+        possible_explanations = data.get('possible_explanations', [])
+        
+        if not observations or not possible_explanations:
+            return jsonify({'error': 'Observations and possible explanations are required'}), 400
+        
+        explanations = vanie_engine.advanced_algorithms.abductive_reasoning(observations, possible_explanations)
+        
+        return jsonify({
+            'ranked_explanations': explanations,
+            'best_explanation': explanations[0] if explanations else None,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error performing abductive reasoning: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/analogical_reasoning', methods=['POST'])
+def perform_analogical_reasoning():
+    """Perform analogical reasoning"""
+    try:
+        data = request.get_json()
+        source = data.get('source', {})
+        target = data.get('target', {})
+        
+        if not source or not target:
+            return jsonify({'error': 'Source and target are required'}), 400
+        
+        analogy = vanie_engine.advanced_algorithms.analogical_reasoning(source, target)
+        
+        return jsonify({
+            'analogy_result': analogy,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error performing analogical reasoning: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/emotion_contagion', methods=['POST'])
+def model_emotion_contagion():
+    """Model emotion contagion"""
+    try:
+        data = request.get_json()
+        speaker_emotion = data.get('speaker_emotion', 'neutral')
+        listener_emotions = data.get('listener_emotions', [])
+        
+        if not listener_emotions:
+            return jsonify({'error': 'Listener emotions are required'}), 400
+        
+        updated_emotions = vanie_engine.advanced_algorithms.emotion_contagion(speaker_emotion, listener_emotions)
+        
+        return jsonify({
+            'updated_emotions': updated_emotions,
+            'speaker_emotion': speaker_emotion,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error modeling emotion contagion: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/mood_tracking', methods=['POST'])
+def track_mood():
+    """Track mood over time"""
+    try:
+        data = request.get_json()
+        emotions_history = data.get('emotions_history', [])
+        
+        if not emotions_history:
+            return jsonify({'error': 'Emotions history is required'}), 400
+        
+        mood_info = vanie_engine.advanced_algorithms.mood_tracking(emotions_history)
+        
+        return jsonify({
+            'mood_info': mood_info,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error tracking mood: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Additional Enhanced Conversation API Endpoints
+
+@app.route('/conversation/dialogue_repair', methods=['POST'])
+def generate_dialogue_repair():
+    """Generate dialogue repair strategy"""
+    try:
+        data = request.get_json()
+        misunderstanding = data.get('misunderstanding', '')
+        context = data.get('context', {})
+        
+        if not misunderstanding:
+            return jsonify({'error': 'Misunderstanding is required'}), 400
+        
+        repair = vanie_engine.advanced_algorithms.dialogue_repair_strategy(misunderstanding, context)
+        
+        return jsonify({
+            'repair_strategy': repair,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error generating dialogue repair: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/clarification', methods=['POST'])
+def generate_clarification():
+    """Generate clarification question"""
+    try:
+        data = request.get_json()
+        ambiguous_message = data.get('message', '')
+        
+        if not ambiguous_message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        clarification = vanie_engine.advanced_algorithms.generate_clarification_question(ambiguous_message)
+        
+        return jsonify({
+            'clarification_question': clarification,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error generating clarification: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/multi_party', methods=['POST'])
+def track_multi_party():
+    """Track multi-party conversation dynamics"""
+    try:
+        data = request.get_json()
+        participants = data.get('participants', [])
+        messages = data.get('messages', [])
+        
+        if not participants or not messages:
+            return jsonify({'error': 'Participants and messages are required'}), 400
+        
+        dynamics = vanie_engine.advanced_algorithms.multi_party_conversation_tracker(participants, messages)
+        
+        return jsonify({
+            'conversation_dynamics': dynamics,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error tracking multi-party conversation: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/semantic_network', methods=['POST'])
+def construct_semantic_network():
+    """Construct semantic network"""
+    try:
+        data = request.get_json()
+        concepts = data.get('concepts', [])
+        relationships = data.get('relationships', [])
+        
+        if not concepts or not relationships:
+            return jsonify({'error': 'Concepts and relationships are required'}), 400
+        
+        network = vanie_engine.advanced_algorithms.semantic_network_construction(concepts, relationships)
+        
+        return jsonify({
+            'semantic_network': network,
+            'num_concepts': len(network),
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error constructing semantic network: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/network_traversal', methods=['POST'])
+def traverse_semantic_network():
+    """Traverse semantic network"""
+    try:
+        data = request.get_json()
+        network = data.get('network', {})
+        start_node = data.get('start_node', '')
+        max_depth = data.get('max_depth', 3)
+        
+        if not network or not start_node:
+            return jsonify({'error': 'Network and start_node are required'}), 400
+        
+        related_concepts = vanie_engine.advanced_algorithms.semantic_network_traversal(network, start_node, max_depth)
+        
+        return jsonify({
+            'related_concepts': related_concepts,
+            'traversal_depth': max_depth,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error traversing semantic network: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/episodic_consolidation', methods=['POST'])
+def consolidate_episodic_memory():
+    """Consolidate episodic memories"""
+    try:
+        data = request.get_json()
+        episodes = data.get('episodes', [])
+        
+        if not episodes:
+            return jsonify({'error': 'Episodes are required'}), 400
+        
+        consolidation = vanie_engine.advanced_algorithms.episodic_memory_consolidation(episodes)
+        
+        return jsonify({
+            'memory_consolidation': consolidation,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error consolidating episodic memory: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/persona_response', methods=['POST'])
+def generate_persona_response():
+    """Generate persona-based response"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        persona = data.get('persona', {})
+        
+        if not message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        response = vanie_engine.advanced_algorithms.persona_based_response(message, persona)
+        
+        return jsonify({
+            'persona_response': response,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error generating persona response: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/context_aware', methods=['POST'])
+def select_context_aware_response():
+    """Select context-aware response"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        context_history = data.get('context_history', [])
+        
+        if not message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        response = vanie_engine.advanced_algorithms.context_aware_response_selection(message, context_history)
+        
+        return jsonify({
+            'context_aware_response': response,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error selecting context-aware response: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     logger.info("Starting VANIE Backend Server...")
     logger.info(f"VANIE Version: {vanie_engine.knowledge_base['vanie_info']['version']}")
@@ -6087,6 +6461,14 @@ if __name__ == '__main__':
     logger.info("Machine Learning Algorithms: Enabled")
     logger.info("Advanced NLP Features: Enabled")
     logger.info("Multi-Turn Dialogue Management: Enabled")
+    logger.info("Dimensionality Reduction: Enabled")
+    logger.info("Advanced Clustering: Enabled")
+    logger.info("Text Generation: Enabled")
+    logger.info("Advanced Reasoning: Enabled")
+    logger.info("Emotional Intelligence: Enabled")
+    logger.info("Multi-Party Conversation: Enabled")
+    logger.info("Semantic Networks: Enabled")
+    logger.info("Persona-Based Responses: Enabled")
     
     try:
         app.run(host='127.0.0.1', port=5000, debug=False)
