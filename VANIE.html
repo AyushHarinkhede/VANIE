@@ -3609,24 +3609,26 @@
                 input.addEventListener('input', (e) => {
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.min(e.target.scrollHeight, 156) + 'px';
-                    sendBtn.disabled = e.target.value.trim() === '';
                     
-                    // Auto-resize textarea
-                    if (e.target.value.trim()) {
-                        sendBtn.disabled = false;
-                    } else {
-                        sendBtn.disabled = true;
-                    }
+                    // Enable/disable send button based on input
+                    const hasText = e.target.value.trim().length > 0;
+                    sendBtn.disabled = !hasText;
                 });
 
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        this.sendMessage();
+                        if (!sendBtn.disabled) {
+                            this.sendMessage();
+                        }
                     }
                 });
 
-                sendBtn.addEventListener('click', () => this.sendMessage());
+                sendBtn.addEventListener('click', () => {
+                    if (!sendBtn.disabled) {
+                        this.sendMessage();
+                    }
+                });
 
                 // File upload
                 document.getElementById('uploadBtn').addEventListener('click', () => {
@@ -3913,15 +3915,18 @@
                     
                     document.getElementById('welcomeScreen').classList.add('hidden');
 
+                    // Add user message to display and context
                     this.addMessage(text, 'user');
                     this.state.conversationContext.push({role: 'user', text: text});
 
+                    // Clear input and disable button
                     input.value = '';
                     input.style.height = 'auto';
                     document.getElementById('sendBtn').disabled = true;
 
                     this.showTyping();
 
+                    // Generate response
                     const response = await this.generateResponse(text);
                     
                     this.hideTyping();
@@ -3931,25 +3936,28 @@
                         soundEffects.play('receive');
                     }, 500);
                     
+                    // Add bot response
                     this.addMessage(response, 'bot');
                     this.state.conversationContext.push({role: 'bot', text: response});
 
+                    // Limit context size
                     if (this.state.conversationContext.length > 10) {
                         this.state.conversationContext = this.state.conversationContext.slice(-10);
                     }
                     
+                    // Re-enable button for next message
+                    document.getElementById('sendBtn').disabled = false;
+                    
                 } catch (error) {
                     this.handleError(error, 'sendMessage');
                     this.hideTyping();
+                    // Ensure button is re-enabled on error
                     document.getElementById('sendBtn').disabled = false;
                 }
             },
 
             async generateResponse(userInput) {
                 try {
-                    // Show typing indicator
-                    this.showTyping();
-                    
                     // Try to connect to Python backend first
                     try {
                         const response = await fetch('http://127.0.0.1:5000/chat', {
@@ -3965,45 +3973,21 @@
                                     conversation_history: this.state.conversationContext.slice(-5)
                                 }
                             }),
-                            signal: AbortSignal.timeout(5000) // 5 second timeout
+                            signal: AbortSignal.timeout(10000) // Increased to 10 second timeout
                         });
                         
                         const data = await response.json();
                         
-                        // Hide typing indicator
-                        this.hideTyping();
-                        
                         if (response.ok && data.response) {
-                            // Display user message
-                            this.addMessage(userInput, 'user');
-                            
-
-                            // Display AI response with enhanced formatting
-                            this.addMessage(data.response, 'bot');
-                            
-
-                            // Update conversation context
-                            this.state.conversationContext.push({role: 'user', text: userInput});
-                            this.state.conversationContext.push({role: 'bot', text: data.response});
-                            
-
                             // Update user name if detected
                             if (data.data && data.data.user_name) {
                                 this.state.userName = data.data.user_name;
                             }
-                            
-
-                            // Limit context size
-                            if (this.state.conversationContext.length > 10) {
-                                this.state.conversationContext = this.state.conversationContext.slice(-10);
-                            }
-                            
 
                             // Update status based on intent
                             if (data.intent) {
                                 this.updateIntentStatus(data.intent);
                             }
-                            
 
                             return data.response;
                         }
@@ -4013,35 +3997,16 @@
                     }
                     
                     // Fallback response system when backend is not available
-                    this.hideTyping();
-                    this.addMessage(userInput, 'user');
-                    
                     // Generate contextual fallback response
                     const fallbackResponse = this.generateFallbackResponse(userInput);
-                    this.addMessage(fallbackResponse, 'bot');
-                    
-                    // Update conversation context
-                    this.state.conversationContext.push({role: 'user', text: userInput});
-                    this.state.conversationContext.push({role: 'bot', text: fallbackResponse});
-                    
-                    // Limit context size
-                    if (this.state.conversationContext.length > 10) {
-                        this.state.conversationContext = this.state.conversationContext.slice(-10);
-                    }
-                    
-                    // Update status based on detected intent
-                    const intent = this.detectIntent(userInput);
-                    this.updateIntentStatus(intent);
-                    
                     return fallbackResponse;
                     
                 } catch (error) {
                     this.handleError(error, 'generateResponse');
                     this.hideTyping();
                     
-                    // Final fallback - show error message
+                    // Final fallback - return error message
                     const errorMessage = "Maaf kijiye, main abhi response generate nahi kar sakti. Python backend available nahi hai. Kripya VANIE.py backend start karein.";
-                    this.addMessage(errorMessage, 'bot');
                     return errorMessage;
                 }
             },

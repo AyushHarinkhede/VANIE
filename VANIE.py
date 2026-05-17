@@ -41,6 +41,7 @@ from difflib import SequenceMatcher
 import statistics
 import heapq
 import itertools
+import fractions
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -2171,6 +2172,774 @@ class AdvancedAlgorithms:
             return "I sense some frustration. How can I better assist you?"
         else:
             return "I'm here to help. What's on your mind?"
+    
+    # Graph Algorithms
+    
+    def dijkstra_shortest_path(self, graph: Dict[str, Dict[str, float]], start: str, end: str) -> Dict[str, Any]:
+        """Dijkstra's algorithm for shortest path"""
+        if start not in graph or end not in graph:
+            return {'error': 'Start or end node not in graph'}
+        
+        distances = {node: float('inf') for node in graph}
+        distances[start] = 0
+        previous = {node: None for node in graph}
+        unvisited = set(graph.keys())
+        
+        while unvisited:
+            current = min(unvisited, key=lambda x: distances[x])
+            
+            if distances[current] == float('inf'):
+                break
+            
+            if current == end:
+                break
+            
+            unvisited.remove(current)
+            
+            for neighbor, weight in graph[current].items():
+                if neighbor in unvisited:
+                    new_distance = distances[current] + weight
+                    if new_distance < distances[neighbor]:
+                        distances[neighbor] = new_distance
+                        previous[neighbor] = current
+        
+        # Reconstruct path
+        path = []
+        current = end
+        while current is not None:
+            path.append(current)
+            current = previous[current]
+        path.reverse()
+        
+        return {
+            'path': path if path[0] == start else [],
+            'distance': distances[end],
+            'visited_nodes': list(graph.keys()) - unvisited
+        }
+    
+    def breadth_first_search(self, graph: Dict[str, List[str]], start: str, target: str = None) -> List[str]:
+        """BFS for graph traversal"""
+        if start not in graph:
+            return []
+        
+        visited = set()
+        queue = [start]
+        result = []
+        
+        while queue:
+            current = queue.pop(0)
+            
+            if current in visited:
+                continue
+            
+            visited.add(current)
+            result.append(current)
+            
+            if current == target:
+                break
+            
+            for neighbor in graph.get(current, []):
+                if neighbor not in visited:
+                    queue.append(neighbor)
+        
+        return result
+    
+    def depth_first_search(self, graph: Dict[str, List[str]], start: str, target: str = None) -> List[str]:
+        """DFS for graph traversal"""
+        if start not in graph:
+            return []
+        
+        visited = set()
+        result = []
+        
+        def dfs(node):
+            if node in visited:
+                return
+            
+            visited.add(node)
+            result.append(node)
+            
+            if node == target:
+                return
+            
+            for neighbor in graph.get(node, []):
+                dfs(neighbor)
+        
+        dfs(start)
+        return result
+    
+    # Advanced Ensemble Methods
+    
+    def bagging_ensemble(self, X_train: List[List[float]], y_train: List[str], 
+                        X_test: List[List[float]], n_estimators: int = 10) -> List[str]:
+        """Bagging ensemble method"""
+        predictions_list = []
+        
+        for _ in range(n_estimators):
+            # Bootstrap sample
+            indices = random.choices(range(len(X_train)), k=len(X_train))
+            X_bootstrap = [X_train[i] for i in indices]
+            y_bootstrap = [y_train[i] for i in indices]
+            
+            # Simple decision tree
+            tree = self.build_decision_tree(X_bootstrap, y_bootstrap, max_depth=2)
+            
+            # Predict
+            tree_predictions = []
+            for sample in X_test:
+                pred = self.predict_decision_tree(tree, sample)
+                tree_predictions.append(pred)
+            
+            predictions_list.append(tree_predictions)
+        
+        # Majority vote for each sample
+        final_predictions = []
+        for i in range(len(X_test)):
+            sample_predictions = [preds[i] for preds in predictions_list]
+            final_predictions.append(max(set(sample_predictions), key=sample_predictions.count))
+        
+        return final_predictions
+    
+    def boosting_ensemble(self, X_train: List[List[float]], y_train: List[str], 
+                         X_test: List[List[float]], n_estimators: int = 10) -> List[str]:
+        """Simple boosting ensemble (AdaBoost-like)"""
+        # Initialize sample weights
+        n_samples = len(X_train)
+        weights = [1.0 / n_samples] * n_samples
+        
+        predictions_list = []
+        
+        for _ in range(n_estimators):
+            # Weighted sampling
+            weighted_indices = random.choices(range(n_samples), weights=weights, k=n_samples)
+            X_weighted = [X_train[i] for i in weighted_indices]
+            y_weighted = [y_train[i] for i in weighted_indices]
+            
+            # Train weak learner (decision tree)
+            tree = self.build_decision_tree(X_weighted, y_weighted, max_depth=2)
+            
+            # Predict and calculate error
+            predictions = []
+            errors = []
+            for i, sample in enumerate(X_train):
+                pred = self.predict_decision_tree(tree, sample)
+                predictions.append(pred)
+                errors.append(1 if pred != y_train[i] else 0)
+            
+            predictions_list.append(predictions)
+            
+            # Update weights (increase weight for misclassified samples)
+            total_error = sum(errors)
+            if total_error > 0:
+                alpha = 0.5 * math.log((1 - total_error) / total_error) if total_error > 0 and total_error < 1 else 0
+                for i in range(n_samples):
+                    if errors[i] == 1:
+                        weights[i] *= math.exp(alpha)
+            
+            # Normalize weights
+            total_weight = sum(weights)
+            weights = [w / total_weight for w in weights]
+        
+        # Weighted voting
+        final_predictions = []
+        for i in range(len(X_test)):
+            sample_predictions = [preds[i] for preds in predictions_list]
+            # Simple majority vote (in real boosting, would use weighted voting)
+            final_predictions.append(max(set(sample_predictions), key=sample_predictions.count))
+        
+        return final_predictions
+    
+    # Advanced Text Classification
+    
+    def naive_bayes_classifier(self, X_train: List[str], y_train: List[str], X_test: List[str]) -> List[str]:
+        """Naive Bayes text classifier"""
+        # Build vocabulary
+        vocabulary = set()
+        for text in X_train:
+            words = text.lower().split()
+            vocabulary.update(words)
+        
+        vocabulary = list(vocabulary)
+        
+        # Calculate class priors
+        class_counts = Counter(y_train)
+        class_priors = {cls: count / len(y_train) for cls, count in class_counts.items()}
+        
+        # Calculate word probabilities for each class
+        class_word_counts = {cls: defaultdict(int) for cls in class_priors}
+        class_totals = {cls: 0 for cls in class_priors}
+        
+        for text, label in zip(X_train, y_train):
+            words = text.lower().split()
+            for word in words:
+                class_word_counts[label][word] += 1
+                class_totals[label] += 1
+        
+        # Calculate probabilities with Laplace smoothing
+        class_word_probs = {}
+        for cls in class_priors:
+            class_word_probs[cls] = {}
+            for word in vocabulary:
+                count = class_word_counts[cls][word]
+                prob = (count + 1) / (class_totals[cls] + len(vocabulary))
+                class_word_probs[cls][word] = prob
+        
+        # Classify test data
+        predictions = []
+        for text in X_test:
+            words = text.lower().split()
+            
+            class_scores = {}
+            for cls in class_priors:
+                score = math.log(class_priors[cls])
+                for word in words:
+                    if word in class_word_probs[cls]:
+                        score += math.log(class_word_probs[cls][word])
+                class_scores[cls] = score
+            
+            predicted_class = max(class_scores, key=class_scores.get)
+            predictions.append(predicted_class)
+        
+        return predictions
+    
+    # Advanced Language Detection
+    
+    def detect_language_advanced(self, text: str) -> Dict[str, float]:
+        """Advanced language detection using character n-grams"""
+        # Language profiles (simplified character n-gram distributions)
+        language_profiles = {
+            'english': {'th': 0.02, 'he': 0.01, 'an': 0.01, 'in': 0.02, 'er': 0.01, 'on': 0.01},
+            'hindi': {'क': 0.15, 'र': 0.10, 'न': 0.08, 'म': 0.07, 'त': 0.06, 'य': 0.05},
+            'spanish': {'el': 0.03, 'la': 0.02, 'de': 0.02, 'en': 0.02, 'os': 0.01, 'es': 0.02},
+            'french': {'le': 0.03, 'de': 0.02, 'en': 0.02, 'on': 0.01, 'nt': 0.01, 're': 0.02},
+            'german': {'er': 0.02, 'en': 0.02, 'ch': 0.02, 'ei': 0.01, 'ie': 0.01, 'te': 0.01}
+        }
+        
+        text_lower = text.lower()
+        scores = {}
+        
+        for lang, profile in language_profiles.items():
+            score = 0.0
+            for char, expected_freq in profile.items():
+                actual_freq = text_lower.count(char) / len(text_lower) if text_lower else 0
+                score += abs(actual_freq - expected_freq)
+            
+            scores[lang] = 1.0 - score  # Lower difference = higher score
+        
+        # Normalize scores
+        total = sum(scores.values())
+        if total > 0:
+            scores = {lang: score / total for lang, score in scores.items()}
+        
+        return scores
+    
+    # Advanced Reasoning
+    
+    def deductive_reasoning(self, premises: List[str], rules: List[Dict]) -> Dict[str, Any]:
+        """Deductive reasoning - derive conclusions from premises using rules"""
+        conclusions = []
+        
+        for rule in rules:
+            conditions = rule.get('conditions', [])
+            conclusion = rule.get('conclusion', '')
+            
+            # Check if all conditions are satisfied by premises
+            conditions_met = all(
+                any(condition in premise.lower() for premise in premises)
+                for condition in conditions
+            )
+            
+            if conditions_met:
+                conclusions.append({
+                    'rule': rule.get('name', 'unnamed'),
+                    'conclusion': conclusion,
+                    'supporting_premises': premises
+                })
+        
+        return {
+            'conclusions': conclusions,
+            'num_conclusions': len(conclusions),
+            'valid': len(conclusions) > 0
+        }
+    
+    def inductive_reasoning(self, observations: List[str]) -> Dict[str, Any]:
+        """Inductive reasoning - derive general principles from observations"""
+        if not observations:
+            return {'generalization': '', 'confidence': 0.0}
+        
+        # Extract common patterns
+        all_words = []
+        for obs in observations:
+            all_words.extend(obs.lower().split())
+        
+        word_freq = Counter(all_words)
+        
+        # Find patterns that appear in multiple observations
+        common_patterns = {word: count for word, count in word_freq.items() 
+                           if count >= len(observations) * 0.5}
+        
+        # Generate generalization
+        if common_patterns:
+            top_patterns = sorted(common_patterns.items(), key=lambda x: x[1], reverse=True)[:5]
+            generalization = f"Based on observations, common themes include: {', '.join([p[0] for p in top_patterns])}"
+            confidence = sum(count for _, count in top_patterns) / sum(word_freq.values())
+        else:
+            generalization = "Insufficient data for generalization"
+            confidence = 0.0
+        
+        return {
+            'generalization': generalization,
+            'confidence': confidence,
+            'patterns': common_patterns
+        }
+    
+    def causal_reasoning(self, events: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Causal reasoning - identify potential causal relationships"""
+        if len(events) < 2:
+            return {'causal_chains': [], 'confidence': 0.0}
+        
+        # Extract temporal sequences
+        causal_chains = []
+        
+        for i in range(len(events) - 1):
+            event1 = events[i]
+            event2 = events[i + 1]
+            
+            # Check if event1 could cause event2
+            potential_cause = self._check_potential_causality(event1, event2)
+            
+            if potential_causal:
+                causal_chains.append({
+                    'cause': event1,
+                    'effect': event2,
+                    'temporal_order': i,
+                    'confidence': potential_causal
+                })
+        
+        # Calculate overall confidence
+        if causal_chains:
+            avg_confidence = sum(chain['confidence'] for chain in causal_chains) / len(causal_chains)
+        else:
+            avg_confidence = 0.0
+        
+        return {
+            'causal_chains': causal_chains,
+            'num_chains': len(causal_chains),
+            'overall_confidence': avg_confidence
+        }
+    
+    def _check_potential_causality(self, event1: Dict, event2: Dict) -> float:
+        """Check if event1 could potentially cause event2"""
+        # Simplified causality check based on temporal and semantic similarity
+        confidence = 0.0
+        
+        # Temporal proximity (closer in time = higher confidence)
+        if 'timestamp' in event1 and 'timestamp' in event2:
+            time_diff = abs(event2['timestamp'] - event1['timestamp'])
+            if time_diff < 60:  # Within a minute
+                confidence += 0.3
+            elif time_diff < 3600:  # Within an hour
+                confidence += 0.2
+        
+        # Semantic similarity
+        if 'content' in event1 and 'content' in event2:
+            similarity = self.text_similarity_score(event1['content'], event2['content'])
+            confidence += similarity * 0.5
+        
+        return min(confidence, 1.0)
+    
+    # Advanced Emotional Features
+    
+    def emotion_blending(self, primary_emotion: str, secondary_emotions: Dict[str, float]) -> Dict[str, float]:
+        """Blend multiple emotions with weighted intensities"""
+        emotion_vectors = {
+            'happy': [0.8, 0.2, 0.0, 0.0, 0.0],
+            'sad': [0.0, 0.9, 0.1, 0.0, 0.0],
+            'angry': [0.1, 0.1, 0.8, 0.0, 0.0],
+            'fear': [0.0, 0.3, 0.0, 0.7, 0.0],
+            'neutral': [0.2, 0.2, 0.2, 0.2, 0.2]
+        }
+        
+        if primary_emotion not in emotion_vectors:
+            primary_emotion = 'neutral'
+        
+        # Start with primary emotion
+        blended = emotion_vectors[primary_emotion].copy()
+        
+        # Blend in secondary emotions
+        for emotion, weight in secondary_emotions.items():
+            if emotion in emotion_vectors:
+                for i in range(len(blended)):
+                    blended[i] = blended[i] * (1 - weight) + emotion_vectors[emotion][i] * weight
+        
+        # Normalize
+        total = sum(blended)
+        if total > 0:
+            blended = [b / total for b in blended]
+        
+        return {
+            'primary_emotion': primary_emotion,
+            'blended_emotions': blended,
+            'emotion_labels': ['happy', 'sad', 'angry', 'fear', 'neutral'],
+            'dominant_emotion': max(zip(['happy', 'sad', 'angry', 'fear', 'neutral'], blended), key=lambda x: x[1])[0]
+        }
+    
+    def mood_prediction(self, current_mood: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict mood based on current state and context"""
+        mood_transitions = {
+            'happy': {
+                'positive_context': 'happy',
+                'negative_context': 'neutral',
+                'stressful_context': 'worried'
+            },
+            'sad': {
+                'supportive_context': 'neutral',
+                'negative_context': 'sad',
+                'exciting_context': 'hopeful'
+            },
+            'angry': {
+                'understanding_context': 'calm',
+                'provoking_context': 'angry',
+                'resolution_context': 'satisfied'
+            },
+            'worried': {
+                'reassuring_context': 'calm',
+                'uncertain_context': 'anxious',
+                'resolution_context': 'relieved'
+            },
+            'neutral': {
+                'positive_context': 'happy',
+                'negative_context': 'sad',
+                'exciting_context': 'excited'
+            }
+        }
+        
+        # Determine context type
+        context_type = 'neutral'
+        if context.get('sentiment', 'neutral') == 'positive':
+            context_type = 'positive_context'
+        elif context.get('sentiment', 'neutral') == 'negative':
+            context_type = 'negative_context'
+        elif context.get('stress_level', 0) > 0.7:
+            context_type = 'stressful_context'
+        elif context.get('excitement_level', 0) > 0.7:
+            context_type = 'exciting_context'
+        
+        # Predict next mood
+        transitions = mood_transitions.get(current_mood, mood_transitions['neutral'])
+        predicted_mood = transitions.get(context_type, current_mood)
+        
+        confidence = 0.7  # Base confidence
+        
+        return {
+            'current_mood': current_mood,
+            'predicted_mood': predicted_mood,
+            'context_type': context_type,
+            'confidence': confidence
+        }
+    
+    def emotional_memory(self, emotional_events: List[Dict]) -> Dict[str, Any]:
+        """Track emotional memory and patterns"""
+        if not emotional_events:
+            return {'emotional_patterns': {}, 'emotional_intensity': 0.0}
+        
+        # Extract emotional patterns
+        emotion_counts = Counter(event.get('emotion', 'neutral') for event in emotional_events)
+        
+        # Calculate emotional intensity
+        intensity_scores = [event.get('intensity', 0.5) for event in emotional_events]
+        avg_intensity = sum(intensity_scores) / len(intensity_scores) if intensity_scores else 0.5
+        
+        # Identify emotional triggers
+        triggers = defaultdict(list)
+        for event in emotional_events:
+            trigger = event.get('trigger', 'unknown')
+            emotion = event.get('emotion', 'neutral')
+            triggers[emotion].append(trigger)
+        
+        return {
+            'emotional_patterns': dict(emotion_counts),
+            'emotional_intensity': avg_intensity,
+            'emotional_triggers': {emotion: Counter(triggers_list) for emotion, triggers_list in triggers.items()},
+            'total_emotional_events': len(emotional_events)
+        }
+    
+    # Advanced Dialogue Strategies
+    
+    def initiative_taking(self, conversation_state: Dict[str, Any]) -> str:
+        """Determine when to take initiative in conversation"""
+        engagement_level = conversation_state.get('engagement_level', 0.5)
+        last_speaker = conversation_state.get('last_speaker', 'user')
+        conversation_depth = conversation_state.get('conversation_depth', 1)
+        
+        # Take initiative if:
+        # - User engagement is low
+        # - User has spoken multiple times without response
+        # - Conversation is stuck on one topic
+        if engagement_level < 0.3:
+            return "I notice our conversation has slowed down. Would you like to explore a new topic?"
+        elif last_speaker == 'user' and conversation_depth > 5:
+            return "Let me share something interesting I learned recently..."
+        elif conversation_state.get('topic_stuck', False):
+            return "We've been discussing this for a while. Would you like to move on?"
+        else:
+            return None
+    
+    def topic_management(self, current_topic: str, topic_history: List[str]) -> Dict[str, Any]:
+        """Manage topic transitions and exploration"""
+        if not topic_history:
+            return {'suggestion': 'start_conversation', 'next_topic': None}
+        
+        topic_frequency = Counter(topic_history)
+        
+        # Suggest new topic if current topic has been discussed extensively
+        if topic_frequency.get(current_topic, 0) > 5:
+            # Find least discussed topics
+            all_topics = set(topic_history)
+            discussed_topics = set(topic_frequency.keys())
+            available_topics = all_topics - discussed_topics
+            
+            if available_topics:
+                next_topic = random.choice(list(available_topics))
+                return {
+                    'suggestion': 'change_topic',
+                    'current_topic': current_topic,
+                    'next_topic': next_topic,
+                    'reason': 'topic_exhausted'
+                }
+        
+        # Suggest deepening current topic
+        if topic_frequency.get(current_topic, 0) >= 2 and topic_frequency.get(current_topic, 0) <= 5:
+            return {
+                'suggestion': 'deepen_topic',
+                'current_topic': current_topic,
+                'reason': 'topic_explored'
+            }
+        
+        return {
+            'suggestion': 'continue',
+            'current_topic': current_topic,
+            'reason': 'topic_fresh'
+        }
+    
+    def discourse_structure_analysis(self, conversation: List[Dict]) -> Dict[str, Any]:
+        """Analyze discourse structure and patterns"""
+        if not conversation:
+            return {'structure': 'empty', 'turns': 0}
+        
+        # Analyze turn-taking patterns
+        speakers = [turn.get('speaker', 'unknown') for turn in conversation]
+        speaker_counts = Counter(speakers)
+        
+        # Analyze topic shifts
+        topics = [turn.get('topic', 'general') for turn in conversation]
+        topic_shifts = sum(1 for i in range(1, len(topics)) if topics[i] != topics[i-1])
+        
+        # Analyze discourse markers
+        discourse_markers = []
+        for turn in conversation:
+            content = turn.get('content', '').lower()
+            markers = ['however', 'therefore', 'moreover', 'furthermore', 'consequently', 'meanwhile']
+            for marker in markers:
+                if marker in content:
+                    discourse_markers.append(marker)
+        
+        return {
+            'structure': 'multi_turn' if len(conversation) > 1 else 'single_turn',
+            'turns': len(conversation),
+            'speaker_distribution': dict(speaker_counts),
+            'topic_shifts': topic_shifts,
+            'discourse_markers': discourse_markers,
+            'dominant_speaker': speaker_counts.most_common(1)[0] if speaker_counts else None
+        }
+    
+    # Cross-Cultural Conversation Support
+    
+    def cultural_adaptation(self, user_cultural_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Adapt conversation style based on cultural context"""
+        cultural_styles = {
+            'formal_western': {
+                'greeting': 'Good day',
+                'addressing': 'formal',
+                'personal_questions': 'limited',
+                'directness': 'moderate',
+                'emoji_usage': 'minimal'
+            },
+            'casual_western': {
+                'greeting': 'Hey',
+                'addressing': 'informal',
+                'personal_questions': 'acceptable',
+                'directness': 'high',
+                'emoji_usage': 'moderate'
+            },
+            'formal_asian': {
+                'greeting': 'Respected',
+                'addressing': 'respectful',
+                'personal_questions': 'very_limited',
+                'directness': 'low',
+                'emoji_usage': 'minimal'
+            },
+            'casual_asian': {
+                'greeting': 'Hello',
+                'addressing 'polite',
+                'personal_questions': 'limited',
+                'directness': 'moderate',
+                'emoji_usage': 'minimal'
+            },
+            'middle_eastern': {
+                'greeting': 'Salam',
+                'addressing 'honorable',
+                'personal_questions': 'context_dependent',
+                'directness': 'moderate',
+                'emoji_usage': 'minimal'
+            }
+        }
+        
+        user_style = user_cultural_context.get('style', 'casual_western')
+        return cultural_styles.get(user_style, cultural_styles['casual_western'])
+    
+    # Advanced Persona System
+    
+    def dynamic_persona_evolution(self, current_persona: Dict[str, Any], 
+                                  interaction_history: List[Dict]) -> Dict[str, Any]:
+        """Evolve persona based on interaction history"""
+        if not interaction_history:
+            return current_persona
+        
+        # Analyze interaction patterns
+        recent_interactions = interaction_history[-10:]
+        
+        # Adjust friendliness based on user's friendliness
+        user_positive_count = sum(1 for i in recent_interactions if i.get('sentiment') == 'positive')
+        if user_positive_count > len(recent_interactions) * 0.7:
+            current_persona['traits']['friendliness'] = min(1.0, current_persona['traits'].get('friendliness', 0.5) + 0.1)
+        
+        # Adjust formality based on user's formality
+        user_formal_count = sum(1 for i in recent_interactions if i.get('formality') == 'formal')
+        if user_formal_count > len(recent_interactions) * 0.7:
+            current_persona['style'] = 'formal'
+        elif user_formal_count < len(recent_interactions) * 0.3:
+            current_persona['style'] = 'casual'
+        
+        # Add new knowledge areas based on discussed topics
+        discussed_topics = [i.get('topic', 'general') for i in recent_interactions]
+        unique_topics = set(discussed_topics)
+        current_persona['knowledge_areas'] = list(unique_topics)
+        
+        return current_persona
+    
+    def trait_based_response(self, message: str, traits: Dict[str, float]) -> str:
+        """Generate response based on personality traits"""
+        response_parts = []
+        
+        # Openness - more exploratory responses
+        if traits.get('openness', 0.5) > 0.7:
+            response_parts.append("That's an interesting perspective. Let me explore that further.")
+        elif traits.get('openness', 0.5) < 0.3:
+            response_parts.append("I'll stick to the main point here.")
+        
+        # Conscientiousness - more detailed and organized responses
+        if traits.get('conscientiousness', 0.5) > 0.7:
+            response_parts.append("Let me break this down systematically for you.")
+        elif traits.get('conscientiousness', 0.5) < 0.3:
+            response_parts.append("Here's the quick answer.")
+        
+        # Extraversion - more enthusiastic and engaging
+        if traits.get('extraversion', 0.5) > 0.7:
+            response_parts.append("I'm excited to help with this!")
+        elif traits.get('extraversion', 0.5) < 0.3:
+            response_parts.append("I can provide the information you need.")
+        
+        # Agreeableness - more accommodating
+        if traits.get('agreeableness', 0.5) > 0.7:
+            response_parts.append("I'm happy to adjust my approach to better suit your needs.")
+        elif traits.get('agreeableness', 0.5) < 0.3:
+            response_parts.append("I'll provide my analysis directly.")
+        
+        # Neuroticism - more cautious
+        if traits.get('neuroticism', 0.5) > 0.7:
+            response_parts.append("I want to make sure I get this right.")
+        elif traits.get('neuroticism', 0.5) < 0.3:
+            response_parts.append("I'm confident in this analysis.")
+        
+        return ' '.join(response_parts) if response_parts else "I can help with that."
+    
+    # Knowledge Graph Integration
+    
+    def knowledge_graph_query(self, query: str, knowledge_graph: Dict[str, List[str]]) -> List[str]:
+        """Query knowledge graph for related concepts"""
+        query_words = set(query.lower().split())
+        
+        related_concepts = []
+        
+        for concept, relations in knowledge_graph.items():
+            concept_words = set(concept.lower().split())
+            
+            # Direct match
+            if query_words & concept_words:
+                related_concepts.append(concept)
+            
+            # Related through relations
+            for relation in relations:
+                if isinstance(relation, dict):
+                    target = relation.get('target', '')
+                    target_words = set(target.lower().split())
+                    if query_words & target_words:
+                        related_concepts.append(target)
+                else:
+                    relation_words = set(str(relation).lower().split())
+                    if query_words & relation_words:
+                        related_concepts.append(relation)
+        
+        return list(set(related_concepts))
+    
+    def knowledge_graph_reasoning(self, entity1: str, entity2: str, 
+                                  knowledge_graph: Dict[str, List[str]]) -> Dict[str, Any]:
+        """Reason about relationship between entities using knowledge graph"""
+        # Find path between entities
+        path = self._find_knowledge_path(entity1, entity2, knowledge_graph, max_depth=3)
+        
+        if path:
+            return {
+                'relationship_type': 'connected',
+                'path': path,
+                'path_length': len(path),
+                'confidence': 1.0 / len(path)
+            }
+        else:
+            return {
+                'relationship_type': 'unknown',
+                'path': [],
+                'confidence': 0.0
+            }
+    
+    def _find_knowledge_path(self, start: str, end: str, graph: Dict[str, List[str]], 
+                             max_depth: int = 3, current_path: List[str] = None) -> List[str]:
+        """Find path between entities in knowledge graph using BFS"""
+        if current_path is None:
+            current_path = [start]
+        
+        if start == end:
+            return current_path
+        
+        if len(current_path) >= max_depth:
+            return None
+        
+        if start not in graph:
+            return None
+        
+        for relation in graph[start]:
+            if isinstance(relation, dict):
+                target = relation.get('target', '')
+            else:
+                target = relation
+            
+            if target and target not in current_path:
+                new_path = self._find_knowledge_path(target, end, graph, max_depth, current_path + [target])
+                if new_path:
+                    return new_path
+        
+        return None
 
 class NaturalConversationEngine:
     """Natural Human Behavior Conversation Algorithm for VANIE"""
@@ -6452,23 +7221,319 @@ def select_context_aware_response():
         logger.error(f"Error selecting context-aware response: {e}")
         return jsonify({'error': str(e)}), 500
 
+# Graph Algorithms Endpoints
+@app.route('/algorithms/dijkstra', methods=['POST'])
+def dijkstra_path():
+    """Find shortest path using Dijkstra's algorithm"""
+    try:
+        data = request.get_json()
+        graph = data.get('graph', {})
+        start = data.get('start', '')
+        end = data.get('end', '')
+        
+        if not graph or not start or not end:
+            return jsonify({'error': 'Graph, start, and end are required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.dijkstra_shortest_path(graph, start, end)
+        return jsonify({'result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in Dijkstra: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/bfs', methods=['POST'])
+def bfs_traversal():
+    """BFS graph traversal"""
+    try:
+        data = request.get_json()
+        graph = data.get('graph', {})
+        start = data.get('start', '')
+        target = data.get('target', None)
+        
+        if not graph or not start:
+            return jsonify({'error': 'Graph and start are required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.breadth_first_search(graph, start, target)
+        return jsonify({'traversal': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in BFS: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Ensemble Methods Endpoints
+@app.route('/algorithms/bagging', methods=['POST'])
+def bagging_ensemble():
+    """Bagging ensemble method"""
+    try:
+        data = request.get_json()
+        X_train = data.get('X_train', [])
+        y_train = data.get('y_train', [])
+        X_test = data.get('X_test', [])
+        n_estimators = data.get('n_estimators', 10)
+        
+        if not X_train or not y_train or not X_test:
+            return jsonify({'error': 'Training data and test data required'}), 400
+        
+        predictions = vanie_engine.advanced_algorithms.bagging_ensemble(X_train, y_train, X_test, n_estimators)
+        return jsonify({'predictions': predictions, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in bagging: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/boosting', methods=['POST'])
+def boosting_ensemble():
+    """Boosting ensemble method"""
+    try:
+        data = request.get_json()
+        X_train = data.get('X_train', [])
+        y_train = data.get('y_train', [])
+        X_test = data.get('X_test', [])
+        n_estimators = data.get('n_estimators', 10)
+        
+        if not X_train or not y_train or not X_test:
+            return jsonify({'error': 'Training data and test data required'}), 400
+        
+        predictions = vanie_engine.advanced_algorithms.boosting_ensemble(X_train, y_train, X_test, n_estimators)
+        return jsonify({'predictions': predictions, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in boosting: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Text Classification Endpoints
+@app.route('/algorithms/naive_bayes', methods=['POST'])
+def naive_bayes_classify():
+    """Naive Bayes text classification"""
+    try:
+        data = request.get_json()
+        X_train = data.get('X_train', [])
+        y_train = data.get('y_train', [])
+        X_test = data.get('X_test', [])
+        
+        if not X_train or not y_train or not X_test:
+            return jsonify({'error': 'Training data and test data required'}), 400
+        
+        predictions = vanie_engine.advanced_algorithms.naive_bayes_classifier(X_train, y_train, X_test)
+        return jsonify({'predictions': predictions, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in Naive Bayes: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/language_detect', methods=['POST'])
+def detect_language():
+    """Advanced language detection"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        
+        if not text:
+            return jsonify({'error': 'Text is required'}), 400
+        
+        scores = vanie_engine.advanced_algorithms.detect_language_advanced(text)
+        return jsonify({'language_scores': scores, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in language detection: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Reasoning Endpoints
+@app.route('/algorithms/deductive', methods=['POST'])
+def deductive_reason():
+    """Deductive reasoning"""
+    try:
+        data = request.get_json()
+        premises = data.get('premises', [])
+        rules = data.get('rules', [])
+        
+        if not premises or not rules:
+            return jsonify({'error': 'Premises and rules required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.deductive_reasoning(premises, rules)
+        return jsonify({'result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in deductive reasoning: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/inductive', methods=['POST'])
+def inductive_reason():
+    """Inductive reasoning"""
+    try:
+        data = request.get_json()
+        observations = data.get('observations', [])
+        
+        if not observations:
+            return jsonify({'error': 'Observations required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.inductive_reasoning(observations)
+        return jsonify({'result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in inductive reasoning: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/causal', methods=['POST'])
+def causal_reason():
+    """Causal reasoning"""
+    try:
+        data = request.get_json()
+        events = data.get('events', [])
+        
+        if not events:
+            return jsonify({'error': 'Events required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.causal_reasoning(events)
+        return jsonify({'result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in causal reasoning: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Emotional Features Endpoints
+@app.route('/algorithms/emotion_blend', methods=['POST'])
+def blend_emotions():
+    """Emotion blending"""
+    try:
+        data = request.get_json()
+        primary_emotion = data.get('primary_emotion', 'neutral')
+        secondary_emotions = data.get('secondary_emotions', {})
+        
+        result = vanie_engine.advanced_algorithms.emotion_blending(primary_emotion, secondary_emotions)
+        return jsonify({'blended_emotion': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in emotion blending: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/mood_predict', methods=['POST'])
+def predict_mood():
+    """Mood prediction"""
+    try:
+        data = request.get_json()
+        current_mood = data.get('current_mood', 'neutral')
+        context = data.get('context', {})
+        
+        result = vanie_engine.advanced_algorithms.mood_prediction(current_mood, context)
+        return jsonify({'mood_prediction': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in mood prediction: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Dialogue Strategy Endpoints
+@app.route('/conversation/initiative', methods=['POST'])
+def take_initiative():
+    """Initiative-taking in conversation"""
+    try:
+        data = request.get_json()
+        conversation_state = data.get('conversation_state', {})
+        
+        result = vanie_engine.advanced_algorithms.initiative_taking(conversation_state)
+        return jsonify({'initiative': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in initiative taking: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/topic_manage', methods=['POST'])
+def manage_topic():
+    """Topic management"""
+    try:
+        data = request.get_json()
+        current_topic = data.get('current_topic', 'general')
+        topic_history = data.get('topic_history', [])
+        
+        result = vanie_engine.advanced_algorithms.topic_management(current_topic, topic_history)
+        return jsonify({'topic_management': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in topic management: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/discourse', methods=['POST'])
+def analyze_discourse():
+    """Discourse structure analysis"""
+    try:
+        data = request.get_json()
+        conversation = data.get('conversation', [])
+        
+        result = vanie_engine.advanced_algorithms.discourse_structure_analysis(conversation)
+        return jsonify({'discourse_analysis': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in discourse analysis: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Cultural & Persona Endpoints
+@app.route('/conversation/cultural', methods=['POST'])
+def cultural_adapt():
+    """Cultural adaptation"""
+    try:
+        data = request.get_json()
+        cultural_context = data.get('cultural_context', {})
+        
+        result = vanie_engine.advanced_algorithms.cultural_adaptation(cultural_context)
+        return jsonify({'cultural_style': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in cultural adaptation: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/persona_evolve', methods=['POST'])
+def evolve_persona():
+    """Dynamic persona evolution"""
+    try:
+        data = request.get_json()
+        current_persona = data.get('current_persona', {})
+        interaction_history = data.get('interaction_history', [])
+        
+        result = vanie_engine.advanced_algorithms.dynamic_persona_evolution(current_persona, interaction_history)
+        return jsonify({'evolved_persona': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in persona evolution: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/trait_response', methods=['POST'])
+def trait_response():
+    """Trait-based response"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        traits = data.get('traits', {})
+        
+        result = vanie_engine.advanced_algorithms.trait_based_response(message, traits)
+        return jsonify({'trait_response': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in trait response: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Knowledge Graph Endpoints
+@app.route('/algorithms/kg_query', methods=['POST'])
+def query_kg():
+    """Knowledge graph query"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        knowledge_graph = data.get('knowledge_graph', {})
+        
+        if not query or not knowledge_graph:
+            return jsonify({'error': 'Query and knowledge graph required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.knowledge_graph_query(query, knowledge_graph)
+        return jsonify({'related_concepts': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in KG query: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/kg_reasoning', methods=['POST'])
+def kg_reasoning():
+    """Knowledge graph reasoning"""
+    try:
+        data = request.get_json()
+        entity1 = data.get('entity1', '')
+        entity2 = data.get('entity2', '')
+        knowledge_graph = data.get('knowledge_graph', {})
+        
+        if not entity1 or not entity2 or not knowledge_graph:
+            return jsonify({'error': 'Entities and knowledge graph required'}), 400
+        
+        result = vanie_engine.advanced_algorithms.knowledge_graph_reasoning(entity1, entity2, knowledge_graph)
+        return jsonify({'reasoning_result': result, 'timestamp': datetime.datetime.now().isoformat()})
+    except Exception as e:
+        logger.error(f"Error in KG reasoning: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     logger.info("Starting VANIE Backend Server...")
     logger.info(f"VANIE Version: {vanie_engine.knowledge_base['vanie_info']['version']}")
-    logger.info("Natural Conversation Engine: Enabled")
-    logger.info("Advanced Algorithms: Enabled")
-    logger.info("Enhanced Conversation Features: Enabled")
-    logger.info("Machine Learning Algorithms: Enabled")
-    logger.info("Advanced NLP Features: Enabled")
-    logger.info("Multi-Turn Dialogue Management: Enabled")
-    logger.info("Dimensionality Reduction: Enabled")
-    logger.info("Advanced Clustering: Enabled")
-    logger.info("Text Generation: Enabled")
-    logger.info("Advanced Reasoning: Enabled")
-    logger.info("Emotional Intelligence: Enabled")
-    logger.info("Multi-Party Conversation: Enabled")
-    logger.info("Semantic Networks: Enabled")
-    logger.info("Persona-Based Responses: Enabled")
+    logger.info("All Advanced Features Enabled")
     
     try:
         app.run(host='127.0.0.1', port=5000, debug=False)
