@@ -3669,11 +3669,24 @@
 
                 // Account button
                 document.getElementById('accountBtn').addEventListener('click', () => {
+                    soundEffects.play('click');
                     if (this.state.isLoggedIn) {
                         this.showUserMenu();
                     } else {
                         this.showAuthModal('login');
                     }
+                });
+
+                // Clear chat button
+                document.getElementById('clearChat').addEventListener('click', () => {
+                    soundEffects.play('click');
+                    this.showClearChatConfirmation();
+                });
+
+                // New chat button
+                document.querySelector('.new-chat-btn').addEventListener('click', () => {
+                    soundEffects.play('click');
+                    this.startNewChat();
                 });
 
                 // Authentication modal events
@@ -5677,53 +5690,52 @@ Last login: ${new Date(user.lastLogin).toLocaleDateString()}
                         localStorage.removeItem('vanieSession');
                     }
                 }
-            }
-        };
+            },
 
-        // Logo Menu Functions
-        toggleLogoMenu(event) {
-            event.stopPropagation();
-            const menu = document.getElementById('logoMenu');
-            menu.classList.toggle('show');
-        },
+            // Logo Menu Functions
+            toggleLogoMenu(event) {
+                event.stopPropagation();
+                const menu = document.getElementById('logoMenu');
+                menu.classList.toggle('show');
+            },
 
-        showSystemInfo() {
-            this.addMessage('Getting system information...', 'bot');
-            this.updateStatus('System Monitor', 'system-monitor');
-            
-            fetch('http://127.0.0.1:5000/info/system')
-                .then(response => response.json())
-                .then(data => {
-                    this.hideTyping();
-                    const systemInfo = this.formatSystemInfo(data);
-                    this.addMessage(systemInfo, 'bot');
-                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-                })
-                .catch(error => {
-                    this.hideTyping();
-                    this.addMessage('Unable to fetch system information.', 'bot');
-                    this.updateStatus('Error', 'error');
-                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-                });
-            
-            this.closeLogoMenu();
-        },
+            showSystemInfo() {
+                this.addMessage('Getting system information...', 'bot');
+                this.updateStatus('System Monitor', 'system-monitor');
+                
+                fetch('http://127.0.0.1:5000/info/system')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.hideTyping();
+                        const systemInfo = this.formatSystemInfo(data);
+                        this.addMessage(systemInfo, 'bot');
+                        setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                    })
+                    .catch(error => {
+                        this.hideTyping();
+                        this.addMessage('Unable to fetch system information.', 'bot');
+                        this.updateStatus('Error', 'error');
+                        setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                    });
+                
+                this.closeLogoMenu();
+            },
 
-        showWeatherInfo() {
-            this.addMessage('Getting weather information...', 'bot');
-            this.updateStatus('Weather Service', 'weather-service');
-            
-            fetch('http://127.0.0.1:5000/info/weather')
-                .then(response => response.json())
-                .then(data => {
-                    this.hideTyping();
-                    const weatherInfo = this.formatWeatherInfo(data);
-                    this.addMessage(weatherInfo, 'bot');
-                    setTimeout(() => this.updateStatus('Online', 'online'), 2000);
-                })
-                .catch(error => {
-                    this.hideTyping();
-                    this.addMessage('Unable to fetch weather information.', 'bot');
+            showWeatherInfo() {
+                this.addMessage('Getting weather information...', 'bot');
+                this.updateStatus('Weather Service', 'weather-service');
+                
+                fetch('http://127.0.0.1:5000/info/weather')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.hideTyping();
+                        const weatherInfo = this.formatWeatherInfo(data);
+                        this.addMessage(weatherInfo, 'bot');
+                        setTimeout(() => this.updateStatus('Online', 'online'), 2000);
+                    })
+                    .catch(error => {
+                        this.hideTyping();
+                        this.addMessage('Unable to fetch weather information.', 'bot');
                     this.updateStatus('Error', 'error');
                     setTimeout(() => this.updateStatus('Online', 'online'), 2000);
                 });

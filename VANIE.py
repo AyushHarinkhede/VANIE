@@ -36,6 +36,9 @@ import math
 import hashlib
 import base64
 import uuid
+from collections import Counter, defaultdict
+from difflib import SequenceMatcher
+import statistics
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -43,6 +46,616 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
+
+class AdvancedAlgorithms:
+    """Advanced Algorithms for NLP, Machine Learning, and Intelligent Decision-Making"""
+    
+    def __init__(self):
+        self.word_embeddings = {}
+        self.pattern_database = {}
+        self.decision_tree = {}
+        self.initialize_algorithms()
+    
+    def initialize_algorithms(self):
+        """Initialize algorithm components"""
+        self._build_word_embeddings()
+        self._build_pattern_database()
+        self._build_decision_tree()
+    
+    def _build_word_embeddings(self):
+        """Build simple word embeddings for semantic similarity"""
+        # Semantic word groups
+        self.word_embeddings = {
+            'positive': ['good', 'great', 'awesome', 'excellent', 'happy', 'love', 'best', 'wonderful', 'amazing', 'fantastic'],
+            'negative': ['bad', 'terrible', 'awful', 'hate', 'worst', 'horrible', 'sad', 'angry', 'poor', 'disappointing'],
+            'technical': ['code', 'programming', 'software', 'algorithm', 'data', 'system', 'computer', 'technology', 'digital', 'web'],
+            'emotional': ['feel', 'emotion', 'happy', 'sad', 'angry', 'love', 'hate', 'fear', 'joy', 'excited'],
+            'question': ['what', 'how', 'why', 'when', 'where', 'who', 'which', 'can', 'could', 'would'],
+            'action': ['do', 'make', 'create', 'build', 'implement', 'develop', 'write', 'run', 'execute', 'perform']
+        }
+    
+    def _build_pattern_database(self):
+        """Build pattern database for recognition"""
+        self.pattern_database = {
+            'greeting_patterns': [
+                r'^(hi|hello|hey|namaste|namaskar)',
+                r'^(good morning|good afternoon|good evening|good night)',
+                r'^(how are you|how\'s it going|what\'s up)'
+            ],
+            'question_patterns': [
+                r'^(what|how|why|when|where|who|which|can|could|would)',
+                r'\?$'
+            ],
+            'command_patterns': [
+                r'^(please|kindly|can you|could you)',
+                r'^(help|assist|support)'
+            ],
+            'emotional_patterns': [
+                r'(happy|excited|great|awesome|wonderful)',
+                r'(sad|angry|upset|disappointed|frustrated)',
+                r'(love|hate|fear|worried|anxious)'
+            ]
+        }
+    
+    def _build_decision_tree(self):
+        """Build decision tree for intent classification"""
+        self.decision_tree = {
+            'root': {
+                'condition': 'message_length',
+                'threshold': 10,
+                'branches': {
+                    'short': {
+                        'condition': 'has_question_mark',
+                        'branches': {
+                            'yes': 'quick_question',
+                            'no': 'greeting_or_command'
+                        }
+                    },
+                    'long': {
+                        'condition': 'sentiment',
+                        'branches': {
+                            'positive': 'positive_conversation',
+                            'negative': 'support_needed',
+                            'neutral': 'information_request'
+                        }
+                    }
+                }
+            }
+        }
+    
+    # Text Similarity Algorithms
+    
+    def cosine_similarity(self, text1: str, text2: str) -> float:
+        """Calculate cosine similarity between two texts"""
+        # Convert texts to word frequency vectors
+        words1 = text1.lower().split()
+        words2 = text2.lower().split()
+        
+        # Get unique words
+        all_words = set(words1 + words2)
+        
+        # Create frequency vectors
+        vec1 = [words1.count(word) for word in all_words]
+        vec2 = [words2.count(word) for word in all_words]
+        
+        # Calculate dot product
+        dot_product = sum(v1 * v2 for v1, v2 in zip(vec1, vec2))
+        
+        # Calculate magnitudes
+        magnitude1 = math.sqrt(sum(v1 ** 2 for v1 in vec1))
+        magnitude2 = math.sqrt(sum(v2 ** 2 for v2 in vec2))
+        
+        # Calculate cosine similarity
+        if magnitude1 == 0 or magnitude2 == 0:
+            return 0.0
+        
+        return dot_product / (magnitude1 * magnitude2)
+    
+    def jaccard_similarity(self, text1: str, text2: str) -> float:
+        """Calculate Jaccard similarity between two texts"""
+        set1 = set(text1.lower().split())
+        set2 = set(text2.lower().split())
+        
+        intersection = len(set1 & set2)
+        union = len(set1 | set2)
+        
+        return intersection / union if union > 0 else 0.0
+    
+    def levenshtein_distance(self, text1: str, text2: str) -> int:
+        """Calculate Levenshtein distance between two texts"""
+        if len(text1) < len(text2):
+            return self.levenshtein_distance(text2, text1)
+        
+        if len(text2) == 0:
+            return len(text1)
+        
+        previous_row = range(len(text2) + 1)
+        
+        for i, c1 in enumerate(text1):
+            current_row = [i + 1]
+            
+            for j, c2 in enumerate(text2):
+                insertions = previous_row[j + 1] + 1
+                deletions = current_row[j] + 1
+                substitutions = previous_row[j] + (c1 != c2)
+                
+                current_row.append(min(insertions, deletions, substitutions))
+            
+            previous_row = current_row
+        
+        return previous_row[-1]
+    
+    def text_similarity_score(self, text1: str, text2: str) -> float:
+        """Calculate comprehensive text similarity score"""
+        cosine = self.cosine_similarity(text1, text2)
+        jaccard = self.jaccard_similarity(text1, text2)
+        sequence = SequenceMatcher(None, text1.lower(), text2.lower()).ratio()
+        
+        # Weighted average
+        return (cosine * 0.4 + jaccard * 0.3 + sequence * 0.3)
+    
+    # Sentiment Analysis Algorithms
+    
+    def advanced_sentiment_analysis(self, text: str) -> Dict[str, Any]:
+        """Advanced sentiment analysis with multiple metrics"""
+        words = text.lower().split()
+        
+        # Count sentiment words
+        positive_count = sum(1 for word in words if word in self.word_embeddings['positive'])
+        negative_count = sum(1 for word in words if word in self.word_embeddings['negative'])
+        
+        # Calculate sentiment scores
+        total_sentiment_words = positive_count + negative_count
+        if total_sentiment_words == 0:
+            sentiment_score = 0.5
+        else:
+            sentiment_score = positive_count / total_sentiment_words
+        
+        # Determine sentiment category
+        if sentiment_score > 0.6:
+            sentiment = 'positive'
+        elif sentiment_score < 0.4:
+            sentiment = 'negative'
+        else:
+            sentiment = 'neutral'
+        
+        # Calculate intensity
+        intensity = abs(sentiment_score - 0.5) * 2
+        
+        # Detect emotion indicators
+        emotion_indicators = {
+            'joy': ['happy', 'joy', 'excited', 'great', 'awesome'],
+            'sadness': ['sad', 'upset', 'disappointed', 'depressed'],
+            'anger': ['angry', 'furious', 'mad', 'irritated'],
+            'fear': ['afraid', 'scared', 'worried', 'anxious'],
+            'love': ['love', 'adore', 'care', 'affection']
+        }
+        
+        detected_emotions = []
+        for emotion, indicators in emotion_indicators.items():
+            if any(indicator in words for indicator in indicators):
+                detected_emotions.append(emotion)
+        
+        return {
+            'sentiment': sentiment,
+            'sentiment_score': sentiment_score,
+            'intensity': intensity,
+            'positive_words': positive_count,
+            'negative_words': negative_count,
+            'detected_emotions': detected_emotions,
+            'confidence': min(1.0, total_sentiment_words / len(words) * 2) if words else 0.0
+        }
+    
+    def emotion_intensity_analysis(self, text: str) -> Dict[str, float]:
+        """Analyze intensity of different emotions in text"""
+        words = text.lower().split()
+        
+        emotion_keywords = {
+            'joy': ['happy', 'joy', 'excited', 'great', 'awesome', 'wonderful', 'amazing', 'fantastic', 'love', 'delighted'],
+            'sadness': ['sad', 'upset', 'disappointed', 'depressed', 'unhappy', 'miserable', 'grief', 'sorrow'],
+            'anger': ['angry', 'furious', 'mad', 'irritated', 'frustrated', 'rage', 'annoyed', 'hostile'],
+            'fear': ['afraid', 'scared', 'worried', 'anxious', 'terrified', 'nervous', 'panic', 'dread'],
+            'surprise': ['surprised', 'shocked', 'amazed', 'astonished', 'stunned', 'unexpected'],
+            'disgust': ['disgusted', 'revolted', 'repulsed', 'sickened', 'nauseated']
+        }
+        
+        emotion_scores = {}
+        for emotion, keywords in emotion_keywords.items():
+            count = sum(1 for word in words if word in keywords)
+            emotion_scores[emotion] = count / len(words) if words else 0.0
+        
+        # Normalize scores
+        total = sum(emotion_scores.values())
+        if total > 0:
+            emotion_scores = {k: v / total for k, v in emotion_scores.items()}
+        
+        return emotion_scores
+    
+    # Recommendation Algorithms
+    
+    def collaborative_filtering(self, user_preferences: Dict[str, float], all_users: List[Dict]) -> List[str]:
+        """Collaborative filtering recommendation algorithm"""
+        # Find similar users
+        similarities = []
+        
+        for other_user in all_users:
+            similarity = self._calculate_user_similarity(user_preferences, other_user['preferences'])
+            similarities.append((other_user['name'], similarity))
+        
+        # Sort by similarity
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        
+        # Get recommendations from similar users
+        recommendations = defaultdict(float)
+        for user_name, similarity in similarities[:5]:  # Top 5 similar users
+            similar_user = next(u for u in all_users if u['name'] == user_name)
+            for item, score in similar_user['preferences'].items():
+                if item not in user_preferences or user_preferences[item] == 0:
+                    recommendations[item] += score * similarity
+        
+        # Sort recommendations
+        sorted_recommendations = sorted(recommendations.items(), key=lambda x: x[1], reverse=True)
+        
+        return [item for item, score in sorted_recommendations[:10]]
+    
+    def _calculate_user_similarity(self, prefs1: Dict[str, float], prefs2: Dict[str, float]) -> float:
+        """Calculate similarity between two users"""
+        common_items = set(prefs1.keys()) & set(prefs2.keys())
+        
+        if not common_items:
+            return 0.0
+        
+        sum1 = sum(prefs1[item] * prefs2[item] for item in common_items)
+        sum2 = sum(prefs1[item] ** 2 for item in common_items)
+        sum3 = sum(prefs2[item] ** 2 for item in common_items)
+        
+        denominator = math.sqrt(sum2) * math.sqrt(sum3)
+        
+        return sum1 / denominator if denominator > 0 else 0.0
+    
+    def content_based_filtering(self, user_history: List[str], item_features: Dict[str, List[str]]) -> List[str]:
+        """Content-based filtering recommendation algorithm"""
+        # Build user profile from history
+        user_profile = self._build_user_profile(user_history)
+        
+        # Calculate similarity with each item
+        item_scores = []
+        for item, features in item_features.items():
+            similarity = self._calculate_profile_similarity(user_profile, features)
+            item_scores.append((item, similarity))
+        
+        # Sort and return top recommendations
+        item_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        return [item for item, score in item_scores[:10]]
+    
+    def _build_user_profile(self, user_history: List[str]) -> Dict[str, float]:
+        """Build user profile from interaction history"""
+        profile = defaultdict(float)
+        
+        for item in user_history:
+            words = item.lower().split()
+            for word in words:
+                profile[word] += 1
+        
+        # Normalize
+        total = sum(profile.values())
+        if total > 0:
+            profile = {k: v / total for k, v in profile.items()}
+        
+        return profile
+    
+    def _calculate_profile_similarity(self, profile: Dict[str, float], features: List[str]) -> float:
+        """Calculate similarity between user profile and item features"""
+        feature_profile = defaultdict(float)
+        
+        for feature in features:
+            words = feature.lower().split()
+            for word in words:
+                feature_profile[word] += 1
+        
+        # Normalize
+        total = sum(feature_profile.values())
+        if total > 0:
+            feature_profile = {k: v / total for k, v in feature_profile.items()}
+        
+        # Calculate cosine similarity
+        common_words = set(profile.keys()) & set(feature_profile.keys())
+        
+        if not common_words:
+            return 0.0
+        
+        dot_product = sum(profile[word] * feature_profile[word] for word in common_words)
+        
+        magnitude1 = math.sqrt(sum(v ** 2 for v in profile.values()))
+        magnitude2 = math.sqrt(sum(v ** 2 for v in feature_profile.values()))
+        
+        return dot_product / (magnitude1 * magnitude2) if magnitude1 > 0 and magnitude2 > 0 else 0.0
+    
+    # Pattern Recognition Algorithms
+    
+    def detect_patterns(self, text: str) -> Dict[str, Any]:
+        """Detect various patterns in text"""
+        patterns_found = {}
+        
+        # Detect greeting patterns
+        for pattern in self.pattern_database['greeting_patterns']:
+            if re.search(pattern, text, re.IGNORECASE):
+                patterns_found['greeting'] = True
+                break
+        
+        # Detect question patterns
+        for pattern in self.pattern_database['question_patterns']:
+            if re.search(pattern, text, re.IGNORECASE):
+                patterns_found['question'] = True
+                break
+        
+        # Detect command patterns
+        for pattern in self.pattern_database['command_patterns']:
+            if re.search(pattern, text, re.IGNORECASE):
+                patterns_found['command'] = True
+                break
+        
+        # Detect emotional patterns
+        emotions_found = []
+        for pattern in self.pattern_database['emotional_patterns']:
+            if re.search(pattern, text, re.IGNORECASE):
+                # Extract emotion
+                if 'happy' in pattern or 'excited' in pattern:
+                    emotions_found.append('positive')
+                elif 'sad' in pattern or 'angry' in pattern:
+                    emotions_found.append('negative')
+        
+        if emotions_found:
+            patterns_found['emotions'] = emotions_found
+        
+        return patterns_found
+    
+    def sequence_pattern_recognition(self, sequence: List[Any]) -> Dict[str, Any]:
+        """Recognize patterns in a sequence of items"""
+        if len(sequence) < 3:
+            return {'pattern': 'insufficient_data'}
+        
+        # Find repeating patterns
+        patterns = []
+        
+        # Check for arithmetic progression
+        if all(isinstance(x, (int, float)) for x in sequence):
+            differences = [sequence[i+1] - sequence[i] for i in range(len(sequence)-1)]
+            if len(set(differences)) == 1:
+                patterns.append('arithmetic_progression')
+        
+        # Check for geometric progression
+        if all(isinstance(x, (int, float)) for x in sequence) and all(x != 0 for x in sequence[:-1]):
+            ratios = [sequence[i+1] / sequence[i] for i in range(len(sequence)-1)]
+            if len(set(ratios)) == 1:
+                patterns.append('geometric_progression')
+        
+        # Check for repeating subsequences
+        for length in range(2, len(sequence) // 2):
+            subsequence = sequence[:length]
+            repeats = True
+            for i in range(length, len(sequence), length):
+                if sequence[i:i+length] != subsequence:
+                    repeats = False
+                    break
+            if repeats:
+                patterns.append(f'repeating_pattern_length_{length}')
+        
+        # Check for palindrome
+        if sequence == sequence[::-1]:
+            patterns.append('palindrome')
+        
+        return {
+            'patterns': patterns,
+            'sequence_length': len(sequence),
+            'unique_elements': len(set(sequence))
+        }
+    
+    # Decision Making Algorithms
+    
+    def decision_tree_classify(self, message: str) -> str:
+        """Classify message using decision tree"""
+        message_length = len(message.split())
+        has_question_mark = '?' in message
+        sentiment = self.advanced_sentiment_analysis(message)['sentiment']
+        
+        # Navigate decision tree
+        if message_length < 10:
+            if has_question_mark:
+                return 'quick_question'
+            else:
+                return 'greeting_or_command'
+        else:
+            if sentiment == 'positive':
+                return 'positive_conversation'
+            elif sentiment == 'negative':
+                return 'support_needed'
+            else:
+                return 'information_request'
+    
+    def weighted_decision_making(self, options: List[Dict[str, Any]], weights: Dict[str, float]) -> Dict[str, Any]:
+        """Make decision using weighted scoring"""
+        scored_options = []
+        
+        for option in options:
+            total_score = 0.0
+            for criterion, weight in weights.items():
+                if criterion in option:
+                    total_score += option[criterion] * weight
+            
+            scored_options.append({
+                'option': option,
+                'score': total_score
+            })
+        
+        # Sort by score
+        scored_options.sort(key=lambda x: x['score'], reverse=True)
+        
+        return scored_options[0]['option'] if scored_options else None
+    
+    # Clustering Algorithms
+    
+    def k_means_clustering(self, data: List[List[float]], k: int, max_iterations: int = 100) -> List[List[float]]:
+        """K-means clustering algorithm"""
+        if len(data) < k:
+            return data
+        
+        # Initialize centroids randomly
+        centroids = random.sample(data, k)
+        
+        for _ in range(max_iterations):
+            # Assign points to nearest centroid
+            clusters = [[] for _ in range(k)]
+            
+            for point in data:
+                distances = [self._euclidean_distance(point, centroid) for centroid in centroids]
+                nearest_centroid = distances.index(min(distances))
+                clusters[nearest_centroid].append(point)
+            
+            # Update centroids
+            new_centroids = []
+            for cluster in clusters:
+                if cluster:
+                    new_centroid = [sum(dim) / len(cluster) for dim in zip(*cluster)]
+                    new_centroids.append(new_centroid)
+                else:
+                    new_centroids.append(centroids[clusters.index(cluster)])
+            
+            # Check for convergence
+            if new_centroids == centroids:
+                break
+            
+            centroids = new_centroids
+        
+        return centroids
+    
+    def _euclidean_distance(self, point1: List[float], point2: List[float]) -> float:
+        """Calculate Euclidean distance between two points"""
+        return math.sqrt(sum((a - b) ** 2 for a, b in zip(point1, point2)))
+    
+    # Time Series Analysis
+    
+    def moving_average(self, data: List[float], window: int) -> List[float]:
+        """Calculate moving average"""
+        if len(data) < window:
+            return data
+        
+        moving_avg = []
+        for i in range(len(data) - window + 1):
+            window_data = data[i:i + window]
+            moving_avg.append(sum(window_data) / window)
+        
+        return moving_avg
+    
+    def detect_trends(self, data: List[float]) -> Dict[str, Any]:
+        """Detect trends in time series data"""
+        if len(data) < 2:
+            return {'trend': 'insufficient_data'}
+        
+        # Calculate linear regression
+        n = len(data)
+        x = list(range(n))
+        y = data
+        
+        sum_x = sum(x)
+        sum_y = sum(y)
+        sum_xy = sum(x[i] * y[i] for i in range(n))
+        sum_x2 = sum(x[i] ** 2 for i in range(n))
+        
+        # Calculate slope
+        slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2)
+        
+        # Determine trend
+        if slope > 0.01:
+            trend = 'increasing'
+        elif slope < -0.01:
+            trend = 'decreasing'
+        else:
+            trend = 'stable'
+        
+        # Calculate volatility
+        mean = statistics.mean(data)
+        variance = statistics.variance(data) if len(data) > 1 else 0
+        volatility = math.sqrt(variance)
+        
+        return {
+            'trend': trend,
+            'slope': slope,
+            'volatility': volatility,
+            'mean': mean,
+            'data_points': n
+        }
+    
+    # Text Processing Algorithms
+    
+    def extract_keywords(self, text: str, top_n: int = 10) -> List[tuple]:
+        """Extract top keywords from text using TF-IDF-like approach"""
+        words = text.lower().split()
+        word_freq = Counter(words)
+        
+        # Remove common stop words
+        stop_words = {'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 
+                     'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 
+                     'should', 'may', 'might', 'must', 'shall', 'can', 'to', 'of', 'in', 
+                     'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into', 'through', 
+                     'during', 'before', 'after', 'above', 'below', 'between', 'under', 
+                     'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 
+                     'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some', 
+                     'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 
+                     'very', 'just'}
+        
+        # Filter stop words
+        filtered_words = {word: freq for word, freq in word_freq.items() if word not in stop_words and len(word) > 2}
+        
+        # Get top keywords
+        top_keywords = sorted(filtered_words.items(), key=lambda x: x[1], reverse=True)[:top_n]
+        
+        return top_keywords
+    
+    def summarize_text(self, text: str, num_sentences: int = 3) -> str:
+        """Extractive text summarization"""
+        sentences = text.split('.')
+        if len(sentences) <= num_sentences:
+            return text
+        
+        # Calculate sentence scores based on word frequency
+        word_freq = Counter(text.lower().split())
+        
+        sentence_scores = []
+        for sentence in sentences:
+            words = sentence.lower().split()
+            score = sum(word_freq.get(word, 0) for word in words)
+            sentence_scores.append((sentence, score))
+        
+        # Get top sentences
+        top_sentences = sorted(sentence_scores, key=lambda x: x[1], reverse=True)[:num_sentences]
+        
+        # Reorder sentences based on original position
+        summary_sentences = [sentence for sentence, _ in sorted(top_sentences, key=lambda x: sentences.index(x[0]))]
+        
+        return '. '.join(summary_sentences) + '.'
+    
+    # Anomaly Detection
+    
+    def detect_anomalies(self, data: List[float], threshold: float = 2.0) -> List[int]:
+        """Detect anomalies using z-score method"""
+        if len(data) < 3:
+            return []
+        
+        mean = statistics.mean(data)
+        std_dev = statistics.stdev(data) if len(data) > 1 else 0
+        
+        if std_dev == 0:
+            return []
+        
+        anomalies = []
+        for i, value in enumerate(data):
+            z_score = abs((value - mean) / std_dev)
+            if z_score > threshold:
+                anomalies.append(i)
+        
+        return anomalies
 
 class NaturalConversationEngine:
     """Natural Human Behavior Conversation Algorithm for VANIE"""
@@ -65,31 +678,60 @@ class NaturalConversationEngine:
         # Enhanced conversation patterns for self-discovery and user profiling
         self.conversation_patterns = {
             'greetings': {
-                'formal': ['नमस्ते', 'आपका स्वागत है', 'गुड मॉर्निंग', 'हैलो'],
-                'casual': ['नमस्ते!', 'कैसे हो?', 'क्या हाल है?', 'हाय!'],
-                'friendly': ['नमस्ते दोस्त! 🙏', 'कैसे हो दोस्त?', 'हाय! क्या बात है?'],
-                'energetic': ['नमस्ते! 😊', 'कैसे हो दोस्त! 🌟', 'हाय! मज़ा चल रहा है!']
+                'formal': ['नमस्ते', 'आपका स्वागत है', 'गुड मॉर्निंग', 'हैलो', 'Good morning', 'Hello'],
+                'casual': ['नमस्ते!', 'कैसे हो?', 'क्या हाल है?', 'हाय!', 'Hey there!', 'What\'s up?'],
+                'friendly': ['नमस्ते दोस्त! 🙏', 'कैसे हो दोस्त?', 'हाय! क्या बात है?', 'Hi friend! 👋'],
+                'energetic': ['नमस्ते! 😊', 'कैसे हो दोस्त! 🌟', 'हाय! मज़ा चल रहा है!', 'Hey! Great to see you! 🎉'],
+                'time_based': {
+                    'morning': ['Good morning! ☀️', 'सुप्रभात!', 'Morning! How are you?'],
+                    'afternoon': ['Good afternoon! 🌤️', 'शुभ दोपहर!', 'Afternoon greetings!'],
+                    'evening': ['Good evening! 🌙', 'शुभ संध्या!', 'Evening! How was your day?'],
+                    'night': ['Good night! 🌃', 'शुभ रात्री!', 'Night! Rest well!']
+                }
             },
             'emotions': {
-                'happy': ['😊', '😄', '🎉', 'बहुत अच्छा!', 'शानदार!', 'बेहतरीन!'],
-                'excited': ['🎉', '🌟', 'वाह!', 'कमाल कर दिया!', 'बहुत बढ़िया!'],
-                'curious': ['🤔', 'ओह! यह दिलचस्प है', 'बताओ इसके बारे में', 'वास्तव में?'],
-                'concerned': ['😔', 'चिंता मत करो', 'सब ठीक होगा', 'मैं यहाँ हूँ'],
-                'supportive': ['💪', 'मैं आपके साथ हूँ', 'आप कर सकते हैं', 'विश्वास रखें'],
-                'thoughtful': ['🤔', 'दिलचस्प बात है', 'गौर से सोचें', 'मैं समझ गई']
+                'happy': ['😊', '😄', '🎉', 'बहुत अच्छा!', 'शानदार!', 'बेहतरीन!', 'That\'s wonderful!', 'Amazing!'],
+                'excited': ['🎉', '🌟', 'वाह!', 'कमाल कर दिया!', 'बहुत बढ़िया!', 'Wow!', 'Incredible!'],
+                'curious': ['🤔', 'ओह! यह दिलचस्प है', 'बताओ इसके बारे में', 'वास्तव में?', 'Interesting!', 'Tell me more!'],
+                'concerned': ['😔', 'चिंता मत करो', 'सब ठीक होगा', 'मैं यहाँ हूँ', 'Don\'t worry!', 'I\'m here for you'],
+                'supportive': ['💪', 'मैं आपके साथ हूँ', 'आप कर सकते हैं', 'विश्वास रखें', 'You\'ve got this!', 'I believe in you!'],
+                'thoughtful': ['🤔', 'दिलचस्प बात है', 'गौर से सोचें', 'मैं समझ गई', 'That\'s thought-provoking!', 'Let me think about that'],
+                'empathetic': ['❤️', 'मैं समझती हूँ', 'यह कठिन हो सकता है', 'तुम अकेले नहीं हो', 'I understand', 'You\'re not alone'],
+                'encouraging': ['🌟', 'आप अच्छा कर रहे हैं', 'ऐसे ही जारी रखें', 'Keep going!', 'You\'re doing great!']
             },
             'transition_phrases': {
-                'topic_change': ['बात बदलते हैं', 'अब दूसरी बात करते हैं', 'एक और बात'],
-                'clarification': ['क्या मैं सही समझी?', 'आपका मतलब है?', 'थोड़ा और बताओ'],
-                'agreement': ['बिल्कुल!', 'मैं सहमत हूँ', 'हाँ, यह सच है', 'बेशक!'],
-                'empathy': ['मैं समझ सकती हूँ', 'यह मुश्किल हो सकता है', 'आप अकेले नहीं हैं'],
-                'encouragement': ['आप अच्छा कर रहे हैं', 'ऐसे ही जारी रखें', 'आपकी कोशिश सराहनीय है']
+                'topic_change': ['बात बदलते हैं', 'अब दूसरी बात करते हैं', 'एक और बात', 'Let\'s change the topic', 'Speaking of which...'],
+                'clarification': ['क्या मैं सही समझी?', 'आपका मतलब है?', 'थोड़ा और बताओ', 'Did I understand correctly?', 'What do you mean?'],
+                'agreement': ['बिल्कुल!', 'मैं सहमत हूँ', 'हाँ, यह सच है', 'बेशक!', 'Absolutely!', 'I agree!', 'Exactly!'],
+                'empathy': ['मैं समझ सकती हूँ', 'यह मुश्किल हो सकता है', 'आप अकेले नहीं हैं', 'I can understand', 'That must be tough'],
+                'encouragement': ['आप अच्छा कर रहे हैं', 'ऐसे ही जारी रखें', 'आपकी कोशिश सराहनीय है', 'Keep it up!', 'Great effort!'],
+                'follow_up': ['और कुछ?', 'क्या और जानना चाहते हैं?', 'Anything else?', 'Would you like to know more?'],
+                'closing': ['बाद में बात करते हैं', 'अभी जाना है', 'Talk later!', 'See you soon!']
             },
             'natural_responses': {
-                'acknowledgment': ['ओह, समझ गई', 'हाँ, मैं देख रही हूँ', 'ठीक है', 'गौर से'],
-                'fillers': ['वैसे तो...', 'देखिए...', 'असल में...', 'मुझे लगता है...'],
-                'delays': ['एक मिनट...', 'सोचने के लिए...', 'थोड़ा समय लेगा...'],
-                'uncertainty': ['शायद', 'हो सकता है', 'मुझे नहीं पता', 'संभवतः']
+                'acknowledgment': ['ओह, समझ गई', 'हाँ, मैं देख रही हूँ', 'ठीक है', 'गौर से', 'I see', 'Got it', 'Understood'],
+                'fillers': ['वैसे तो...', 'देखिए...', 'असल में...', 'मुझे लगता है...', 'Well...', 'Actually...', 'You know...'],
+                'delays': ['एक मिनट...', 'सोचने के लिए...', 'थोड़ा समय लेगा...', 'Let me think...', 'Give me a moment...'],
+                'uncertainty': ['शायद', 'हो सकता है', 'मुझे नहीं पता', 'संभवतः', 'Maybe...', 'It\'s possible...', 'I\'m not sure'],
+                'confirmation': ['क्या यह सही है?', 'सही?', 'Right?', 'Is that correct?', 'Am I right?']
+            },
+            'small_talk': {
+                'weather': ['मौसम कैसा है?', 'How\'s the weather?', 'Nice day today!'],
+                'weekend': ['वीकेंड कैसा रहा?', 'How was your weekend?', 'Any plans for the weekend?'],
+                'work': ['काम कैसा चल रहा है?', 'How\'s work going?', 'Working on anything interesting?'],
+                'general': ['क्या नया है?', 'What\'s new?', 'How are things?'],
+                'compliments': ['अच्छा काम!', 'Great job!', 'Well done!']
+            },
+            'follow_up_questions': {
+                'technical': ['क्या और technical help चाहिए?', 'Need more technical help?', 'Any other technical questions?'],
+                'personal': ['और कुछ personal बात?', 'Anything personal to share?', 'How are you feeling?'],
+                'general': ['और क्या जानना चाहते हैं?', 'What else would you like to know?', 'Anything else?'],
+                'suggestions': ['कोई suggestions चाहिए?', 'Need any suggestions?', 'Would you like some recommendations?']
+            },
+            'context_aware': {
+                'remembering': ['याद है, हमने इसके बारे में बात की थी', 'I remember we discussed this', 'As we talked about before...'],
+                'connecting': ['यह आपकी पिछली बात से जुड़ा है', 'This connects to what you said earlier', 'Related to our previous discussion...'],
+                'building': ['आइए इस पर और बनाते हैं', 'Let\'s build on this', 'Let\'s expand on this idea']
             },
             'self_discovery': {
                 'vanie_intro': [
@@ -727,39 +1369,234 @@ class NaturalConversationEngine:
         return ''
     
     def _add_natural_delays(self, response_parts: List[str]) -> List[str]:
-        """Add natural delays and fillers for realistic conversation"""
-        natural_parts = []
-        for i, part in enumerate(response_parts):
-            if i > 0 and i < len(response_parts) - 1:
-                # Add filler between parts
-                fillers = self.conversation_patterns['natural_responses']['fillers']
-                natural_parts.append(f"{random.choice(fillers)} {part}")
-            else:
-                natural_parts.append(part)
-        
-        return natural_parts
+        """Add natural delays and fillers to response"""
+        if len(response_parts) > 2:
+            delay_position = len(response_parts) // 2
+            filler = random.choice(self.conversation_patterns['natural_responses']['fillers'])
+            response_parts.insert(delay_position, filler)
+        return response_parts
     
     def get_conversation_statistics(self) -> Dict[str, Any]:
-        """Get conversation statistics for optimization"""
+        """Get conversation statistics"""
         return {
             'total_interactions': self.conversation_state['interaction_count'],
-            'current_mood': self.conversation_state['mood'],
             'engagement_level': self.conversation_state['engagement_level'],
             'detected_language': self.conversation_state['detected_language'],
-            'formality_preference': self.conversation_state['formality_level'],
-            'conversation_quality': self._calculate_conversation_quality()
+            'formality_level': self.conversation_state['formality_level'],
+            'current_mood': self.conversation_state['mood'],
+            'user_style_detected': self.conversation_state['user_style_detected']
         }
     
-    def _calculate_conversation_quality(self) -> float:
-        """Calculate conversation quality score"""
-        factors = [
-            self.conversation_state['engagement_level'],
-            self.personality_traits['friendliness'],
-            self.personality_traits['helpfulness'],
-            self.personality_traits['empathy']
-        ]
+    # Enhanced Communication Methods
+    
+    def add_to_context_memory(self, message: str, response: str, context: Dict = None):
+        """Add interaction to context memory for conversation continuity"""
+        import datetime
         
-        return sum(factors) / len(factors)
+        memory_entry = {
+            'timestamp': datetime.datetime.now().isoformat(),
+            'user_message': message,
+            'vania_response': response,
+            'context': context or {},
+            'emotion': self.conversation_state['emotion'],
+            'topic': self._extract_topic_from_message(message)
+        }
+        
+        self.conversation_state['context_memory'].append(memory_entry)
+        
+        # Keep only last 20 interactions in memory
+        if len(self.conversation_state['context_memory']) > 20:
+            self.conversation_state['context_memory'] = self.conversation_state['context_memory'][-20:]
+    
+    def _extract_topic_from_message(self, message: str) -> str:
+        """Extract main topic from message"""
+        topic_keywords = {
+            'programming': ['code', 'python', 'javascript', 'programming', 'coding', 'function', 'class'],
+            'technology': ['tech', 'computer', 'software', 'app', 'system', 'device'],
+            'personal': ['i feel', 'my', 'i am', 'feeling', 'emotion', 'personal'],
+            'work': ['work', 'job', 'office', 'project', 'task', 'deadline'],
+            'learning': ['learn', 'study', 'understand', 'explain', 'teach', 'knowledge'],
+            'entertainment': ['movie', 'music', 'game', 'fun', 'entertainment'],
+            'health': ['health', 'exercise', 'diet', 'fitness', 'wellness'],
+            'general': ['what', 'how', 'why', 'when', 'where', 'tell']
+        }
+        
+        message_lower = message.lower()
+        for topic, keywords in topic_keywords.items():
+            if any(keyword in message_lower for keyword in keywords):
+                return topic
+        
+        return 'general'
+    
+    def get_context_aware_response(self, message: str) -> str:
+        """Generate response based on conversation context"""
+        if not self.conversation_state['context_memory']:
+            return None
+        
+        recent_context = self.conversation_state['context_memory'][-3:]
+        current_topic = self._extract_topic_from_message(message)
+        
+        # Check if continuing same topic
+        if recent_context and recent_context[-1]['topic'] == current_topic:
+            connecting_phrase = random.choice(self.conversation_patterns['context_aware']['connecting'])
+            return f"{connecting_phrase} "
+        
+        # Check if referencing previous discussion
+        for memory in reversed(recent_context):
+            if memory['topic'] == current_topic:
+                remembering_phrase = random.choice(self.conversation_patterns['context_aware']['remembering'])
+                return f"{remembering_phrase} "
+        
+        return None
+    
+    def generate_smart_follow_up(self, current_topic: str, user_satisfaction: float = 0.8) -> str:
+        """Generate intelligent follow-up question based on context"""
+        follow_up_categories = {
+            'programming': 'technical',
+            'technology': 'technical',
+            'personal': 'personal',
+            'work': 'general',
+            'learning': 'general',
+            'entertainment': 'general',
+            'health': 'personal',
+            'general': 'general'
+        }
+        
+        category = follow_up_categories.get(current_topic, 'general')
+        follow_ups = self.conversation_patterns['follow_up_questions'][category]
+        
+        # Adjust follow-up based on user satisfaction
+        if user_satisfaction < 0.6:
+            return "क्या मैं और बेहतर तरीके से मदद कर सकती हूँ? Is there anything I can explain better?"
+        elif user_satisfaction > 0.9:
+            return random.choice(follow_ups)
+        else:
+            return random.choice(follow_ups)
+    
+    def adjust_personality_based_on_interaction(self, analysis: Dict):
+        """Adapt personality traits based on user interaction patterns"""
+        # Adjust friendliness based on user's formality
+        if analysis['formality'] == 'casual':
+            self.personality_traits['friendliness'] = min(1.0, self.personality_traits['friendliness'] + 0.05)
+            self.personality_traits['professionalism'] = max(0.5, self.personality_traits['professionalism'] - 0.05)
+        elif analysis['formality'] == 'formal':
+            self.personality_traits['professionalism'] = min(1.0, self.personality_traits['professionalism'] + 0.05)
+            self.personality_traits['friendliness'] = max(0.6, self.personality_traits['friendliness'] - 0.05)
+        
+        # Adjust enthusiasm based on user's emotion
+        if analysis['emotion'] == 'excited':
+            self.personality_traits['enthusiasm'] = min(1.0, self.personality_traits['enthusiasm'] + 0.1)
+        elif analysis['emotion'] == 'sad':
+            self.personality_traits['empathy'] = min(1.0, self.personality_traits['empathy'] + 0.1)
+            self.personality_traits['enthusiasm'] = max(0.5, self.personality_traits['enthusiasm'] - 0.05)
+        
+        # Adjust curiosity based on question frequency
+        if analysis['intent_type'] == 'question':
+            self.personality_traits['curiosity'] = min(1.0, self.personality_traits['curiosity'] + 0.05)
+    
+    def detect_conversation_flow(self, message: str) -> str:
+        """Detect the flow and direction of conversation"""
+        if not self.conversation_state['context_memory']:
+            return 'initiation'
+        
+        last_message = self.conversation_state['context_memory'][-1]['user_message']
+        current_topic = self._extract_topic_from_message(message)
+        last_topic = self.conversation_state['context_memory'][-1]['topic']
+        
+        if current_topic != last_topic:
+            return 'topic_change'
+        elif analysis['intent_type'] == 'question':
+            return 'inquiry'
+        elif analysis['sentiment'] == 'positive':
+            return 'positive_engagement'
+        elif analysis['sentiment'] == 'negative':
+            return 'concern_raised'
+        else:
+            return 'continuation'
+    
+    def generate_time_based_greeting(self) -> str:
+        """Generate greeting based on current time"""
+        import datetime
+        current_hour = datetime.datetime.now().hour
+        
+        if 5 <= current_hour < 12:
+            return random.choice(self.conversation_patterns['greetings']['time_based']['morning'])
+        elif 12 <= current_hour < 17:
+            return random.choice(self.conversation_patterns['greetings']['time_based']['afternoon'])
+        elif 17 <= current_hour < 21:
+            return random.choice(self.conversation_patterns['greetings']['time_based']['evening'])
+        else:
+            return random.choice(self.conversation_patterns['greetings']['time_based']['night'])
+    
+    def handle_multi_turn_conversation(self, message: str) -> Dict[str, Any]:
+        """Handle multi-turn conversation with context awareness"""
+        context_response = self.get_context_aware_response(message)
+        conversation_flow = self.detect_conversation_flow(message)
+        current_topic = self._extract_topic_from_message(message)
+        
+        return {
+            'context_aware_prefix': context_response,
+            'conversation_flow': conversation_flow,
+            'current_topic': current_topic,
+            'suggested_follow_up': self.generate_smart_follow_up(current_topic, self.user_profile['satisfaction_score'])
+        }
+    
+    def enhance_response_with_personality(self, base_response: str, analysis: Dict) -> str:
+        """Enhance response with personality traits"""
+        enhanced_response = base_response
+        
+        # Add enthusiasm if trait is high
+        if self.personality_traits['enthusiasm'] > 0.8 and analysis['sentiment'] == 'positive':
+            enthusiasm = random.choice(self.conversation_patterns['emotions']['excited'])
+            enhanced_response += f" {enthusiasm}"
+        
+        # Add empathy if user is sad
+        if self.personality_traits['empathy'] > 0.8 and analysis['emotion'] == 'sad':
+            empathy = random.choice(self.conversation_patterns['emotions']['empathetic'])
+            enhanced_response = f"{empathy} {enhanced_response}"
+        
+        # Add encouragement if user needs support
+        if self.personality_traits['helpfulness'] > 0.9 and analysis['intent_type'] == 'help_request':
+            encouragement = random.choice(self.conversation_patterns['emotions']['supportive'])
+            enhanced_response += f" {encouragement}"
+        
+        return enhanced_response
+    
+    def generate_small_talk_response(self, message: str) -> str:
+        """Generate small talk response for casual conversations"""
+        message_lower = message.lower()
+        
+        if any(word in message_lower for word in ['weather', 'मौसम', 'rain', 'sun']):
+            return random.choice(self.conversation_patterns['small_talk']['weather'])
+        elif any(word in message_lower for word in ['weekend', 'saturday', 'sunday', 'वीकेंड']):
+            return random.choice(self.conversation_patterns['small_talk']['weekend'])
+        elif any(word in message_lower for word in ['work', 'job', 'office', 'काम']):
+            return random.choice(self.conversation_patterns['small_talk']['work'])
+        elif any(word in message_lower for word in ['how are you', 'कैसे हो', 'what\'s new', 'क्या नया']):
+            return random.choice(self.conversation_patterns['small_talk']['general'])
+        
+        return None
+    
+    def get_conversation_summary(self) -> str:
+        """Generate a summary of the conversation"""
+        if not self.conversation_state['context_memory']:
+            return "हमने अभी तक बात नहीं की है। Let's start our conversation!"
+        
+        topics_discussed = [memory['topic'] for memory in self.conversation_state['context_memory']]
+        topic_counts = {}
+        for topic in topics_discussed:
+            topic_counts[topic] = topic_counts.get(topic, 0) + 1
+        
+        main_topic = max(topic_counts, key=topic_counts.get) if topic_counts else 'general'
+        interaction_count = len(self.conversation_state['context_memory'])
+        
+        summary = f"हमने अब तक {interaction_count} बारबात की है। "
+        summary += f"हम mainly {main_topic} के बारे में बात कर रहे हैं। "
+        
+        if self.user_profile['satisfaction_score'] > 0.8:
+            summary += "आपको हमारी बातचीत अच्छी लग रही है! 😊"
+        
+        return summary
 
 class VANIEEngine:
     """Main VANIE Engine with Advanced Real-time Capabilities"""
@@ -774,6 +1611,9 @@ class VANIEEngine:
         
         # Initialize natural conversation engine
         self.natural_conversation = NaturalConversationEngine()
+        
+        # Initialize advanced algorithms
+        self.advanced_algorithms = AdvancedAlgorithms()
         
         # Initialize knowledge base
         self.knowledge_base = self._initialize_knowledge_base()
@@ -1355,7 +2195,7 @@ class VANIEEngine:
         return 'general_conversation'
     
     def generate_response(self, message: str, user_context: Dict = None) -> Dict[str, Any]:
-        """Generate intelligent response with natural human behavior"""
+        """Generate intelligent response with natural human behavior and enhanced communication"""
         # First, get the natural conversation analysis
         natural_analysis = self.natural_conversation.analyze_user_input(message, user_context)
         
@@ -1363,30 +2203,58 @@ class VANIEEngine:
         intent = self.detect_user_intent(message)
         datetime_info = self.get_current_datetime()
         
+        # Handle multi-turn conversation with context awareness
+        multi_turn_context = self.natural_conversation.handle_multi_turn_conversation(message)
+        
+        # Adjust personality based on interaction
+        self.natural_conversation.adjust_personality_based_on_interaction(natural_analysis)
+        
+        # Check for small talk opportunities
+        small_talk_response = self.natural_conversation.generate_small_talk_response(message)
+        
+        # Generate natural response first
+        natural_response = self.natural_conversation.generate_natural_response(message, user_context)
+        
+        # Add context-aware prefix if available
+        if multi_turn_context['context_aware_prefix']:
+            natural_response = multi_turn_context['context_aware_prefix'] + natural_response
+        
+        # Enhance response with personality
+        enhanced_natural_response = self.natural_conversation.enhance_response_with_personality(
+            natural_response, natural_analysis
+        )
+        
         # Update conversation context
         self.conversation_context.append({
             'message': message,
             'intent': intent,
             'timestamp': datetime_info['timestamp'],
-            'natural_analysis': natural_analysis
+            'natural_analysis': natural_analysis,
+            'conversation_flow': multi_turn_context['conversation_flow'],
+            'topic': multi_turn_context['current_topic']
         })
         
         # Keep only last 10 messages in context
         self.conversation_context = self.conversation_context[-10:]
         
-        # Generate natural response first
-        natural_response = self.natural_conversation.generate_natural_response(message, user_context)
+        # Add to context memory for continuity
+        self.natural_conversation.add_to_context_memory(message, enhanced_natural_response, user_context)
         
         response = {
             'intent': intent,
             'timestamp': datetime_info['timestamp'],
             'context_updated': True,
-            'natural_response': natural_response,
+            'natural_response': enhanced_natural_response,
             'conversation_analysis': natural_analysis,
+            'multi_turn_context': multi_turn_context,
             'data': {
                 'conversation_type': 'natural',
                 'engagement_level': self.natural_conversation.conversation_state['engagement_level'],
-                'conversation_quality': self.natural_conversation.get_conversation_statistics()
+                'conversation_quality': self.natural_conversation.get_conversation_statistics(),
+                'conversation_flow': multi_turn_context['conversation_flow'],
+                'current_topic': multi_turn_context['current_topic'],
+                'suggested_follow_up': multi_turn_context['suggested_follow_up'],
+                'personality_traits': self.natural_conversation.personality_traits
             }
         }
         
@@ -1407,8 +2275,11 @@ class VANIEEngine:
                 response['data']['priority'] = 'high'
                 
             elif intent == 'daily_life_conversation':
-                # Natural daily life conversation
-                enhanced_response = f"{natural_response}\n\n{self._handle_daily_life_conversation(message)}"
+                # Natural daily life conversation with small talk
+                if small_talk_response:
+                    enhanced_response = f"{small_talk_response}\n\n{natural_response}"
+                else:
+                    enhanced_response = f"{natural_response}\n\n{self._handle_daily_life_conversation(message)}"
                 response['response'] = enhanced_response
                 response['data']['conversation_type'] = 'daily_life'
                 
@@ -2158,6 +3029,274 @@ def get_weather():
 def get_vanie_info():
     """Get VANIE information"""
     return jsonify(vanie_engine.knowledge_base['vanie_info'])
+
+@app.route('/conversation/insights', methods=['GET'])
+def get_conversation_insights():
+    """Get comprehensive conversation insights"""
+    try:
+        user_insights = vanie_engine.natural_conversation.get_user_insights()
+        system_insights = vanie_engine.natural_conversation.get_system_insights()
+        conversation_summary = vanie_engine.natural_conversation.get_conversation_summary()
+        
+        return jsonify({
+            'user_insights': user_insights,
+            'system_insights': system_insights,
+            'conversation_summary': conversation_summary,
+            'personality_traits': vanie_engine.natural_conversation.personality_traits,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error getting conversation insights: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/summary', methods=['GET'])
+def get_conversation_summary():
+    """Get conversation summary"""
+    try:
+        summary = vanie_engine.natural_conversation.get_conversation_summary()
+        return jsonify({
+            'summary': summary,
+            'interaction_count': len(vanie_engine.natural_conversation.conversation_state['context_memory']),
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error getting conversation summary: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/conversation/personality', methods=['GET'])
+def get_personality_traits():
+    """Get current personality traits"""
+    try:
+        return jsonify({
+            'personality_traits': vanie_engine.natural_conversation.personality_traits,
+            'conversation_state': vanie_engine.natural_conversation.conversation_state,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error getting personality traits: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Advanced Algorithms API Endpoints
+
+@app.route('/algorithms/sentiment', methods=['POST'])
+def analyze_sentiment():
+    """Analyze sentiment of text using advanced algorithms"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        
+        if not text:
+            return jsonify({'error': 'No text provided'}), 400
+        
+        sentiment_result = vanie_engine.advanced_algorithms.advanced_sentiment_analysis(text)
+        emotion_intensity = vanie_engine.advanced_algorithms.emotion_intensity_analysis(text)
+        
+        return jsonify({
+            'sentiment_analysis': sentiment_result,
+            'emotion_intensity': emotion_intensity,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error analyzing sentiment: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/similarity', methods=['POST'])
+def calculate_similarity():
+    """Calculate text similarity between two texts"""
+    try:
+        data = request.get_json()
+        text1 = data.get('text1', '')
+        text2 = data.get('text2', '')
+        
+        if not text1 or not text2:
+            return jsonify({'error': 'Both texts are required'}), 400
+        
+        cosine_sim = vanie_engine.advanced_algorithms.cosine_similarity(text1, text2)
+        jaccard_sim = vanie_engine.advanced_algorithms.jaccard_similarity(text1, text2)
+        levenshtein_dist = vanie_engine.advanced_algorithms.levenshtein_distance(text1, text2)
+        overall_score = vanie_engine.advanced_algorithms.text_similarity_score(text1, text2)
+        
+        return jsonify({
+            'cosine_similarity': cosine_sim,
+            'jaccard_similarity': jaccard_sim,
+            'levenshtein_distance': levenshtein_dist,
+            'overall_similarity_score': overall_score,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error calculating similarity: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/patterns', methods=['POST'])
+def detect_patterns():
+    """Detect patterns in text"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        
+        if not text:
+            return jsonify({'error': 'No text provided'}), 400
+        
+        patterns = vanie_engine.advanced_algorithms.detect_patterns(text)
+        
+        return jsonify({
+            'detected_patterns': patterns,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error detecting patterns: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/keywords', methods=['POST'])
+def extract_keywords():
+    """Extract keywords from text"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        top_n = data.get('top_n', 10)
+        
+        if not text:
+            return jsonify({'error': 'No text provided'}), 400
+        
+        keywords = vanie_engine.advanced_algorithms.extract_keywords(text, top_n)
+        
+        return jsonify({
+            'keywords': keywords,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error extracting keywords: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/summary', methods=['POST'])
+def summarize_text():
+    """Summarize text using extractive summarization"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        num_sentences = data.get('num_sentences', 3)
+        
+        if not text:
+            return jsonify({'error': 'No text provided'}), 400
+        
+        summary = vanie_engine.advanced_algorithms.summarize_text(text, num_sentences)
+        
+        return jsonify({
+            'original_length': len(text),
+            'summary_length': len(summary),
+            'summary': summary,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error summarizing text: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/trends', methods=['POST'])
+def detect_trends():
+    """Detect trends in time series data"""
+    try:
+        data = request.get_json()
+        series_data = data.get('data', [])
+        
+        if not series_data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        trend_analysis = vanie_engine.advanced_algorithms.detect_trends(series_data)
+        
+        return jsonify({
+            'trend_analysis': trend_analysis,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error detecting trends: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/anomalies', methods=['POST'])
+def detect_anomalies():
+    """Detect anomalies in data"""
+    try:
+        data = request.get_json()
+        series_data = data.get('data', [])
+        threshold = data.get('threshold', 2.0)
+        
+        if not series_data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        anomalies = vanie_engine.advanced_algorithms.detect_anomalies(series_data, threshold)
+        
+        return jsonify({
+            'anomaly_indices': anomalies,
+            'anomaly_count': len(anomalies),
+            'total_data_points': len(series_data),
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error detecting anomalies: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/decision', methods=['POST'])
+def make_decision():
+    """Make decision using weighted decision making"""
+    try:
+        data = request.get_json()
+        options = data.get('options', [])
+        weights = data.get('weights', {})
+        
+        if not options or not weights:
+            return jsonify({'error': 'Options and weights are required'}), 400
+        
+        decision = vanie_engine.advanced_algorithms.weighted_decision_making(options, weights)
+        
+        return jsonify({
+            'selected_option': decision,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error making decision: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/clustering', methods=['POST'])
+def perform_clustering():
+    """Perform K-means clustering"""
+    try:
+        data = request.get_json()
+        dataset = data.get('data', [])
+        k = data.get('k', 3)
+        
+        if not dataset:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        centroids = vanie_engine.advanced_algorithms.k_means_clustering(dataset, k)
+        
+        return jsonify({
+            'centroids': centroids,
+            'k': k,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error performing clustering: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/algorithms/recommend', methods=['POST'])
+def get_recommendations():
+    """Get recommendations using collaborative filtering"""
+    try:
+        data = request.get_json()
+        user_preferences = data.get('user_preferences', {})
+        all_users = data.get('all_users', [])
+        
+        if not user_preferences or not all_users:
+            return jsonify({'error': 'User preferences and all users data are required'}), 400
+        
+        recommendations = vanie_engine.advanced_algorithms.collaborative_filtering(user_preferences, all_users)
+        
+        return jsonify({
+            'recommendations': recommendations,
+            'timestamp': datetime.datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error getting recommendations: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     logger.info("Starting VANIE Backend Server...")
