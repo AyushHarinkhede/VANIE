@@ -1,7 +1,7 @@
 @echo off
 REM VANIE - Virtual Assistant of Neural Integrated Engine
 REM Startup Script for Windows
-
+ 
 echo.
 echo ============================================================
 echo    VANIE - Virtual Assistant of Neural Integrated Engine
