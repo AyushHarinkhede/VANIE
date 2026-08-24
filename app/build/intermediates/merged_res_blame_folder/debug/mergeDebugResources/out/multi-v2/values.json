@@ -63,11 +63,11 @@
                 {
                     "source": "C:\\Users\\AASHU\\Documents\\Ayush\\VANIE👾\\app\\src\\main\\res\\values\\ic_launcher_background.xml",
                     "from": {
-                        "startLines": "17",
+                        "startLines": "2",
                         "startColumns": "4",
-                        "startOffsets": "709",
+                        "startOffsets": "57",
                         "endColumns": "56",
-                        "endOffsets": "761"
+                        "endOffsets": "109"
                     },
                     "to": {
                         "startLines": "7",

@@ -691,6 +691,70 @@ class VANIEEnhanced:
             elif intent == 'vanie':
                 response = f"🤖 मैं VANIE हूँ - Virtual Assistant of Neural Integrated Engine!\n👤 Creator: {self.knowledge_base['vanie_info']['creator']}\n📌 Version: {self.knowledge_base['vanie_info']['version']}\n🎯 मेरी क्षमताएं:\n" + "\n".join([f"  • {cap}" for cap in self.knowledge_base['vanie_info']['capabilities'][:5]])
                 response_intent = 'vanie'
+            elif intent == 'torch_on':
+                response = "🔦 Flashlight turned ON!"
+                response_intent = 'torch_on'
+                response_data['action'] = 'TORCH_ON'
+            elif intent == 'torch_off':
+                response = "🔦 Flashlight turned OFF!"
+                response_intent = 'torch_off'
+                response_data['action'] = 'TORCH_OFF'
+            elif intent == 'wifi_on':
+                response = "📶 Opening Wi-Fi settings to enable..."
+                response_intent = 'wifi_on'
+                response_data['action'] = 'WIFI_ON'
+            elif intent == 'wifi_off':
+                response = "📶 Opening Wi-Fi settings to disable..."
+                response_intent = 'wifi_off'
+                response_data['action'] = 'WIFI_OFF'
+            elif intent == 'bluetooth_on':
+                response = "🔵 Opening Bluetooth controls..."
+                response_intent = 'bluetooth_on'
+                response_data['action'] = 'BLUETOOTH_ON'
+            elif intent == 'bluetooth_off':
+                response = "🔵 Opening Bluetooth controls to turn off..."
+                response_intent = 'bluetooth_off'
+                response_data['action'] = 'BLUETOOTH_OFF'
+            elif intent == 'dnd_on':
+                response = "🌙 Do Not Disturb (DND) mode activated."
+                response_intent = 'dnd_on'
+                response_data['action'] = 'DND_ON'
+            elif intent == 'dnd_off':
+                response = "🔔 Do Not Disturb (DND) mode disabled."
+                response_intent = 'dnd_off'
+                response_data['action'] = 'DND_OFF'
+            elif intent == 'mode_silent':
+                response = "🔕 Phone set to Silent Mode."
+                response_intent = 'mode_silent'
+                response_data['action'] = 'MODE_SILENT'
+            elif intent == 'mode_vibrate':
+                response = "📳 Phone set to Vibrate Mode."
+                response_intent = 'mode_vibrate'
+                response_data['action'] = 'MODE_VIBRATE'
+            elif intent == 'mode_ring':
+                response = "🔔 Phone set to Normal Ringing Mode."
+                response_intent = 'mode_ring'
+                response_data['action'] = 'MODE_RING'
+            elif intent == 'make_call':
+                response = "📞 Initiating direct phone call..."
+                response_intent = 'make_call'
+                response_data['action'] = 'MAKE_CALL'
+            elif intent == 'send_sms':
+                response = "💬 Preparing SMS dispatch..."
+                response_intent = 'send_sms'
+                response_data['action'] = 'SEND_SMS'
+            elif intent == 'send_whatsapp':
+                response = "💚 Launching WhatsApp for message dispatch..."
+                response_intent = 'send_whatsapp'
+                response_data['action'] = 'SEND_WHATSAPP'
+            elif intent == 'answer_call':
+                response = "📞 Answering incoming call!"
+                response_intent = 'answer_call'
+                response_data['action'] = 'ANSWER_CALL'
+            elif intent == 'reject_call':
+                response = "📵 Rejecting incoming call."
+                response_intent = 'reject_call'
+                response_data['action'] = 'REJECT_CALL'
             elif intent == 'code':
                 response = "💻 Programming में expert हूँ! Python, JavaScript, Java, C++, और भी बहुत कुछ! क्या specific topic चाहिए? 🚀"
                 response_intent = 'code'
@@ -701,16 +765,42 @@ class VANIEEnhanced:
                     response = f"😊 वाह! यह बहुत अच्छा है! आपकी खुशी मेरी खुशी है! ✨"
                 response_intent = 'emotional'
             else:
-                # Intelligent fallback with keywords
-                response = f"🤔 दिलचस्प! '{message}' के बारे में... मैं सोचती हूँ कि यह topic बहुत महत्वपूर्ण है। क्या आप इसके बारे में और जानना चाहेंगे? 📚"
-                response_intent = 'general'
+                # Check for action fallback keywords
+                msg_lower = message.lower()
+                if 'torch' in msg_lower or 'flashlight' in msg_lower or 'लाइट' in msg_lower:
+                    if 'off' in msg_lower or 'बंद' in msg_lower:
+                        response = "🔦 Flashlight turned OFF!"
+                        response_intent = 'torch_off'
+                        response_data['action'] = 'TORCH_OFF'
+                    else:
+                        response = "🔦 Flashlight turned ON!"
+                        response_intent = 'torch_on'
+                        response_data['action'] = 'TORCH_ON'
+                elif 'silent' in msg_lower or 'साइलेंट' in msg_lower:
+                    response = "🔕 Phone set to Silent Mode."
+                    response_intent = 'mode_silent'
+                    response_data['action'] = 'MODE_SILENT'
+                elif 'call' in msg_lower or 'कॉल' in msg_lower or 'फोन' in msg_lower:
+                    response = "📞 Initiating call..."
+                    response_intent = 'make_call'
+                    response_data['action'] = 'MAKE_CALL'
+                elif 'open' in msg_lower or 'खोलो' in msg_lower:
+                    response = f"🚀 Launching application..."
+                    response_intent = 'launch_app'
+                    response_data['action'] = 'LAUNCH_APP'
+                else:
+                    response = f"🤔 '{message}' - VANIE Neural Integrated Engine is ready for your command! 🤖"
+                    response_intent = 'general'
             
             # Add bot response to memory
             self.memory.add_message('bot', response or "Response generated", response_intent)
             
+            action_tag = response_data.get('action', '')
+            
             return {
                 'response': response or "Unable to process",
                 'intent': response_intent,
+                'action': action_tag,
                 'sentiment': sentiment,
                 'sentiment_confidence': round(sentiment_confidence, 2),
                 'intent_confidence': round(intent_confidence, 2),
