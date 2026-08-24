@@ -19,9 +19,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -370,8 +372,8 @@ fun PermissionsModalSheet(onDismiss: () -> Unit, onRequestPermissions: () -> Uni
 fun SettingsModalSheet(onDismiss: () -> Unit) {
     val context = LocalContext.current
     var isVoiceEnabled by remember { mutableStateOf(VanieVoiceService.isVoiceEnabled(context)) }
-    var speechSpeed by remember { floatStateOf(1.0f) }
-    var speechPitch by remember { floatStateOf(1.0f) }
+    var speechSpeed by remember { mutableFloatStateOf(1.0f) }
+    var speechPitch by remember { mutableFloatStateOf(1.0f) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
