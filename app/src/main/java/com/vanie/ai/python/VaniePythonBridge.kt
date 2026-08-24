@@ -38,14 +38,14 @@ class VaniePythonBridge(private val context: Context) {
         }
 
         try {
-            val pyResult = vanieEnginePy?.callMethod("generate_response", input)
+            val pyResult = vanieEnginePy?.callAttr("generate_response", input)
             if (pyResult != null) {
-                // Correctly call dict.get("key") on Python dict object
-                val responseText = pyResult.callMethod("get", "response")?.toString() ?: "I processed your request offline."
-                val intentStr = pyResult.callMethod("get", "intent")?.toString() ?: "general"
-                val actionTag = pyResult.callMethod("get", "action")?.toString() ?: ""
-                val sentimentStr = pyResult.callMethod("get", "sentiment")?.toString() ?: "neutral"
-                val intentConf = pyResult.callMethod("get", "intent_confidence")?.toDegreeFloat() ?: 0.9f
+                // Correctly call dict.get("key") on Python dict object via Chaquopy callAttr
+                val responseText = pyResult.callAttr("get", "response")?.toString() ?: "I processed your request offline."
+                val intentStr = pyResult.callAttr("get", "intent")?.toString() ?: "general"
+                val actionTag = pyResult.callAttr("get", "action")?.toString() ?: ""
+                val sentimentStr = pyResult.callAttr("get", "sentiment")?.toString() ?: "neutral"
+                val intentConf = pyResult.callAttr("get", "intent_confidence")?.toDegreeFloat() ?: 0.9f
 
                 val actionCmd = mapActionTagToEnum(actionTag, intentStr, input)
                 val targetName = extractTargetName(input)
