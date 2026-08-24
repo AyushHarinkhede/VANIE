@@ -201,6 +201,7 @@ fun ChatScreen(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
                     ),
                     border = SuggestionChipDefaults.suggestionChipBorder(
+                        enabled = true,
                         borderColor = AccentCyan.copy(alpha = 0.4f)
                     )
                 )
