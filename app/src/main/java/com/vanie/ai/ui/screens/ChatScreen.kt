@@ -9,6 +9,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -200,10 +201,7 @@ fun ChatScreen(
                     colors = SuggestionChipDefaults.suggestionChipColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
                     ),
-                    border = SuggestionChipDefaults.suggestionChipBorder(
-                        enabled = true,
-                        borderColor = AccentCyan.copy(alpha = 0.4f)
-                    )
+                    border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.4f))
                 )
             }
         }
