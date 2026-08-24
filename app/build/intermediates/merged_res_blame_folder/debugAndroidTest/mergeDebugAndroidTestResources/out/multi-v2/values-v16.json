@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.vanie.ai.test.app-mergeDebugAndroidTestResources-32:/values-v16/values-v16.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\AASHU\\.gradle\\caches\\9.0.0\\transforms\\2f6476fd4a3a7b5e2e70c1842b649ad4\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
+                    }
+                }
+            ]
+        }
+    ]
+}

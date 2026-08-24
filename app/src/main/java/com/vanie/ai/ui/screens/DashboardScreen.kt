@@ -1,6 +1,7 @@
 package com.vanie.ai.ui.screens
 
 import android.media.AudioManager
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vanie.ai.control.VanieDeviceController
 import com.vanie.ai.telephony.VanieTelephonyController
+import com.vanie.ai.ui.theme.AccentCyan
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +29,8 @@ fun DashboardScreen(
 ) {
     var torchState by remember { mutableStateOf(false) }
     var dndState by remember { mutableStateOf(false) }
+    var brightnessValue by remember { mutableFloatStateOf(0.75f) }
+    var batteryText by remember { mutableStateOf("Tap to check battery level") }
 
     Column(
         modifier = Modifier
@@ -42,7 +46,7 @@ fun DashboardScreen(
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = "Instant 0-delay offline system controls powered by VANIE",
+            text = "Instant 0-delay offline system controls powered by VANIE NPU Engine",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -54,7 +58,7 @@ fun DashboardScreen(
         ) {
             ControlCard(
                 title = "Flashlight",
-                subtitle = if (torchState) "ON" else "OFF",
+                subtitle = if (torchState) "ACTIVE" else "OFF",
                 icon = Icons.Default.FlashOn,
                 isActive = torchState,
                 onClick = {
@@ -66,7 +70,7 @@ fun DashboardScreen(
 
             ControlCard(
                 title = "Do Not Disturb",
-                subtitle = if (dndState) "Active" else "Off",
+                subtitle = if (dndState) "ACTIVE" else "OFF",
                 icon = Icons.Default.DoNotDisturbOn,
                 isActive = dndState,
                 onClick = {
@@ -84,7 +88,7 @@ fun DashboardScreen(
         ) {
             ControlCard(
                 title = "Wi-Fi Control",
-                subtitle = "Tap to open",
+                subtitle = "Tap to manage",
                 icon = Icons.Default.Wifi,
                 isActive = false,
                 onClick = { deviceController.openWifiSettings() },
@@ -93,12 +97,41 @@ fun DashboardScreen(
 
             ControlCard(
                 title = "Bluetooth",
-                subtitle = "Tap to open",
+                subtitle = "Tap to manage",
                 icon = Icons.Default.Bluetooth,
                 isActive = false,
                 onClick = { deviceController.openBluetoothSettings() },
                 modifier = Modifier.weight(1f)
             )
+        }
+
+        // Screen Brightness Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Brightness6, contentDescription = null, tint = AccentCyan)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Screen Brightness: ${(brightnessValue * 100).toInt()}%",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Slider(
+                    value = brightnessValue,
+                    onValueChange = {
+                        brightnessValue = it
+                        deviceController.setScreenBrightness((it * 100).toInt())
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
 
         // Audio Profile Card
@@ -134,6 +167,26 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Silent")
                     }
+                }
+            }
+        }
+
+        // Battery Status Card
+        Card(
+            onClick = { batteryText = deviceController.getBatteryStatus() },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.BatteryChargingFull, contentDescription = null, tint = AccentCyan, modifier = Modifier.size(32.dp))
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(text = "Battery Status", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = batteryText, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f))
                 }
             }
         }
@@ -183,8 +236,8 @@ fun ControlCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.height(110.dp),
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.height(115.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
         )
@@ -192,13 +245,14 @@ fun ControlCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(14.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(28.dp)
             )
             Column {
                 Text(

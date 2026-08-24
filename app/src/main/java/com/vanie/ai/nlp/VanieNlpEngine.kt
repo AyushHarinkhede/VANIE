@@ -270,7 +270,7 @@ class VanieNlpEngine(private val context: Context) {
         )
     }
 
-    private fun calculateSentiment(text: str): Pair<String, Float> {
+    private fun calculateSentiment(text: String): Pair<String, Float> {
         val words = text.lowercase().split("\\s+".toRegex())
         var score = 0
         var matches = 0

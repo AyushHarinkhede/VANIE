@@ -27,7 +27,7 @@ class VanieCallReceiver : BroadcastReceiver() {
                 Log.d(TAG, "Incoming call ringing: $incomingNumber")
                 val telephonyController = VanieTelephonyController(context)
                 val contactName = if (!incomingNumber.isNull_or_blank()) {
-                    telephonyController.resolvePhoneNumber(incomingNumber) ?: incomingNumber
+                    telephonyController.resolvePhoneNumber(incomingNumber!!) ?: incomingNumber!!
                 } else {
                     "Unknown Caller"
                 }

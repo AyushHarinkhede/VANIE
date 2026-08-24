@@ -6,45 +6,48 @@ import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.vanie.ai.nlp.ActionCommand
 import com.vanie.ai.nlp.NlpResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class VaniePythonBridge(private val context: Context) {
 
     private var vanieEnginePy: PyObject? = null
+    @Volatile
     private var isInitialized = false
 
-    init {
-        initPython()
-    }
-
-    private fun initPython() {
-        try {
-            if (!Python.isStarted()) {
-                Python.start(AndroidPlatform(context))
+    private suspend fun initPython() = withContext(Dispatchers.IO) {
+        if (!isInitialized) {
+            try {
+                if (!Python.isStarted()) {
+                    Python.start(AndroidPlatform(context))
+                }
+                val py = Python.getInstance()
+                val module = py.getModule("VANIE_ENHANCED")
+                vanieEnginePy = module.get("vanie_engine")
+                isInitialized = true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                isInitialized = false
             }
-            val py = Python.getInstance()
-            val module = py.getModule("VANIE_ENHANCED")
-            vanieEnginePy = module.get("vanie_engine")
-            isInitialized = true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            isInitialized = false
         }
     }
 
-    fun processWithPython(input: String): NlpResult {
+    suspend fun processWithPython(input: String): NlpResult = withContext(Dispatchers.IO) {
         if (!isInitialized || vanieEnginePy == null) {
             initPython()
         }
 
-        return try {
+        try {
             val pyResult = vanieEnginePy?.callMethod("generate_response", input)
             if (pyResult != null) {
-                val responseText = pyResult.get("response")?.toString() ?: "I processed your request offline."
-                val intentStr = pyResult.get("intent")?.toString() ?: "general"
-                val sentimentStr = pyResult.get("sentiment")?.toString() ?: "neutral"
-                val intentConf = pyResult.get("intent_confidence")?.toDegreeFloat() ?: 0.9f
+                // Correctly call dict.get("key") on Python dict object
+                val responseText = pyResult.callMethod("get", "response")?.toString() ?: "I processed your request offline."
+                val intentStr = pyResult.callMethod("get", "intent")?.toString() ?: "general"
+                val actionTag = pyResult.callMethod("get", "action")?.toString() ?: ""
+                val sentimentStr = pyResult.callMethod("get", "sentiment")?.toString() ?: "neutral"
+                val intentConf = pyResult.callMethod("get", "intent_confidence")?.toDegreeFloat() ?: 0.9f
 
-                val actionCmd = mapIntentToAction(intentStr, input)
+                val actionCmd = mapActionTagToEnum(actionTag, intentStr, input)
                 val targetName = extractTargetName(input)
                 val messageBody = extractMessageBody(input)
 
@@ -75,41 +78,76 @@ class VaniePythonBridge(private val context: Context) {
         }
     }
 
-    private fun mapIntentToAction(intentStr: String, rawInput: String): ActionCommand {
+    private fun mapActionTagToEnum(actionTag: String, intentStr: String, rawInput: String): ActionCommand {
         val lower = rawInput.lowercase()
+
+        // 1. Direct Python Action Tag Match
+        when (actionTag) {
+            "TORCH_ON" -> return ActionCommand.TORCH_ON
+            "TORCH_OFF" -> return ActionCommand.TORCH_OFF
+            "WIFI_ON" -> return ActionCommand.WIFI_ON
+            "WIFI_OFF" -> return ActionCommand.WIFI_OFF
+            "BLUETOOTH_ON" -> return ActionCommand.BLUETOOTH_ON
+            "BLUETOOTH_OFF" -> return ActionCommand.BLUETOOTH_OFF
+            "DND_ON" -> return ActionCommand.DND_ON
+            "DND_OFF" -> return ActionCommand.DND_OFF
+            "MODE_SILENT" -> return ActionCommand.MODE_SILENT
+            "MODE_VIBRATE" -> return ActionCommand.MODE_VIBRATE
+            "MODE_RING" -> return ActionCommand.MODE_RING
+            "MAKE_CALL" -> return ActionCommand.MAKE_CALL
+            "SEND_SMS" -> return ActionCommand.SEND_SMS
+            "SEND_WHATSAPP" -> return ActionCommand.SEND_WHATSAPP
+            "ANSWER_CALL" -> return ActionCommand.ANSWER_CALL
+            "REJECT_CALL" -> return ActionCommand.REJECT_CALL
+            "BRIGHTNESS" -> return ActionCommand.BRIGHTNESS
+            "ALARM" -> return ActionCommand.ALARM
+            "BATTERY" -> return ActionCommand.BATTERY
+            "NOTIFICATION_READ" -> return ActionCommand.NOTIFICATION_READ
+            "LAUNCH_APP" -> return ActionCommand.LAUNCH_APP
+        }
+
+        // 2. Intent & Regex Fallback
         return when {
-            intentStr == "torch_on" || lower.contains("torch on") || lower.contains("flashlight on") || lower.contains("लाइट चालू") -> ActionCommand.TORCH_ON
-            intentStr == "torch_off" || lower.contains("torch off") || lower.contains("flashlight off") || lower.contains("लाइट बंद") -> ActionCommand.TORCH_OFF
-            intentStr == "wifi_on" || lower.contains("wifi on") || lower.contains("turn on wifi") -> ActionCommand.WIFI_ON
-            intentStr == "wifi_off" || lower.contains("wifi off") || lower.contains("turn off wifi") -> ActionCommand.WIFI_OFF
-            intentStr == "bluetooth_on" || lower.contains("bluetooth on") -> ActionCommand.BLUETOOTH_ON
-            intentStr == "bluetooth_off" || lower.contains("bluetooth off") -> ActionCommand.BLUETOOTH_OFF
-            intentStr == "dnd_on" || lower.contains("dnd on") || lower.contains("do not disturb") -> ActionCommand.DND_ON
-            intentStr == "dnd_off" || lower.contains("dnd off") -> ActionCommand.DND_OFF
-            intentStr == "mode_silent" || lower.contains("silent mode") -> ActionCommand.MODE_SILENT
-            intentStr == "mode_vibrate" || lower.contains("vibrate mode") -> ActionCommand.MODE_VIBRATE
-            intentStr == "mode_ring" || lower.contains("ring mode") -> ActionCommand.MODE_RING
-            intentStr == "make_call" || lower.contains("call ") || lower.contains("कॉल करो") -> ActionCommand.MAKE_CALL
-            intentStr == "send_sms" || lower.contains("text ") || lower.contains("sms") -> ActionCommand.SEND_SMS
-            intentStr == "send_whatsapp" || lower.contains("whatsapp") || lower.contains("व्हाट्सएप") -> ActionCommand.SEND_WHATSAPP
-            intentStr == "answer_call" || lower.contains("pickup call") || lower.contains("receive call") -> ActionCommand.ANSWER_CALL
-            intentStr == "reject_call" || lower.contains("cut call") || lower.contains("hangup") -> ActionCommand.REJECT_CALL
-            lower.contains("brightness") || lower.contains("screen light") -> ActionCommand.BRIGHTNESS
-            lower.contains("alarm") || lower.contains("timer") || lower.contains("remind") -> ActionCommand.ALARM
-            lower.contains("battery") || lower.contains("charge") || lower.contains("power level") -> ActionCommand.BATTERY
+            lower.contains("torch on") || lower.contains("flashlight on") || lower.contains("flash on") || lower.contains("turn on flashlight") || lower.contains("लाइट चालू") || lower.contains("टॉर्च चालू") || intentStr == "torch_on" -> ActionCommand.TORCH_ON
+            lower.contains("torch off") || lower.contains("flashlight off") || lower.contains("flash off") || lower.contains("turn off flashlight") || lower.contains("लाइट बंद") || lower.contains("टॉर्च बंद") || intentStr == "torch_off" -> ActionCommand.TORCH_OFF
+            lower.contains("wifi on") || lower.contains("turn on wifi") || lower.contains("enable wifi") || lower.contains("वाईफाई चालू") -> ActionCommand.WIFI_ON
+            lower.contains("wifi off") || lower.contains("turn off wifi") || lower.contains("disable wifi") || lower.contains("वाईफाई बंद") -> ActionCommand.WIFI_OFF
+            lower.contains("bluetooth on") || lower.contains("turn on bluetooth") || lower.contains("ब्लूटूथ चालू") -> ActionCommand.BLUETOOTH_ON
+            lower.contains("bluetooth off") || lower.contains("turn off bluetooth") || lower.contains("ब्लूटूथ बंद") -> ActionCommand.BLUETOOTH_OFF
+            lower.contains("dnd on") || lower.contains("do not disturb on") || lower.contains("डीएनडी चालू") -> ActionCommand.DND_ON
+            lower.contains("dnd off") || lower.contains("do not disturb off") || lower.contains("डीएनडी बंद") -> ActionCommand.DND_OFF
+            lower.contains("silent mode") || lower.contains("phone silent") || lower.contains("साइलेंट करो") -> ActionCommand.MODE_SILENT
+            lower.contains("vibrate mode") || lower.contains("phone vibrate") || lower.contains("वाइब्रेट करो") -> ActionCommand.MODE_VIBRATE
+            lower.contains("ring mode") || lower.contains("normal mode") || lower.contains("रिंगर ऑन") -> ActionCommand.MODE_RING
+            lower.contains("open youtube") || lower.contains("open whatsapp") || lower.contains("open chrome") || lower.contains("open camera") || lower.startsWith("open ") || lower.contains("खोलो") -> ActionCommand.LAUNCH_APP
+            lower.contains("call ") || lower.contains("dial ") || lower.contains("कॉल करो") || lower.contains("फोन करो") || intentStr == "make_call" -> ActionCommand.MAKE_CALL
+            lower.contains("text ") || lower.contains("sms ") || lower.contains("send text") || lower.contains("मैसेज करो") || intentStr == "send_sms" -> ActionCommand.SEND_SMS
+            lower.contains("whatsapp ") || lower.contains("send whatsapp") || lower.contains("व्हाट्सएप करो") || intentStr == "send_whatsapp" -> ActionCommand.SEND_WHATSAPP
+            lower.contains("pickup call") || lower.contains("answer call") || lower.contains("कॉल उठाओ") || intentStr == "answer_call" -> ActionCommand.ANSWER_CALL
+            lower.contains("cut call") || lower.contains("hangup") || lower.contains("reject call") || lower.contains("कॉल काटो") || intentStr == "reject_call" -> ActionCommand.REJECT_CALL
+            lower.contains("brightness") || lower.contains("screen light") || lower.contains("ब्राइटनेस") -> ActionCommand.BRIGHTNESS
+            lower.contains("alarm") || lower.contains("timer") || lower.contains("अलार्म") -> ActionCommand.ALARM
+            lower.contains("battery") || lower.contains("charge") || lower.contains("बैटरी") -> ActionCommand.BATTERY
             lower.contains("notification") || lower.contains("read messages") || lower.contains("unread") -> ActionCommand.NOTIFICATION_READ
             else -> ActionCommand.NONE
         }
     }
 
     private fun extractTargetName(input: String): String? {
-        val parts = input.split(Regex("(?i)to|for|call|whatsapp|text|send"), 2)
-        return if (parts.size > 1) parts[1].trim().split(" ")[0] else null
+        val lower = input.lowercase()
+        if (lower.startsWith("open ")) {
+            return lower.replace("open ", "").trim()
+        }
+        val parts = input.split(Regex("(?i)to|for|call|dial|whatsapp|text|send|open"), 2)
+        return if (parts.size > 1) {
+            val clean = parts[1].trim().split(" ")[0]
+            if (clean.isNotBlank()) clean else null
+        } else null
     }
 
     private fun extractMessageBody(input: String): String? {
         val parts = input.split(Regex("(?i)saying|message|that|text"), 2)
-        return if (parts.size > 1) parts[1].trim() else null
+        return if (parts.size > 1 && parts[1].isNotBlank()) parts[1].trim() else null
     }
 
     private fun fallbackResult(input: String): NlpResult {

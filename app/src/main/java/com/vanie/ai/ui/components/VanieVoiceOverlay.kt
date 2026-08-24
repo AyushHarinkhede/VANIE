@@ -53,7 +53,7 @@ fun VanieVoiceOverlay(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 32.dp, horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterAlignment
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Pulsing Logo Visualizer
                 PulsingVanieLogo()

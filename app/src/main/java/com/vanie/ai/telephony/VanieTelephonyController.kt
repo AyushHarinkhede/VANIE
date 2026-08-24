@@ -16,7 +16,7 @@ class VanieTelephonyController(private val context: Context) {
             return
         }
 
-        val phoneNumber = resolvePhoneNumber(contactNameOrNumber) ?: contactNameOrNumber
+        val phoneNumber = resolvePhoneNumber(contactNameOrNumber!!) ?: contactNameOrNumber!!
 
         try {
             val intent = Intent(Intent.ACTION_CALL).apply {
@@ -42,7 +42,7 @@ class VanieTelephonyController(private val context: Context) {
             return
         }
 
-        val phoneNumber = resolvePhoneNumber(contactNameOrNumber) ?: contactNameOrNumber
+        val phoneNumber = resolvePhoneNumber(contactNameOrNumber!!) ?: contactNameOrNumber!!
         val textToSend = messageText ?: "Hello from VANIE AI Assistant!"
 
         try {
@@ -66,7 +66,7 @@ class VanieTelephonyController(private val context: Context) {
             return
         }
 
-        val rawNumber = resolvePhoneNumber(contactNameOrNumber) ?: contactNameOrNumber
+        val rawNumber = resolvePhoneNumber(contactNameOrNumber!!) ?: contactNameOrNumber!!
         val cleanNumber = rawNumber.replace("[^0-9+]".toRegex(), "")
         val textToSend = messageText ?: "Hello from VANIE AI!"
 

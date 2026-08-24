@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -27,6 +28,28 @@ class VanieVoiceService : Service(), RecognitionListener, TextToSpeech.OnInitLis
         private const val TAG = "VanieVoiceService"
         private const val CHANNEL_ID = "VANIE_VOICE_SERVICE_CHANNEL"
         private const val NOTIFICATION_ID = 1001
+        private const val PREFS_NAME = "VANIE_SETTINGS"
+        private const val KEY_VOICE_ENABLED = "voice_wake_word_enabled"
+
+        fun setVoiceEnabled(context: Context, enabled: Boolean) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(KEY_VOICE_ENABLED, enabled).apply()
+            val intent = Intent(context, VanieVoiceService::class.java)
+            if (enabled) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } else {
+                context.stopService(intent)
+            }
+        }
+
+        fun isVoiceEnabled(context: Context): Boolean {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getBoolean(KEY_VOICE_ENABLED, true)
+        }
     }
 
     private var speechRecognizer: SpeechRecognizer? = null
@@ -46,10 +69,14 @@ class VanieVoiceService : Service(), RecognitionListener, TextToSpeech.OnInitLis
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildForegroundNotification())
 
-        startListening()
+        if (isVoiceEnabled(this)) {
+            startListening()
+        }
     }
 
     private fun startListening() {
+        if (!isVoiceEnabled(this)) return
+
         if (SpeechRecognizer.isRecognitionAvailable(this)) {
             speechRecognizer?.destroy()
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
@@ -73,8 +100,9 @@ class VanieVoiceService : Service(), RecognitionListener, TextToSpeech.OnInitLis
             Log.d(TAG, "Spoken text: $spokenText")
             handleSpokenCommand(spokenText)
         }
-        // Restart listener for continuous offline hotword detection
-        startListening()
+        if (isVoiceEnabled(this)) {
+            startListening()
+        }
     }
 
     private fun handleSpokenCommand(input: String) {
@@ -146,7 +174,9 @@ class VanieVoiceService : Service(), RecognitionListener, TextToSpeech.OnInitLis
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onError(error: Int) {
-        startListening()
+        if (isVoiceEnabled(this)) {
+            startListening()
+        }
     }
 
     override fun onReadyForSpeech(params: Bundle?) {}
