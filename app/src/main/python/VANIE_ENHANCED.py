@@ -329,6 +329,10 @@ class VANIEEnhanced:
                 'quote': r'(quote|famous|कहावत|wisdom|advice)',
                 'conversion': r'(convert|conversion|transform|unit|km|mile|celsius|fahrenheit|kg|lbs|gb|mb)',
                 'search': r'(search|find|look for|खोजो)',
+                'set_alarm': r'(alarm|अलार्म|wakeup|baje)',
+                'set_timer': r'(timer|टाइमर)',
+                'stopwatch': r'(stopwatch|स्टॉपवॉच)',
+                'add_task': r'(task|remind|yaad|to do)',
                 'torch_on': r'(torch on|flashlight on|flash on|लाइट चालू|लाइट ऑन|टॉर्च ऑन|टॉर्च चालू)',
                 'torch_off': r'(torch off|flashlight off|flash off|लाइट बंद|लाइट ऑफ|टॉर्च ऑफ|टॉर्च बंद)',
                 'wifi_on': r'(wifi on|turn on wifi|enable wifi|वाईफाई ऑन|वाईफाई चालू)',
@@ -892,6 +896,22 @@ class VANIEEnhanced:
             elif intent == 'vanie':
                 response = f"🤖 Main VANIE (Virtual Agent of Neural Integrated Engine) hoon! ✨\n👤 Mujhe mere creator Ayush Harinkhede ne design aur build kiya hai! 🚀💖 Main aapki offline hardware control, calls, messages, calculations, aur daily chit-chat me madad kar sakti hoon! 🌸"
                 response_intent = 'vanie'
+            elif intent == 'set_alarm':
+                response = "⏰ Setting alarm in background without opening app..."
+                response_intent = 'set_alarm'
+                response_data['action'] = 'SET_ALARM'
+            elif intent == 'set_timer':
+                response = "⏱️ Setting live timer in background..."
+                response_intent = 'set_timer'
+                response_data['action'] = 'SET_TIMER'
+            elif intent == 'stopwatch':
+                response = "⏱️ Updating live stopwatch..."
+                response_intent = 'stopwatch'
+                response_data['action'] = 'START_STOPWATCH'
+            elif intent == 'add_task':
+                response = "📋 Managing your live task list..."
+                response_intent = 'add_task'
+                response_data['action'] = 'ADD_TASK'
             elif intent == 'torch_on':
                 response = "🔦 Flashlight turned ON!"
                 response_intent = 'torch_on'

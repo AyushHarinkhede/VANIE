@@ -229,13 +229,112 @@ class VanieDeviceController(private val context: Context) {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)
-            Toast.makeText(context, "Alarm set for $hour:$minute", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "⏰ Alarm set for ${String.format("%02d:%02d", hour, minute)}", Toast.LENGTH_SHORT).show()
             true
         } catch (e: Exception) {
             e.printStackTrace()
             false
         }
     }
+
+    fun setTimer(seconds: Int, message: String = "VANIE Timer"): Boolean {
+        return try {
+            val intent = Intent(AlarmClock.ACTION_SET_TIMER).apply {
+                putExtra(AlarmClock.EXTRA_LENGTH, seconds)
+                putExtra(AlarmClock.EXTRA_MESSAGE, message)
+                putExtra(AlarmClock.EXTRA_SKIP_UI, true)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+            Toast.makeText(context, "⏱️ Timer set for $seconds seconds", Toast.LENGTH_SHORT).show()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+object VanieAlarmState {
+    var pendingHour: Int = -1
+    var pendingMinute: Int = 0
+    var pendingLabel: String = "VANIE Alarm"
+    var isWaitingForAmPm: Boolean = false
+}
+
+object VanieStopwatch {
+    private var startTime = 0L
+    private var isRunning = false
+    private var elapsedTime = 0L
+
+    fun start(): String {
+        return if (!isRunning) {
+            startTime = System.currentTimeMillis() - elapsedTime
+            isRunning = true
+            "⏱️ Stopwatch Started! 🚀"
+        } else {
+            "⏱️ Stopwatch is already running! Elapsed: ${getFormattedTime()}"
+        }
+    }
+
+    fun pause(): String {
+        return if (isRunning) {
+            elapsedTime = System.currentTimeMillis() - startTime
+            isRunning = false
+            "⏸️ Stopwatch Paused at ${getFormattedTime()}"
+        } else {
+            "⏱️ Stopwatch is currently paused at ${getFormattedTime()}"
+        }
+    }
+
+    fun reset(): String {
+        startTime = 0L
+        elapsedTime = 0L
+        isRunning = false
+        return "🔄 Stopwatch Reset to 00:00!"
+    }
+
+    fun getFormattedTime(): String {
+        val total = if (isRunning) System.currentTimeMillis() - startTime else elapsedTime
+        val seconds = (total / 1000) % 60
+        val minutes = (total / (1000 * 60)) % 60
+        val hours = total / (1000 * 3600)
+        return if (hours > 0) {
+            String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format("%02d:%02d", minutes, seconds)
+        }
+    }
+}
+
+object VanieTaskManager {
+    private val taskList = mutableListOf<String>()
+
+    fun addTask(task: String): String {
+        val cleanTask = task.trim()
+        if (cleanTask.isNotEmpty()) {
+            taskList.add(cleanTask)
+            return "✅ Task Added: '$cleanTask' (Total Tasks: ${taskList.size})"
+        }
+        return "⚠️ Kripya task ka details batayein!"
+    }
+
+    fun getTasks(): String {
+        if (taskList.isEmpty()) {
+            return "📋 Aapke paas abhi koi pending task nahi hai!"
+        }
+        val sb = StringBuilder("📋 **Aapki Task List:**\n")
+        taskList.forEachIndexed { i, t ->
+            sb.append("${i + 1}. $t\n")
+        }
+        return sb.toString().trim()
+    }
+
+    fun clearTasks(): String {
+        val count = taskList.size
+        taskList.clear()
+        return "🗑️ Sabhi $count tasks clear kar diye gaye hain!"
+    }
+}
 
     fun getDetailedBatteryInfo(): String {
         val iFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)

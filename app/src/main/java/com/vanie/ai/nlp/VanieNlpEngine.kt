@@ -55,7 +55,17 @@ enum class ActionCommand {
     OPEN_SETTINGS,
     OPEN_MAPS,
     OPEN_PLAYSTORE,
-    OPEN_CALCULATOR
+    OPEN_CALCULATOR,
+    SET_ALARM,
+    CONFIRM_ALARM_AM,
+    CONFIRM_ALARM_PM,
+    SET_TIMER,
+    START_STOPWATCH,
+    PAUSE_STOPWATCH,
+    RESET_STOPWATCH,
+    ADD_TASK,
+    SHOW_TASKS,
+    CLEAR_TASKS
 }
 
 class VanieNlpEngine(private val context: Context) {
@@ -245,7 +255,16 @@ class VanieNlpEngine(private val context: Context) {
             lower.contains("battery") || lower.contains("charge") || lower.contains("kitni battery") -> bestIntent = "battery"
             lower.contains("notification") || lower.contains("read message") || lower.contains("unread") -> bestIntent = "notification_read"
             lower.contains("brightness") || lower.contains("screen light") || lower.contains("brighten") -> bestIntent = "brightness"
-            lower.contains("alarm") || lower.contains("timer") || lower.contains("wakeup") -> bestIntent = "alarm"
+            
+            // AM / PM Confirmation State
+            com.vanie.ai.control.VanieAlarmState.isWaitingForAmPm && (lower.contains("am") || lower.contains("subah") || lower.contains("morning")) -> bestIntent = "confirm_alarm_am"
+            com.vanie.ai.control.VanieAlarmState.isWaitingForAmPm && (lower.contains("pm") || lower.contains("shaam") || lower.contains("raat") || lower.contains("evening") || lower.contains("night") || lower.contains("dopahar")) -> bestIntent = "confirm_alarm_pm"
+
+            // Alarm, Timer, Stopwatch, Task intents
+            lower.contains("alarm") || lower.contains("अलार्म") || (lower.contains("baje") && lower.contains("laga")) -> bestIntent = "set_alarm"
+            lower.contains("timer") || lower.contains("टाइमर") -> bestIntent = "set_timer"
+            lower.contains("stopwatch") || lower.contains("स्टॉपवॉच") -> bestIntent = "stopwatch"
+            lower.contains("task") || lower.contains("remind") || lower.contains("yaad") || lower.contains("to do") -> bestIntent = "task"
 
             // Conversational & Fun
             lower.contains("hi") || lower.contains("hello") || lower.contains("hey") || lower.contains("namaste") -> bestIntent = "greeting"
@@ -357,10 +376,88 @@ class VanieNlpEngine(private val context: Context) {
                 targetName = num ?: "75"
                 responseText = "Setting screen brightness to ${targetName}%..."
             }
-            "alarm" -> {
-                actionCommand = ActionCommand.ALARM
-                targetName = cleanInput
-                responseText = "Setting alarm..."
+            "confirm_alarm_am" -> {
+                actionCommand = ActionCommand.CONFIRM_ALARM_AM
+                responseText = "⏰ Subah (AM) ka alarm set kar diya gaya hai!"
+            }
+            "confirm_alarm_pm" -> {
+                actionCommand = ActionCommand.CONFIRM_ALARM_PM
+                responseText = "⏰ Shaam/Raat (PM) ka alarm set kar diya gaya hai!"
+            }
+            "set_alarm" -> {
+                val digits = Regex("(\\d{1,2})(?::(\\d{2}))?").find(cleanInput)
+                if (digits != null) {
+                    val rawHour = digits.groupValues[1].toIntOrNull() ?: 7
+                    val min = digits.groupValues.getOrNull(2)?.toIntOrNull() ?: 0
+                    val hasAm = lower.contains("am") || lower.contains("subah") || lower.contains("morning")
+                    val hasPm = lower.contains("pm") || lower.contains("shaam") || lower.contains("raat") || lower.contains("dopahar") || lower.contains("evening") || lower.contains("night")
+
+                    if (hasAm) {
+                        val h = if (rawHour == 12) 0 else rawHour
+                        actionCommand = ActionCommand.SET_ALARM
+                        targetName = "$h:$min"
+                        responseText = "⏰ Alarm set for ${String.format("%02d:%02d", h, min)} (AM)!"
+                        com.vanie.ai.control.VanieAlarmState.isWaitingForAmPm = false
+                    } else if (hasPm) {
+                        val h = if (rawHour == 12) 12 else (rawHour % 12) + 12
+                        actionCommand = ActionCommand.SET_ALARM
+                        targetName = "$h:$min"
+                        responseText = "⏰ Alarm set for ${String.format("%02d:%02d", h, min)} (PM)!"
+                        com.vanie.ai.control.VanieAlarmState.isWaitingForAmPm = false
+                    } else {
+                        com.vanie.ai.control.VanieAlarmState.pendingHour = rawHour
+                        com.vanie.ai.control.VanieAlarmState.pendingMinute = min
+                        com.vanie.ai.control.VanieAlarmState.isWaitingForAmPm = true
+                        actionCommand = ActionCommand.NONE
+                        responseText = "⏰ Aapko $rawHour:${String.format("%02d", min)} ka alarm subah (AM) ka lagana hai ya shaam/raat (PM) ka?"
+                    }
+                } else {
+                    actionCommand = ActionCommand.SET_ALARM
+                    targetName = "7:0"
+                    responseText = "⏰ Default alarm set for 7:00 AM!"
+                }
+            }
+            "set_timer" -> {
+                actionCommand = ActionCommand.SET_TIMER
+                val num = Regex("\\d+").find(cleanInput)?.value?.toIntOrNull() ?: 60
+                val isMin = lower.contains("min") || lower.contains("minute") || lower.contains("मिनट")
+                val totalSec = if (isMin) num * 60 else num
+                targetName = totalSec.toString()
+                responseText = "⏱️ Timer set for $totalSec seconds!"
+            }
+            "stopwatch" -> {
+                when {
+                    lower.contains("pause") || lower.contains("rok") || lower.contains("stop") -> {
+                        actionCommand = ActionCommand.PAUSE_STOPWATCH
+                        responseText = com.vanie.ai.control.VanieStopwatch.pause()
+                    }
+                    lower.contains("reset") || lower.contains("clear") -> {
+                        actionCommand = ActionCommand.RESET_STOPWATCH
+                        responseText = com.vanie.ai.control.VanieStopwatch.reset()
+                    }
+                    else -> {
+                        actionCommand = ActionCommand.START_STOPWATCH
+                        responseText = com.vanie.ai.control.VanieStopwatch.start()
+                    }
+                }
+            }
+            "task" -> {
+                when {
+                    lower.contains("show") || lower.contains("list") || lower.contains("dekh") || lower.contains("batao") -> {
+                        actionCommand = ActionCommand.SHOW_TASKS
+                        responseText = com.vanie.ai.control.VanieTaskManager.getTasks()
+                    }
+                    lower.contains("clear") || lower.contains("delete") || lower.contains("hatao") -> {
+                        actionCommand = ActionCommand.CLEAR_TASKS
+                        responseText = com.vanie.ai.control.VanieTaskManager.clearTasks()
+                    }
+                    else -> {
+                        actionCommand = ActionCommand.ADD_TASK
+                        val taskText = cleanInput.replace(Regex("(?i)(add|task|remind me to|remind|yaad dilana|to do)"), "").trim()
+                        targetName = if (taskText.isNotEmpty()) taskText else cleanInput
+                        responseText = com.vanie.ai.control.VanieTaskManager.addTask(targetName!!)
+                    }
+                }
             }
             "launch_app" -> {
                 actionCommand = ActionCommand.LAUNCH_APP
