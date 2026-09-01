@@ -300,16 +300,27 @@ class VANIEEnhanced:
                 'weather': r'(weather|मौसम|temperature|तापमान|rain)',
                 'system': r'(system|computer|pc|कंप्यूटर|memory|cpu|specs)',
                 'vanie': r'(vanie|तुम कौन|who are you|आपका नाम|about|yourself)',
-                'math': r'(\d+\.?\d*\s*[\+\-\*/]\s*\d+\.?\d*|calculate|गणना)',
+                'math': r'(\d+\.?\d*\s*[\+\-\*/%\^]\s*\d+\.?\d*|calculate|sqrt|square root|sin|cos|tan|log|ln|fact|factorial|percent|%)',
                 'code': r'(code|python|javascript|java|cpp|प्रोग्रामिंग|programming)',
-                'emotional': r'(sad|happy|excited|उदास|खुश|परेशान|feeling)',
+                'emotional': r'(feeling|sad|happy|excited|stressed|anxious|angry|gussa|bore|उदास|खुश|परेशान)',
+                'routine_morning': r'(good morning|सुप्रभात|good morning vanie|morning talk)',
+                'routine_night': r'(good night|शुभ रात्रि|sweet dreams|so jao)',
+                'routine_food': r'(khana khaya|breakfast|lunch|dinner|chai|coffee|food|what did you eat)',
+                'routine_meetup': r'(meetup|milte hain|let\'s meet|chalo milte|hangout|kahin chalein|meet up)',
+                'routine_daily': r'(daily routine|aaj ka plan|what are you doing|kya kar rahe ho|kya chal raha hai)',
+                'emotions_happy': r'(happy|excited|awesome|good news|खुश|मज़ा आ गया|great day)',
+                'emotions_sad': r'(sad|lonely|depressed|heartbroken|उदास|अकेला|upset|cry)',
+                'emotions_stress': r'(stressed|anxious|tired|thak gaya|headache|tension|परेशान)',
+                'emotions_angry': r'(angry|frustrated|gussa|annoyed|irritated|गुस्सा)',
+                'emotions_bored': r'(bored|boring|bore ho raha|kuch batao|kuch bolo)',
+                'age_calc': r'(age|umar|birthdate|born in|date of birth|dob|kitne saal)',
                 'joke': r'(joke|मजाक|हंसाओ|funny|laugh|चुटकुले)',
                 'riddle': r'(riddle|पहेली|guess|सवाल)',
                 'trivia': r'(trivia|क्विज़|facts|interesting|fact)',
                 'game': r'(game|खेल|play|word game)',
                 'motivation': r'(motivation|inspire|courage|strength|confidence|प्रेरणा)',
                 'quote': r'(quote|famous|कहावत|wisdom|advice)',
-                'conversion': r'(convert|conversion|transform|unit)',
+                'conversion': r'(convert|conversion|transform|unit|km|mile|celsius|fahrenheit|kg|lbs|gb|mb)',
                 'search': r'(search|find|look for|खोजो)',
                 'torch_on': r'(torch on|flashlight on|flash on|लाइट चालू|लाइट ऑन|टॉर्च ऑन|टॉर्च चालू)',
                 'torch_off': r'(torch off|flashlight off|flash off|लाइट बंद|लाइट ऑफ|टॉर्च ऑफ|टॉर्च बंद)',
@@ -411,77 +422,159 @@ class VANIEEnhanced:
         return f"💡 {fact}"
     
     def perform_advanced_calculation(self, text: str) -> str:
-        """Perform advanced mathematical calculations"""
+        """Perform basic, scientific, and percentage mathematical calculations"""
         try:
-            # Extract mathematical expression
-            match = re.search(r'(\d+\.?\d*)\s*([\+\-\*/])\s*(\d+\.?\d*)', text)
-            if match:
-                num1, operator, num2 = float(match.group(1)), match.group(2), float(match.group(3))
-                
-                operations = {
-                    '+': operator.add,
-                    '-': operator.sub,
-                    '*': operator.mul,
-                    '/': operator.truediv
-                }
-                
-                if operator == '/' and num2 == 0:
-                    return "🚫 Zero से divide नहीं कर सकते! Division by zero is not allowed! ⚠️"
-                
-                result = operations[operator](num1, num2)
-                
-                # Additional info
-                info = ""
-                if operator == '*':
-                    info = f"\n💡 {num1} का {num2} गुना"
-                elif operator == '+':
-                    info = f"\n💡 Total: {result}"
-                
-                return f"🧮 {num1} {operator} {num2} = {result}{info}"
-        except:
-            pass
-        
-        return None
-    
+            text_clean = text.lower().strip()
+
+            # 1. Percentage calculation: e.g. "15% of 500" or "500 ka 15%"
+            pct_match = re.search(r'(\d+\.?\d*)\s*(?:%|percent)\s*(?:of|ka|परसेंट)\s*(\d+\.?\d*)', text_clean) or \
+                        re.search(r'(\d+\.?\d*)\s*(?:ka|of)\s*(\d+\.?\d*)\s*(?:%|percent|परसेंट)', text_clean)
+            if pct_match:
+                g1, g2 = float(pct_match.group(1)), float(pct_match.group(2))
+                val = (g1 / 100.0) * g2 if 'of' in text_clean or '%' in pct_match.group(1) else (g2 / 100.0) * g1
+                return f"🧮 Percentage Result: {val:g}"
+
+            # 2. Scientific functions: sqrt, sin, cos, tan, log, ln, factorial, power
+            if 'sqrt' in text_clean or 'वर्गमूल' in text_clean or 'square root' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums and nums[0] >= 0:
+                    return f"🧮 √{nums[0]} = {math.sqrt(nums[0]):g}"
+
+            if 'sin' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums:
+                    return f"🧮 sin({nums[0]}°) = {math.sin(math.radians(nums[0])):.4f}"
+
+            if 'cos' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums:
+                    return f"🧮 cos({nums[0]}°) = {math.cos(math.radians(nums[0])):.4f}"
+
+            if 'tan' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums:
+                    return f"🧮 tan({nums[0]}°) = {math.tan(math.radians(nums[0])):.4f}"
+
+            if 'log' in text_clean or 'ln' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums and nums[0] > 0:
+                    if 'ln' in text_clean:
+                        return f"🧮 ln({nums[0]}) = {math.log(nums[0]):.4f}"
+                    return f"🧮 log10({nums[0]}) = {math.log10(nums[0]):.4f}"
+
+            if 'fact' in text_clean or 'factorial' in text_clean or '!' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums and 0 <= nums[0] <= 100:
+                    return f"🧮 {int(nums[0])}! = {math.factorial(int(nums[0]))}"
+
+            # 3. Standard expression (+, -, *, /, %, ^, **)
+            expr_match = re.search(r'(\d+\.?\d*)\s*([\+\-\*/%\^]|\*\*)\s*(\d+\.?\d*)', text_clean)
+            if expr_match:
+                num1 = float(expr_match.group(1))
+                op = expr_match.group(2)
+                num2 = float(expr_match.group(3))
+
+                if op == '+':
+                    res = num1 + num2
+                elif op == '-':
+                    res = num1 - num2
+                elif op == '*':
+                    res = num1 * num2
+                elif op == '/':
+                    if num2 == 0:
+                        return "🚫 Zero से divide नहीं कर सकते! Division by zero is not allowed! ⚠️"
+                    res = num1 / num2
+                elif op == '%':
+                    res = num1 % num2
+                elif op in ('^', '**'):
+                    res = num1 ** num2
+                else:
+                    res = num1 + num2
+
+                res_str = f"{res:g}" if abs(res) < 1e12 else f"{res:.4e}"
+                return f"🧮 Calculation: {num1:g} {op} {num2:g} = {res_str}"
+
+        except Exception as e:
+            logger.error(f"Calculation error: {e}")
+
+        return "🧮 Invalid math expression."
+
     def unit_conversion(self, text: str) -> str:
-        """Handle unit conversions"""
-        conversions = {
-            'km_to_miles': lambda x: x * 0.621371,
-            'miles_to_km': lambda x: x * 1.60934,
-            'kg_to_lbs': lambda x: x * 2.20462,
-            'lbs_to_kg': lambda x: x * 0.453592,
-            'celsius_to_fahrenheit': lambda x: (x * 9/5) + 32,
-            'fahrenheit_to_celsius': lambda x: (x - 32) * 5/9,
-        }
-        
-        # Simple unit conversion
+        """Expanded unit conversions (Temp, Length, Weight, Data, Speed)"""
         text_lower = text.lower()
-        
-        if 'km' in text_lower and 'mile' in text_lower:
-            numbers = self.nlp.extract_numbers(text)
-            if numbers:
-                result = conversions['km_to_miles'](numbers[0])
-                return f"📏 {numbers[0]} km = {result:.2f} miles"
-        
-        if 'mile' in text_lower and 'km' in text_lower:
-            numbers = self.nlp.extract_numbers(text)
-            if numbers:
-                result = conversions['miles_to_km'](numbers[0])
-                return f"📏 {numbers[0]} miles = {result:.2f} km"
-        
+        nums = self.nlp.extract_numbers(text)
+        if not nums:
+            return "📏 Please specify a number to convert."
+        val = nums[0]
+
+        # Temperature
         if 'celsius' in text_lower or '°c' in text_lower or 'c to f' in text_lower:
-            numbers = self.nlp.extract_numbers(text)
-            if numbers:
-                result = conversions['celsius_to_fahrenheit'](numbers[0])
-                return f"🌡️ {numbers[0]}°C = {result:.2f}°F"
-        
+            return f"🌡️ {val}°C = {(val * 9/5) + 32:.2f}°F"
         if 'fahrenheit' in text_lower or '°f' in text_lower or 'f to c' in text_lower:
-            numbers = self.nlp.extract_numbers(text)
-            if numbers:
-                result = conversions['fahrenheit_to_celsius'](numbers[0])
-                return f"🌡️ {numbers[0]}°F = {result:.2f}°C"
-        
-        return None
+            return f"🌡️ {val}°F = {((val - 32) * 5/9):.2f}°C"
+
+        # Length / Distance
+        if ('km' in text_lower or 'kilometer' in text_lower) and ('mile' in text_lower or 'mi' in text_lower):
+            return f"📏 {val} km = {(val * 0.621371):.2f} miles"
+        if ('mile' in text_lower or 'mi' in text_lower) and ('km' in text_lower or 'kilometer' in text_lower):
+            return f"📏 {val} miles = {(val * 1.60934):.2f} km"
+        if ('meter' in text_lower or 'm' in text_lower) and ('feet' in text_lower or 'foot' in text_lower):
+            return f"📏 {val} meters = {(val * 3.28084):.2f} feet"
+        if ('feet' in text_lower or 'foot' in text_lower) and ('meter' in text_lower or 'm' in text_lower):
+            return f"📏 {val} feet = {(val * 0.3048):.2f} meters"
+        if 'cm' in text_lower and ('inch' in text_lower or 'inches' in text_lower):
+            return f"📏 {val} cm = {(val * 0.393701):.2f} inches"
+        if ('inch' in text_lower or 'inches' in text_lower) and 'cm' in text_lower:
+            return f"📏 {val} inches = {(val * 2.54):.2f} cm"
+
+        # Weight / Mass
+        if 'kg' in text_lower and ('pound' in text_lower or 'lbs' in text_lower):
+            return f"⚖️ {val} kg = {(val * 2.20462):.2f} lbs"
+        if ('pound' in text_lower or 'lbs' in text_lower) and 'kg' in text_lower:
+            return f"⚖️ {val} lbs = {(val * 0.453592):.2f} kg"
+        if 'gram' in text_lower and 'ounce' in text_lower:
+            return f"⚖️ {val} grams = {(val * 0.035274):.2f} oz"
+
+        # Data Units
+        if 'gb' in text_lower and 'mb' in text_lower:
+            return f"💾 {val} GB = {(val * 1024):.0f} MB"
+        if 'mb' in text_lower and 'gb' in text_lower:
+            return f"💾 {val} MB = {(val / 1024):.2f} GB"
+        if 'tb' in text_lower and 'gb' in text_lower:
+            return f"💾 {val} TB = {(val * 1024):.0f} GB"
+
+        # Speed
+        if 'km/h' in text_lower and 'mph' in text_lower:
+            return f"🏎️ {val} km/h = {(val * 0.621371):.2f} mph"
+        if 'mph' in text_lower and 'km/h' in text_lower:
+            return f"🏎️ {val} mph = {(val * 1.60934):.2f} km/h"
+
+        return f"📏 Conversion result for {val}"
+
+    def calculate_age(self, text: str) -> str:
+        """Calculate exact age from birthdate or year"""
+        try:
+            today = datetime.date.today()
+            date_match = re.search(r'(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})', text)
+            if date_match:
+                d, m, y = int(date_match.group(1)), int(date_match.group(2)), int(date_match.group(3))
+                dob = datetime.date(y, m, d) if d > 12 and m <= 12 else datetime.date(y, m, d)
+                days_lived = (today - dob).days
+                years = days_lived // 365
+                rem_days = days_lived % 365
+                months = rem_days // 30
+                days = rem_days % 30
+                return f"🎂 Birthdate: {dob.strftime('%d %B %Y')}\n✨ Exact Age: {years} Years, {months} Months, {days} Days ({days_lived:,} total days lived! 🎉)"
+
+            year_match = re.search(r'\b(19\d{2}|20\d{2})\b', text)
+            if year_match:
+                birth_year = int(year_match.group(1))
+                age_years = today.year - birth_year
+                return f"🎂 Born in {birth_year}: You are approximately {age_years} years old this year! 🌟"
+        except Exception as e:
+            pass
+
+        return "🎂 Please provide a valid birthdate (e.g., 'Age for 15-08-2005' or 'Born in 2002')."
     
     def get_current_datetime(self) -> Dict[str, str]:
         """Get current date and time"""
@@ -644,6 +737,58 @@ class VANIEEnhanced:
             elif intent == 'conversion':
                 response = self.unit_conversion(message)
                 response_intent = 'conversion'
+            elif intent == 'age_calc':
+                response = self.calculate_age(message)
+                response_intent = 'age_calc'
+            elif intent == 'routine_morning':
+                responses = [
+                    "☀️ Good Morning! Aasha hai aapka din bohot accha aur energetic rahega! 😊 Chai/Coffee pee li?",
+                    "🌅 Good Morning! Naye din ki shuruaat ek nayi positivity ke saath! Aaj kya khaas plans hain aapke? 🚀"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_morning'
+            elif intent == 'routine_night':
+                responses = [
+                    "🌙 Good Night! Din bhar bohot kaam kiya, ab acchi aur gehri neend lo! Sweet dreams! 😴✨",
+                    "🌌 Shubh Ratri! Kal ek naya shandar din hoga. Aram se so jao! 😴💤"
+                ]
+                response = random.choice(responses)
+            elif intent == 'routine_food':
+                responses = [
+                    "🍲 Main toh digital AI hoon, mera khana toh data aur code hai! Par aapne time se khana khaya ya nahi? Healthy khana khao! 🥗😊",
+                    "☕ Chai/Coffee toh har mood ki remedy hai! Aapka kya mood hai aaj, garam chai ya cold coffee? ☕✨"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_food'
+            elif intent == 'routine_meetup':
+                responses = [
+                    "☕ Chalo meetup plan karte hain! Virtual chai pe milte hain! Kahin ghoomne jaane ka mood hai kya aaj? 🚗🌆",
+                    "🎉 Virtual meetup toh done hai! Batao kahan chalein? Park, café ya drive pe? 🚀✨"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_meetup'
+            elif intent == 'routine_daily':
+                responses = [
+                    "⚡ Main aapke commands execute kar rahi hoon aur nayi baatein sikh rahi hoon! Aap batao, aaj ka din kaisa chal raha hai? 😊",
+                    "📊 Sab badhiya chal raha hai! Aapka daily routine kaisa chal raha hai aaj? Kisi help ki zarurat hai?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_daily'
+            elif intent == 'emotions_happy':
+                response = "🎉 WAAH! Aapki khushi dekh kar mera system bhi boost ho gaya! 🚀 Aise hi hamesha khush raho aur enjoy karo! ✨"
+                response_intent = 'emotions_happy'
+            elif intent == 'emotions_sad':
+                response = "💙 Mujhe bohot bura laga sunkar. Aap bilkul akele nahi ho, main hamesha yahan hoon baat karne ke liye! Deep breath lo, sab thik hoga. 🫂✨"
+                response_intent = 'emotions_sad'
+            elif intent == 'emotions_stress':
+                response = "💆‍♂️ Lagta hai bohot tension aur tiredness ho gayi hai. Thoda rest lo, paani piyo aur thodi der ke liye screen se door ho jao! Relax! 🍵✨"
+                response_intent = 'emotions_stress'
+            elif intent == 'emotions_angry':
+                response = "🕊️ Gussa aana normal hai, par shaant ho jao. Thoda paani piyo aur 5 seconds tak deep breath lo. Main aapki baat sun rahi hoon, bolo kya hua? 💙"
+                response_intent = 'emotions_angry'
+            elif intent == 'emotions_bored':
+                response = "🎮 Bore mat ho! Main hoon na! Aao ek joke sunau, ya koi riddle ya fun trivia game khelein? Batao kya pasand hai! 😄"
+                response_intent = 'emotions_bored'
             elif intent == 'joke':
                 response = self.handle_joke()
                 response_intent = 'joke'
