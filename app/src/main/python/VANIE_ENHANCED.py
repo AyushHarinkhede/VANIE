@@ -75,9 +75,13 @@ import operator
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app
-app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}})
+# Initialize Flask app if available
+if Flask is not None:
+    app = Flask(__name__, static_folder='.', static_url_path='')
+    if CORS is not None:
+        CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}})
+else:
+    app = None
 
 class AdvancedNLPAlgorithms:
     """Advanced Natural Language Processing Algorithms"""
@@ -824,95 +828,95 @@ class VANIEEnhanced:
 # Initialize VANIE engine
 vanie_engine = VANIEEnhanced()
 
-# Routes
-@app.route('/')
-def index():
-    """Serve the main HTML page"""
-    try:
-        return send_from_directory('.', 'VANIE_FIXED.html')
-    except:
+if app is not None:
+    @app.route('/')
+    def index():
+        """Serve the main HTML page"""
         try:
-            return send_from_directory('.', 'VANIE.html')
+            return send_from_directory('.', 'VANIE_FIXED.html')
         except:
-            return jsonify({'error': 'HTML file not found'}), 404
+            try:
+                return send_from_directory('.', 'VANIE.html')
+            except:
+                return jsonify({'error': 'HTML file not found'}), 404
 
-@app.route('/chat', methods=['POST', 'OPTIONS'])
-def chat():
-    """Main chat endpoint with advanced processing"""
-    if request.method == 'OPTIONS':
-        return '', 204
-    
-    try:
-        data = request.get_json()
-        if not data or 'message' not in data:
-            return jsonify({'error': 'No message provided', 'response': 'कृपया कोई संदेश भेजें'}), 400
+    @app.route('/chat', methods=['POST', 'OPTIONS'])
+    def chat():
+        """Main chat endpoint with advanced processing"""
+        if request.method == 'OPTIONS':
+            return '', 204
         
-        message = data['message'].strip()
-        if not message:
-            return jsonify({'error': 'Empty message', 'response': 'खाली संदेश नहीं भेज सकते'}), 400
+        try:
+            data = request.get_json()
+            if not data or 'message' not in data:
+                return jsonify({'error': 'No message provided', 'response': 'कृपया कोई संदेश भेजें'}), 400
+            
+            message = data['message'].strip()
+            if not message:
+                return jsonify({'error': 'Empty message', 'response': 'खाली संदेश नहीं भेज सकते'}), 400
+            
+            user_context = data.get('context', {})
+            response = vanie_engine.generate_response(message, user_context)
+            
+            return jsonify(response)
         
-        user_context = data.get('context', {})
-        response = vanie_engine.generate_response(message, user_context)
-        
-        return jsonify(response)
-    
-    except Exception as e:
-        logger.error(f"Error in chat endpoint: {e}")
+        except Exception as e:
+            logger.error(f"Error in chat endpoint: {e}")
+            return jsonify({
+                'error': 'Internal server error',
+                'response': 'मुझे एक technical issue आया है। कृपया फिर से कोशिश करें। ⚠️',
+                'timestamp': datetime.datetime.now().isoformat()
+            }), 500
+
+    @app.route('/health', methods=['GET'])
+    def health():
+        """Health check"""
         return jsonify({
-            'error': 'Internal server error',
-            'response': 'मुझे एक technical issue आया है। कृपया फिर से कोशिश करें। ⚠️',
-            'timestamp': datetime.datetime.now().isoformat()
-        }), 500
+            'status': 'healthy',
+            'timestamp': datetime.datetime.now().isoformat(),
+            'version': vanie_engine.knowledge_base['vanie_info']['version'],
+            'conversation_stats': vanie_engine.memory.get_summary()
+        })
 
-@app.route('/health', methods=['GET'])
-def health():
-    """Health check"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.datetime.now().isoformat(),
-        'version': vanie_engine.knowledge_base['vanie_info']['version'],
-        'conversation_stats': vanie_engine.memory.get_summary()
-    })
+    @app.route('/info/datetime', methods=['GET'])
+    def get_datetime():
+        """Get date and time"""
+        return jsonify(vanie_engine.get_current_datetime())
 
-@app.route('/info/datetime', methods=['GET'])
-def get_datetime():
-    """Get date and time"""
-    return jsonify(vanie_engine.get_current_datetime())
+    @app.route('/info/system', methods=['GET'])
+    def get_system():
+        """Get system information"""
+        return jsonify(vanie_engine.get_system_info())
 
-@app.route('/info/system', methods=['GET'])
-def get_system():
-    """Get system information"""
-    return jsonify(vanie_engine.get_system_info())
+    @app.route('/info/weather', methods=['GET'])
+    def get_weather():
+        """Get weather"""
+        location = request.args.get('location', 'Delhi')
+        return jsonify(vanie_engine.get_weather_info(location))
 
-@app.route('/info/weather', methods=['GET'])
-def get_weather():
-    """Get weather"""
-    location = request.args.get('location', 'Delhi')
-    return jsonify(vanie_engine.get_weather_info(location))
+    @app.route('/info/vanie', methods=['GET'])
+    def get_vanie():
+        """Get VANIE info"""
+        return jsonify(vanie_engine.knowledge_base['vanie_info'])
 
-@app.route('/info/vanie', methods=['GET'])
-def get_vanie():
-    """Get VANIE info"""
-    return jsonify(vanie_engine.knowledge_base['vanie_info'])
+    @app.route('/api/version', methods=['GET'])
+    def get_version():
+        """Get app version"""
+        return jsonify({
+            'version': vanie_engine.knowledge_base['vanie_info']['version'],
+            'name': 'VANIE',
+            'status': 'active'
+        })
 
-@app.route('/api/version', methods=['GET'])
-def get_version():
-    """Get app version"""
-    return jsonify({
-        'version': vanie_engine.knowledge_base['vanie_info']['version'],
-        'name': 'VANIE',
-        'status': 'active'
-    })
+    @app.route('/analytics', methods=['GET'])
+    def analytics():
+        """Get conversation analytics"""
+        return jsonify({
+            'conversation_summary': vanie_engine.memory.get_summary(),
+            'total_conversations': len(vanie_engine.memory.conversation_history)
+        })
 
-@app.route('/analytics', methods=['GET'])
-def analytics():
-    """Get conversation analytics"""
-    return jsonify({
-        'conversation_summary': vanie_engine.memory.get_summary(),
-        'total_conversations': len(vanie_engine.memory.conversation_history)
-    })
-
-if __name__ == '__main__':
+if __name__ == '__main__' and app is not None:
     print("\n" + "="*70)
     print("🤖 VANIE - Virtual Assistant of Neural Integrated Engine")
     print("="*70)
@@ -932,3 +936,4 @@ if __name__ == '__main__':
         threaded=True,
         use_reloader=False
     )
+

@@ -16,19 +16,47 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = DarkPrimary,
-    onPrimary = DarkOnPrimary,
-    primaryContainer = DarkContainer,
-    background = MaterialBackgroundDark,
-    surface = MaterialSurfaceDark,
-    surfaceVariant = MaterialSurfaceVariantDark
+    primary = M3DarkPrimary,
+    onPrimary = M3DarkOnPrimary,
+    primaryContainer = M3DarkPrimaryContainer,
+    onPrimaryContainer = M3DarkOnPrimaryContainer,
+    secondary = M3DarkSecondary,
+    onSecondary = M3DarkOnSecondary,
+    secondaryContainer = M3DarkSecondaryContainer,
+    onSecondaryContainer = M3DarkOnSecondaryContainer,
+    tertiary = M3DarkTertiary,
+    onTertiary = M3DarkOnTertiary,
+    tertiaryContainer = M3DarkTertiaryContainer,
+    onTertiaryContainer = M3DarkOnTertiaryContainer,
+    background = M3DarkBackground,
+    onBackground = M3DarkOnBackground,
+    surface = M3DarkSurface,
+    onSurface = M3DarkOnSurface,
+    surfaceVariant = M3DarkSurfaceVariant,
+    onSurfaceVariant = M3DarkOnSurfaceVariant,
+    outline = M3DarkOutline
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = PixelBluePrimary,
-    onPrimary = PixelBlueOnPrimary,
-    primaryContainer = PixelBlueContainer,
-    onPrimaryContainer = PixelBlueOnContainer
+    primary = M3LightPrimary,
+    onPrimary = M3LightOnPrimary,
+    primaryContainer = M3LightPrimaryContainer,
+    onPrimaryContainer = M3LightOnPrimaryContainer,
+    secondary = M3LightSecondary,
+    onSecondary = M3LightOnSecondary,
+    secondaryContainer = M3LightSecondaryContainer,
+    onSecondaryContainer = M3LightOnSecondaryContainer,
+    tertiary = M3LightTertiary,
+    onTertiary = M3LightOnTertiary,
+    tertiaryContainer = M3LightTertiaryContainer,
+    onTertiaryContainer = M3LightOnTertiaryContainer,
+    background = M3LightBackground,
+    onBackground = M3LightOnBackground,
+    surface = M3LightSurface,
+    onSurface = M3LightOnSurface,
+    surfaceVariant = M3LightSurfaceVariant,
+    onSurfaceVariant = M3LightOnSurfaceVariant,
+    outline = M3LightOutline
 )
 
 @Composable
@@ -60,3 +88,4 @@ fun VANIETheme(
         content = content
     )
 }
+

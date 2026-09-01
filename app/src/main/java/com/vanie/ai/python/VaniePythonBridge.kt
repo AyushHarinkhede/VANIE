@@ -6,12 +6,14 @@ import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.vanie.ai.nlp.ActionCommand
 import com.vanie.ai.nlp.NlpResult
+import com.vanie.ai.nlp.VanieNlpEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class VaniePythonBridge(private val context: Context) {
 
     private var vanieEnginePy: PyObject? = null
+    private val nlpFallbackEngine = VanieNlpEngine(context)
     @Volatile
     private var isInitialized = false
 
@@ -40,7 +42,6 @@ class VaniePythonBridge(private val context: Context) {
         try {
             val pyResult = vanieEnginePy?.callAttr("generate_response", input)
             if (pyResult != null) {
-                // Correctly call dict.get("key") on Python dict object via Chaquopy callAttr
                 val responseText = pyResult.callAttr("get", "response")?.toString() ?: "I processed your request offline."
                 val intentStr = pyResult.callAttr("get", "intent")?.toString() ?: "general"
                 val actionTag = pyResult.callAttr("get", "action")?.toString() ?: ""
@@ -81,8 +82,12 @@ class VaniePythonBridge(private val context: Context) {
     private fun mapActionTagToEnum(actionTag: String, intentStr: String, rawInput: String): ActionCommand {
         val lower = rawInput.lowercase()
 
-        // 1. Direct Python Action Tag Match
         when (actionTag) {
+            "GET_NETWORK_INFO" -> return ActionCommand.GET_NETWORK_INFO
+            "GET_DETAILED_BATTERY" -> return ActionCommand.GET_DETAILED_BATTERY
+            "SEND_WHATSAPP_CALL" -> return ActionCommand.SEND_WHATSAPP_CALL
+            "CONFIRM_SEND_DRAFT" -> return ActionCommand.CONFIRM_SEND_DRAFT
+            "LOCATION_INFO" -> return ActionCommand.LOCATION_INFO
             "TORCH_ON" -> return ActionCommand.TORCH_ON
             "TORCH_OFF" -> return ActionCommand.TORCH_OFF
             "WIFI_ON" -> return ActionCommand.WIFI_ON
@@ -106,8 +111,8 @@ class VaniePythonBridge(private val context: Context) {
             "LAUNCH_APP" -> return ActionCommand.LAUNCH_APP
         }
 
-        // 2. Intent & Regex Fallback
         return when {
+            lower == "send it" || lower == "bhej do" || lower == "confirm send" || lower == "yes send" || lower == "ha bhej do" -> ActionCommand.CONFIRM_SEND_DRAFT
             lower.contains("torch on") || lower.contains("flashlight on") || lower.contains("flash on") || lower.contains("turn on flashlight") || lower.contains("लाइट चालू") || lower.contains("टॉर्च चालू") || intentStr == "torch_on" -> ActionCommand.TORCH_ON
             lower.contains("torch off") || lower.contains("flashlight off") || lower.contains("flash off") || lower.contains("turn off flashlight") || lower.contains("लाइट बंद") || lower.contains("टॉर्च बंद") || intentStr == "torch_off" -> ActionCommand.TORCH_OFF
             lower.contains("wifi on") || lower.contains("turn on wifi") || lower.contains("enable wifi") || lower.contains("वाईफाई चालू") -> ActionCommand.WIFI_ON
@@ -119,6 +124,9 @@ class VaniePythonBridge(private val context: Context) {
             lower.contains("silent mode") || lower.contains("phone silent") || lower.contains("साइलेंट करो") -> ActionCommand.MODE_SILENT
             lower.contains("vibrate mode") || lower.contains("phone vibrate") || lower.contains("वाइब्रेट करो") -> ActionCommand.MODE_VIBRATE
             lower.contains("ring mode") || lower.contains("normal mode") || lower.contains("रिंगर ऑन") -> ActionCommand.MODE_RING
+            lower.contains("network type") || lower.contains("sim info") || lower.contains("operator") -> ActionCommand.GET_NETWORK_INFO
+            lower.contains("battery percentage") || lower.contains("kitni charge") || lower.contains("power status") -> ActionCommand.GET_DETAILED_BATTERY
+            lower.contains("whatsapp call") || lower.contains("call on whatsapp") || lower.contains("whatsapp se call") -> ActionCommand.SEND_WHATSAPP_CALL
             lower.contains("open youtube") || lower.contains("open whatsapp") || lower.contains("open chrome") || lower.contains("open camera") || lower.startsWith("open ") || lower.contains("खोलो") -> ActionCommand.LAUNCH_APP
             lower.contains("call ") || lower.contains("dial ") || lower.contains("कॉल करो") || lower.contains("फोन करो") || intentStr == "make_call" -> ActionCommand.MAKE_CALL
             lower.contains("text ") || lower.contains("sms ") || lower.contains("send text") || lower.contains("मैसेज करो") || intentStr == "send_sms" -> ActionCommand.SEND_SMS
@@ -138,26 +146,21 @@ class VaniePythonBridge(private val context: Context) {
         if (lower.startsWith("open ")) {
             return lower.replace("open ", "").trim()
         }
-        val parts = input.split(Regex("(?i)to|for|call|dial|whatsapp|text|send|open"), 2)
-        return if (parts.size > 1) {
-            val clean = parts[1].trim().split(" ")[0]
-            if (clean.isNotBlank()) clean else null
-        } else null
+        val parts = input.split(Regex("(?i)\\b(to|for|call|dial|whatsapp call|whatsapp|text|send|open|on whatsapp|in whatsapp)\\b"), 2)
+        if (parts.size > 1) {
+            val candidate = parts[1].split(Regex("(?i)\\b(saying|message|that|text|ko)\\b"), 2)[0].trim()
+            if (candidate.isNotBlank()) return candidate
+        }
+        return null
     }
 
     private fun extractMessageBody(input: String): String? {
-        val parts = input.split(Regex("(?i)saying|message|that|text"), 2)
+        val parts = input.split(Regex("(?i)\\b(saying|message|that|text)\\b"), 2)
         return if (parts.size > 1 && parts[1].isNotBlank()) parts[1].trim() else null
     }
 
     private fun fallbackResult(input: String): NlpResult {
-        return NlpResult(
-            intent = "general",
-            confidence = 0.5f,
-            sentiment = "neutral",
-            sentimentConfidence = 0.5f,
-            responseText = "Processed offline: $input",
-            actionCommand = ActionCommand.NONE
-        )
+        return nlpFallbackEngine.processMessage(input)
     }
 }
+

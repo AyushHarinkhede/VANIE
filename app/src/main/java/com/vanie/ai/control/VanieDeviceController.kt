@@ -1,15 +1,19 @@
 package com.vanie.ai.control
 
 import android.app.NotificationManager
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.BatteryManager
 import android.os.Build
 import android.provider.AlarmClock
 import android.provider.Settings
+import android.telephony.TelephonyManager
 import android.widget.Toast
 import kotlin.math.roundToInt
 
@@ -40,6 +44,35 @@ class VanieDeviceController(private val context: Context) {
         }
     }
 
+    fun setBluetoothMode(enable: Boolean): String {
+        return try {
+            val adapter = BluetoothAdapter.getDefaultAdapter()
+            if (adapter == null) {
+                return "Bluetooth is not supported on this device."
+            }
+            if (enable) {
+                if (!adapter.isEnabled) {
+                    @Suppress("DEPRECATION")
+                    adapter.enable()
+                    "Bluetooth turned ON directly."
+                } else {
+                    "Bluetooth is already ON."
+                }
+            } else {
+                if (adapter.isEnabled) {
+                    @Suppress("DEPRECATION")
+                    adapter.disable()
+                    "Bluetooth turned OFF directly."
+                } else {
+                    "Bluetooth is already OFF."
+                }
+            }
+        } catch (e: Exception) {
+            openBluetoothSettings()
+            "Opening Bluetooth settings..."
+        }
+    }
+
     fun openWifiSettings() {
         try {
             val intent = Intent(Settings.ACTION_WIFI_SETTINGS).apply {
@@ -59,6 +92,17 @@ class VanieDeviceController(private val context: Context) {
             context.startActivity(intent)
         } catch (e: Exception) {
             Toast.makeText(context, "Could not open Bluetooth settings", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun openLocationSettings() {
+        try {
+            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Could not open Location settings", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -132,28 +176,46 @@ class VanieDeviceController(private val context: Context) {
 
     fun launchApp(appNameQuery: String): Boolean {
         val pm = context.packageManager
-        val packages = pm.getInstalledPackages(0)
+        val cleanQuery = appNameQuery.lowercase().trim()
 
-        val targetPkg = when (appNameQuery.lowercase()) {
-            "youtube" -> "com.google.android.youtube"
-            "whatsapp" -> "com.whatsapp"
-            "chrome" -> "com.android.chrome"
-            "camera" -> "com.google.android.GoogleCamera"
-            else -> packages.firstOrNull {
-                it.packageName.contains(appNameQuery, ignoreCase = true) ||
-                pm.getApplicationLabel(it.applicationInfo).toString().contains(appNameQuery, ignoreCase = true)
-            }?.packageName
+        val directPackage = when {
+            cleanQuery.contains("youtube") -> "com.google.android.youtube"
+            cleanQuery.contains("whatsapp") -> "com.whatsapp"
+            cleanQuery.contains("chrome") -> "com.android.chrome"
+            cleanQuery.contains("camera") -> "com.google.android.GoogleCamera"
+            cleanQuery.contains("photo") || cleanQuery.contains("gallery") -> "com.google.android.apps.photos"
+            cleanQuery.contains("map") -> "com.google.android.apps.maps"
+            cleanQuery.contains("gmail") || cleanQuery.contains("email") -> "com.google.android.gm"
+            cleanQuery.contains("setting") -> "com.android.settings"
+            cleanQuery.contains("store") || cleanQuery.contains("play") -> "com.android.vending"
+            cleanQuery.contains("clock") || cleanQuery.contains("timer") -> "com.google.android.deskclock"
+            else -> null
         }
 
-        if (targetPkg != null) {
-            val launchIntent = pm.getLaunchIntentForPackage(targetPkg)
+        if (directPackage != null) {
+            val launchIntent = pm.getLaunchIntentForPackage(directPackage)
             if (launchIntent != null) {
                 launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(launchIntent)
                 return true
             }
         }
-        Toast.makeText(context, "Could not find app $appNameQuery", Toast.LENGTH_SHORT).show()
+
+        val packages = pm.getInstalledPackages(0)
+        val matchedPkg = packages.firstOrNull {
+            it.packageName.contains(cleanQuery, ignoreCase = true) ||
+            pm.getApplicationLabel(it.applicationInfo).toString().contains(cleanQuery, ignoreCase = true)
+        }?.packageName
+
+        if (matchedPkg != null) {
+            val launchIntent = pm.getLaunchIntentForPackage(matchedPkg)
+            if (launchIntent != null) {
+                launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(launchIntent)
+                return true
+            }
+        }
+        Toast.makeText(context, "Could not find app '$appNameQuery'", Toast.LENGTH_SHORT).show()
         return false
     }
 
@@ -175,15 +237,84 @@ class VanieDeviceController(private val context: Context) {
         }
     }
 
-    fun getBatteryStatus(): String {
+    fun getDetailedBatteryInfo(): String {
         val iFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         val batteryStatus = context.registerReceiver(null, iFilter)
         val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
         val scale = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
         val batteryPct = if (level != -1 && scale != -1) (level * 100 / scale.toFloat()).roundToInt() else 50
         val isCharging = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) == BatteryManager.BATTERY_STATUS_CHARGING
+        val tempTenths = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
+        val tempCelsius = tempTenths / 10f
+        val tech = batteryStatus?.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY) ?: "Li-ion"
 
-        val chargingState = if (isCharging) "Charging ⚡" else "Discharging 🔋"
-        return "Battery is currently at $batteryPct% ($chargingState)."
+        val healthStr = when (batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN)) {
+            BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
+            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheated"
+            BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
+            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over Voltage"
+            else -> "Healthy"
+        }
+
+        return "Battery Level: ${batteryPct}%\nStatus: ${if (isCharging) "Charging ⚡" else "Discharging"}\nHealth: $healthStr\nTemperature: ${String.format("%.1f", tempCelsius)}°C ($tech)"
     }
+
+    fun getNetworkAndPhoneInfo(): String {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+
+        val activeNetwork = cm.activeNetwork
+        val caps = cm.getNetworkCapabilities(activeNetwork)
+
+        val connectionType = when {
+            caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> "Wi-Fi Network"
+            caps?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "Cellular Mobile Data"
+            else -> "No Active Internet"
+        }
+
+        val operatorName = tm.networkOperatorName.ifBlank { "Mobile Operator" }
+        val simState = if (tm.simState == TelephonyManager.SIM_STATE_READY) "Active SIM" else "No SIM / Disabled"
+
+        return "Connection: $connectionType\nOperator: $operatorName\nSIM Status: $simState"
+    }
+
+    fun getBatteryStatus(): String = getDetailedBatteryInfo()
+
+    fun adjustVolume(increase: Boolean): String {
+        return try {
+            val direction = if (increase) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER
+            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
+            val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val percent = (currentVol * 100) / maxVol
+            "Media volume adjusted to $percent%"
+        } catch (e: Exception) {
+            "Could not adjust volume"
+        }
+    }
+
+    fun muteVolume(): String {
+        return try {
+            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
+            "Media muted"
+        } catch (e: Exception) {
+            "Could not mute volume"
+        }
+    }
+
+    fun openCamera(): Boolean = launchApp("camera")
+    fun openGallery(): Boolean = launchApp("photos")
+    fun openSettings(): Boolean {
+        return try {
+            val intent = Intent(Settings.ACTION_SETTINGS).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    fun openMaps(): Boolean = launchApp("maps")
+    fun openPlayStore(): Boolean = launchApp("store")
+    fun openCalculator(): Boolean = launchApp("calculator")
 }
+

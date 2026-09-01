@@ -4,7 +4,10 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
@@ -16,7 +19,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -32,7 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +49,7 @@ import com.vanie.ai.ui.theme.AccentGreen
 import com.vanie.ai.ui.theme.AccentPurple
 import java.util.Locale
 import java.util.UUID
+import kotlinx.coroutines.delay
 
 @Immutable
 data class ChatMessage(
@@ -54,44 +59,61 @@ data class ChatMessage(
     val timestamp: String = "Now"
 )
 
+fun cleanTextForTts(text: String): String {
+    return text
+        .replace(Regex("[\\p{So}\\p{Cn}\\p{Cs}\\p{Co}\\p{Cc}\\uD83C-\\uDBFF\\uDC00-\\uDFFF]+"), "")
+        .replace(Regex("[*_#`~]"), "")
+        .trim()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     messages: List<ChatMessage>,
     isThinking: Boolean,
+    clearAnimationTrigger: Int = 0,
     onSendMessage: (String) -> Unit,
     onMicClick: () -> Unit
 ) {
     var textState by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableIntStateOf(0) }
-    var isToolsDrawerOpen by remember { mutableStateOf(false) }
+    var currentlySpeakingId by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+
+    // Set to track message IDs whose typing animation has completed (prevents re-animating on scroll)
+    val animatedMessageIds = remember { mutableStateMapOf<String, Boolean>() }
+
+    val mediaPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            onSendMessage("Attached image: $uri")
+        }
+    }
 
     var ttsEngine by remember { mutableStateOf<TextToSpeech?>(null) }
 
     DisposableEffect(Unit) {
         val tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // Initialized
+                // TTS ready
             }
         }
+        tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {}
+            override fun onDone(utteranceId: String?) {
+                currentlySpeakingId = null
+            }
+            override fun onError(utteranceId: String?) {
+                currentlySpeakingId = null
+            }
+        })
         ttsEngine = tts
         onDispose {
             tts.stop()
             tts.shutdown()
         }
-    }
-
-    val categoryTabs = listOf("⚡ Hardware", "📞 Telecom", "⏰ Productivity", "🧠 AI Fun")
-
-    val commandsByCategory = remember {
-        mapOf(
-            0 to listOf("🔦 Flashlight ON", "🔕 Silent Mode", "🌙 Turn on DND", "🔋 Battery Status", "📱 System Info"),
-            1 to listOf("📞 Call Contact", "💬 Send SMS", "💚 WhatsApp Message", "📞 Answer Call"),
-            2 to listOf("⏰ Set Alarm 7 AM", "📲 Read Notifications", "🚀 Open YouTube", "🌐 Open Chrome"),
-            3 to listOf("😄 Tell me a joke", "🤔 Give me a riddle", "💪 Motivational quote", "🧮 Calculate 25 * 4")
-        )
     }
 
     LaunchedEffect(messages.size, isThinking) {
@@ -103,22 +125,18 @@ fun ChatScreen(
         }
     }
 
+    LaunchedEffect(clearAnimationTrigger) {
+        if (clearAnimationTrigger > 0 && messages.isNotEmpty()) {
+            listState.animateScrollToItem(0)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    )
-                )
-            )
+            .background(Color.Transparent)
     ) {
-        // Live System Status Bar
-        LiveSystemStatusBar(onOpenTools = { isToolsDrawerOpen = true })
-
-        // Chat Message List
+        // Chat Message List (Scrolls edge-to-edge behind floating top bar and input bar)
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -126,7 +144,7 @@ fun ChatScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(vertical = 14.dp)
+            contentPadding = PaddingValues(top = 76.dp, bottom = 14.dp)
         ) {
             items(
                 items = messages,
@@ -138,15 +156,31 @@ fun ChatScreen(
                 ) {
                     GlassmorphicChatBubble(
                         message = msg,
+                        isSpeaking = currentlySpeakingId == msg.id,
+                        hasAnimated = animatedMessageIds.containsKey(msg.id),
+                        onAnimationComplete = { animatedMessageIds[msg.id] = true },
+                        onEditUserMessage = { editText ->
+                            textState = editText
+                        },
                         onCopyText = { text ->
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText("VANIE Text", text)
                             clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "Copied to clipboard! 📋", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Copied to clipboard!", Toast.LENGTH_SHORT).show()
                         },
-                        onSpeakText = { text ->
-                            ttsEngine?.language = Locale.US
-                            ttsEngine?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "VANIE_SPEAK")
+                        onToggleSpeakText = { text ->
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            if (currentlySpeakingId == msg.id) {
+                                ttsEngine?.stop()
+                                currentlySpeakingId = null
+                            } else {
+                                ttsEngine?.stop()
+                                currentlySpeakingId = msg.id
+                                val cleanText = cleanTextForTts(text)
+                                ttsEngine?.language = Locale.US
+                                ttsEngine?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, msg.id)
+                            }
                         }
                     )
                 }
@@ -159,217 +193,147 @@ fun ChatScreen(
             }
         }
 
-        // Categorized Command Category Chips
-        ScrollableTabRow(
-            selectedTabIndex = selectedCategory,
-            edgePadding = 12.dp,
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = Color.Transparent,
-            divider = {}
-        ) {
-            categoryTabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedCategory == index,
-                    onClick = { selectedCategory = index },
-                    text = {
-                        Text(
-                            text = title,
-                            fontSize = 12.sp,
-                            fontWeight = if (selectedCategory == index) FontWeight.Bold else FontWeight.Normal,
-                            color = if (selectedCategory == index) AccentCyan else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+        // Floating Liquid Glass Wider Input Action Bar (With Animated Send & Mic Buttons)
+        Surface(
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+            shape = RoundedCornerShape(30.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
+            border = BorderStroke(
+                1.dp,
+                Brush.horizontalGradient(
+                    listOf(
+                        AccentCyan.copy(alpha = 0.5f),
+                        AccentPurple.copy(alpha = 0.5f)
+                    )
                 )
-            }
-        }
-
-        // Command Action Pills for Selected Category
-        LazyRow(
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(
-                items = commandsByCategory[selectedCategory] ?: emptyList(),
-                key = { pill -> pill }
-            ) { pill ->
-                SuggestionChip(
-                    onClick = { onSendMessage(pill) },
-                    label = { Text(pill, fontSize = 12.sp, color = AccentCyan, fontFamily = FontFamily.Monospace) },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
-                    ),
-                    border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.4f))
-                )
-            }
-        }
-
-        // Glassmorphic Input Action Bar
-        Surface(
-            tonalElevation = 8.dp,
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
+                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .navigationBarsPadding()
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Tools Drawer Trigger
-                IconButton(onClick = { isToolsDrawerOpen = true }) {
-                    Icon(Icons.Default.Build, contentDescription = "AI Tools", tint = AccentGreen)
-                }
-
-                // Media Upload Button
+                // Water Drop Attach File Button
                 IconButton(
                     onClick = {
-                        Toast.makeText(context, "Media attachment clicked", Toast.LENGTH_SHORT).show()
-                    }
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        mediaPickerLauncher.launch("image/*")
+                    },
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
                 ) {
                     Icon(
                         imageVector = Icons.Default.AttachFile,
                         contentDescription = "Attach File",
-                        tint = AccentCyan
-                    )
-                }
-
-                // Camera Upload Button
-                IconButton(
-                    onClick = {
-                        Toast.makeText(context, "Camera upload clicked", Toast.LENGTH_SHORT).show()
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = "Camera",
-                        tint = AccentPurple
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                // Text Input Field with STRICT "Ask VANIE" Placeholder
+                // Wider Input Text Field
                 OutlinedTextField(
                     value = textState,
                     onValueChange = { textState = it },
                     placeholder = {
                         Text(
-                            text = "Ask VANIE",
+                            text = "Ask VANIE...",
                             fontSize = 15.sp,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Medium,
-                            color = AccentCyan.copy(alpha = 0.7f)
+                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                        focusedBorderColor = AccentCyan,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = {
                         if (textState.isNotBlank()) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onSendMessage(textState)
                             textState = ""
                         }
                     })
                 )
 
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
-                // Voice Mic Button
+                // Live Voice VANIE Mic Button
                 IconButton(
-                    onClick = onMicClick,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onMicClick()
+                    },
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
                         .background(
-                            Brush.linearGradient(listOf(AccentCyan, AccentPurple))
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    AccentCyan
+                                )
+                            )
                         )
+                        .border(1.dp, Color.White.copy(alpha = 0.4f), CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Mic,
-                        contentDescription = "Voice Input",
+                        contentDescription = "Live Voice VANIE",
                         tint = Color.White
                     )
                 }
 
-                Spacer(modifier = Modifier.width(4.dp))
-
-                // Send Button
-                IconButton(
-                    onClick = {
-                        if (textState.isNotBlank()) {
-                            onSendMessage(textState)
-                            textState = ""
-                        }
-                    },
-                    enabled = textState.isNotBlank()
+                // Send Button with Smooth Fade & Scale Animation (Hidden when text is empty)
+                AnimatedVisibility(
+                    visible = textState.isNotBlank(),
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = "Send",
-                        tint = if (textState.isNotBlank()) AccentCyan else Color.Gray
-                    )
+                    Row {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        IconButton(
+                            onClick = {
+                                if (textState.isNotBlank()) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onSendMessage(textState)
+                                    textState = ""
+                                }
+                            },
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            AccentPurple,
+                                            MaterialTheme.colorScheme.primary
+                                        )
+                                    )
+                                )
+                                .border(1.dp, Color.White.copy(alpha = 0.4f), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Send,
+                                contentDescription = "Send Message",
+                                tint = Color.White
+                            )
+                        }
+                    }
                 }
-            }
-        }
-    }
-
-    // AI Tools Drawer Modal Sheet
-    if (isToolsDrawerOpen) {
-        AiToolsModalSheet(
-            onDismiss = { isToolsDrawerOpen = false },
-            onSelectToolCommand = { cmd ->
-                onSendMessage(cmd)
-                isToolsDrawerOpen = false
-            }
-        )
-    }
-}
-
-@Composable
-fun LiveSystemStatusBar(onOpenTools: () -> Unit) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, AccentCyan.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(AccentGreen)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "NPU Engine: Active",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    color = AccentGreen
-                )
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.BatteryChargingFull, contentDescription = null, tint = AccentCyan, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "Offline Mode", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-
-            IconButton(onClick = onOpenTools, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Default.Widgets, contentDescription = "Tools", tint = AccentPurple, modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -378,104 +342,188 @@ fun LiveSystemStatusBar(onOpenTools: () -> Unit) {
 @Composable
 fun GlassmorphicChatBubble(
     message: ChatMessage,
+    isSpeaking: Boolean,
+    hasAnimated: Boolean,
+    onAnimationComplete: () -> Unit,
+    onEditUserMessage: (String) -> Unit = {},
     onCopyText: (String) -> Unit,
-    onSpeakText: (String) -> Unit
+    onToggleSpeakText: (String) -> Unit
 ) {
     val isUser = message.sender == "user"
     val alignment = if (isUser) Alignment.End else Alignment.Start
+
+    // If message has already completed typing or is from user, start with full text directly (prevents scroll re-typing)
+    var displayedText by remember(message.id) {
+        mutableStateOf(if (isUser || hasAnimated) message.text else "")
+    }
+    var isTypingFinished by remember(message.id) {
+        mutableStateOf(isUser || hasAnimated)
+    }
+
+    LaunchedEffect(message.id, message.text) {
+        if (!isUser && !hasAnimated) {
+            val fullText = message.text
+            if (displayedText.length < fullText.length) {
+                for (i in 1..fullText.length) {
+                    displayedText = fullText.substring(0, i)
+                    delay(12) // Smooth futuristic typing animation (~12ms per char)
+                }
+            }
+            isTypingFinished = true
+            onAnimationComplete()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = alignment
     ) {
-        if (!isUser) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.vanie),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clip(CircleShape)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "VANIE Neural Engine",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    color = AccentCyan
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .widthIn(max = 300.dp)
-                .clip(
-                    RoundedCornerShape(
-                        topStart = 22.dp,
-                        topEnd = 22.dp,
-                        bottomStart = if (isUser) 22.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 22.dp
+        Surface(
+            shape = RoundedCornerShape(
+                topStart = 20.dp,
+                topEnd = 20.dp,
+                bottomStart = if (isUser) 20.dp else 4.dp,
+                bottomEnd = if (isUser) 4.dp else 20.dp
+            ),
+            color = if (isUser) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+            },
+            tonalElevation = if (isUser) 4.dp else 2.dp,
+            shadowElevation = if (isUser) 2.dp else 1.dp,
+            border = BorderStroke(
+                1.dp,
+                if (isUser) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                } else {
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            AccentCyan.copy(alpha = 0.5f),
+                            AccentPurple.copy(alpha = 0.5f)
+                        )
                     )
-                )
-                .background(
-                    if (isUser) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f)
-                )
-                .border(
-                    width = 1.dp,
-                    brush = if (isUser) Brush.linearGradient(listOf(Color.White.copy(alpha = 0.4f), Color.Transparent))
-                    else Brush.linearGradient(listOf(AccentCyan.copy(alpha = 0.7f), AccentPurple.copy(alpha = 0.5f))),
-                    shape = RoundedCornerShape(
-                        topStart = 22.dp,
-                        topEnd = 22.dp,
-                        bottomStart = if (isUser) 22.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 22.dp
-                    )
-                )
-                .padding(14.dp)
+                }
+            ),
+            modifier = Modifier.widthIn(max = 310.dp)
         ) {
-            Column {
+            Column(modifier = Modifier.padding(14.dp)) {
+                // Header badge for VANIE responses
+                if (!isUser) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.vanie),
+                            contentDescription = "VANIE Avatar",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "VANIE",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AccentCyan
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(AccentGreen)
+                        )
+                    }
+                }
+
+                // Message Text with optional active typing cursor
+                val textToShow = if (!isTypingFinished && !isUser) "$displayedText ▋" else displayedText
                 Text(
-                    text = message.text,
-                    color = if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = textToShow,
+                    color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 15.sp,
                     lineHeight = 22.sp,
-                    fontFamily = if (!isUser) FontFamily.Monospace else FontFamily.Default
+                    fontWeight = FontWeight.Normal
                 )
 
-                if (!isUser) {
+                // Action Bar for User messages (Copy & Edit)
+                if (isUser) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        IconButton(
-                            onClick = { onCopyText(message.text) },
-                            modifier = Modifier.size(24.dp)
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                            modifier = Modifier
+                                .clickable { onCopyText(message.text) }
+                                .padding(4.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = "Copy Text",
-                                tint = AccentCyan,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                            modifier = Modifier
+                                .clickable { onEditUserMessage(message.text) }
+                                .padding(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Message",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Action Bar for VANIE messages (Copy & Voice Reader)
+                if (!isUser) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .clickable { onCopyText(message.text) }
+                                .padding(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy Text",
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                        IconButton(
-                            onClick = { onSpeakText(message.text) },
-                            modifier = Modifier.size(24.dp)
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .clickable { onToggleSpeakText(message.text) }
+                                .padding(4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.VolumeUp,
-                                contentDescription = "Speak Out Loud",
-                                tint = AccentPurple,
+                                imageVector = if (isSpeaking) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                                contentDescription = if (isSpeaking) "Stop Voice" else "Read Out Loud",
+                                tint = if (isSpeaking) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -510,9 +558,7 @@ fun ThinkingIndicator() {
         Image(
             painter = painterResource(id = R.drawable.vanie),
             contentDescription = null,
-            modifier = Modifier
-                .size(18.dp)
-                .clip(CircleShape)
+            modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
@@ -532,63 +578,3 @@ fun ThinkingIndicator() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AiToolsModalSheet(onDismiss: () -> Unit, onSelectToolCommand: (String) -> Unit) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "VANIE AI Smart Utilities & Tools",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = AccentCyan
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ToolCard(title = "Math Calculator", icon = Icons.Default.Calculate, onClick = { onSelectToolCommand("Calculate 125 * 8") }, modifier = Modifier.weight(1f))
-                ToolCard(title = "Unit Converter", icon = Icons.Default.Transform, onClick = { onSelectToolCommand("Convert 10 km to miles") }, modifier = Modifier.weight(1f))
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ToolCard(title = "Riddles & Trivia", icon = Icons.Default.QuestionAnswer, onClick = { onSelectToolCommand("Give me a riddle") }, modifier = Modifier.weight(1f))
-                ToolCard(title = "System Inspector", icon = Icons.Default.DeveloperBoard, onClick = { onSelectToolCommand("System specs") }, modifier = Modifier.weight(1f))
-            }
-
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(14.dp)) {
-                Text("Close Tools Drawer")
-            }
-        }
-    }
-}
-
-@Composable
-fun ToolCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(
-        onClick = onClick,
-        modifier = modifier.height(90.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Icon(imageVector = icon, contentDescription = title, tint = AccentCyan)
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-        }
-    }
-}
