@@ -326,6 +326,7 @@ fun VanieVoiceOverlay(
                     // 1. User Mic Mute / Unmute Button
                     IconButton(
                         onClick = {
+                            com.vanie.ai.util.VanieHaptics.performClick(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isUserMuted = !isUserMuted
                             if (isUserMuted) {
@@ -361,6 +362,7 @@ fun VanieVoiceOverlay(
                     // 2. Silent VANIE / Voice Reader Mute Button
                     IconButton(
                         onClick = {
+                            com.vanie.ai.util.VanieHaptics.performClick(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isVanieSilent = !isVanieSilent
                             if (isVanieSilent) {
@@ -394,6 +396,7 @@ fun VanieVoiceOverlay(
                     // 3. Close Overlay Cross Button
                     IconButton(
                         onClick = {
+                            com.vanie.ai.util.VanieHaptics.performSuccess(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             speechRecognizer?.stopListening()
                             ttsEngine?.stop()

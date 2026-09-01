@@ -147,13 +147,23 @@ class MainActivity : ComponentActivity() {
                             .align(Alignment.TopCenter)
                             .statusBarsPadding()
                             .padding(horizontal = 12.dp, vertical = 6.dp),
-                        onSettingsClick = { isSettingsSheetOpen = true },
-                        onMenuClick = { isMenuExpanded = true },
+                        onSettingsClick = {
+                            com.vanie.ai.util.VanieHaptics.performClick(this@MainActivity)
+                            isSettingsSheetOpen = true
+                        },
+                        onMenuClick = {
+                            com.vanie.ai.util.VanieHaptics.performClick(this@MainActivity)
+                            isMenuExpanded = true
+                        },
                         isMenuExpanded = isMenuExpanded,
                         onDismissMenu = { isMenuExpanded = false },
                         isDarkTheme = isDarkTheme,
-                        onToggleTheme = { isDarkTheme = !isDarkTheme },
+                        onToggleTheme = {
+                            com.vanie.ai.util.VanieHaptics.performClick(this@MainActivity)
+                            isDarkTheme = !isDarkTheme
+                        },
                         onClearChat = {
+                            com.vanie.ai.util.VanieHaptics.performSuccess(this@MainActivity)
                             messages.clear()
                             messages.add(
                                 ChatMessage(
@@ -165,6 +175,7 @@ class MainActivity : ComponentActivity() {
                             isMenuExpanded = false
                         },
                         onOpenAbout = {
+                            com.vanie.ai.util.VanieHaptics.performClick(this@MainActivity)
                             isMenuExpanded = false
                             isAboutDialogOpen = true
                         }

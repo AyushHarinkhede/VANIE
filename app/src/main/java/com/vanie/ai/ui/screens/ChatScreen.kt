@@ -229,6 +229,7 @@ fun ChatScreen(
                 // Water Drop Attach File Button
                 IconButton(
                     onClick = {
+                        com.vanie.ai.util.VanieHaptics.performClick(context)
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         mediaPickerLauncher.launch("image/*")
                     },
@@ -249,7 +250,12 @@ fun ChatScreen(
                 // Wider Input Text Field
                 OutlinedTextField(
                     value = textState,
-                    onValueChange = { textState = it },
+                    onValueChange = {
+                        if (it.length > textState.length) {
+                            com.vanie.ai.util.VanieHaptics.performModePulse(context)
+                        }
+                        textState = it
+                    },
                     placeholder = {
                         Text(
                             text = "Ask VANIE...",
@@ -269,6 +275,7 @@ fun ChatScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = {
                         if (textState.isNotBlank()) {
+                            com.vanie.ai.util.VanieHaptics.performSuccess(context)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onSendMessage(textState)
                             textState = ""
@@ -281,6 +288,7 @@ fun ChatScreen(
                 // Live Voice VANIE Mic Button
                 IconButton(
                     onClick = {
+                        com.vanie.ai.util.VanieHaptics.performSuccess(context)
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onMicClick()
                     },
@@ -304,17 +312,18 @@ fun ChatScreen(
                     )
                 }
 
-                // Send Button with Smooth Fade & Scale Animation (Hidden when text is empty)
+                // Send Button with Smooth Fade & Spring Bouncy Scale Animation
                 AnimatedVisibility(
                     visible = textState.isNotBlank(),
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut()
+                    enter = fadeIn(animationSpec = tween(250)) + scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow)),
+                    exit = fadeOut(animationSpec = tween(200)) + scaleOut(animationSpec = spring(stiffness = Spring.StiffnessHigh))
                 ) {
                     Row {
                         Spacer(modifier = Modifier.width(4.dp))
                         IconButton(
                             onClick = {
                                 if (textState.isNotBlank()) {
+                                    com.vanie.ai.util.VanieHaptics.performSuccess(context)
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onSendMessage(textState)
                                     textState = ""
