@@ -249,7 +249,7 @@ class VanieNlpEngine(private val context: Context) {
 
             // Conversational & Fun
             lower.contains("hi") || lower.contains("hello") || lower.contains("hey") || lower.contains("namaste") -> bestIntent = "greeting"
-            lower.contains("who are you") || lower.contains("what is vanie") || lower.contains("vanie") -> bestIntent = "vanie"
+            lower.contains("who made") || lower.contains("banaya") || lower.contains("creator") || lower.contains("manufacturer") || lower.contains("developer") || lower.contains("full form") || lower.contains("who are you") || lower.contains("what is vanie") || lower.contains("vanie") -> bestIntent = "vanie"
             lower.contains("joke") || lower.contains("majak") || lower.contains("hansaao") -> bestIntent = "joke"
             lower.contains("riddle") || lower.contains("paheli") -> bestIntent = "riddle"
             lower.contains("quote") || lower.contains("motivation") -> bestIntent = "motivation"
@@ -421,7 +421,7 @@ class VanieNlpEngine(private val context: Context) {
                 responseText = "Hello! I am VANIE (Virtual Agent of Neural Integrated Engine). How can I assist you today?"
             }
             "vanie" -> {
-                responseText = "VANIE: Virtual Agent of Neural Integrated Engine!\nCreated by Ayush Harinkhede.\nI control phone hardware, dial calls, send messages, read notifications, and answer questions completely offline!"
+                responseText = "🤖 Main VANIE (Virtual Agent of Neural Integrated Engine) hoon! ✨\n👤 Mujhe mere creator Ayush Harinkhede ne design aur build kiya hai! 🚀💖 Main aapki offline hardware control, calls, messages, calculations, aur daily chit-chat me madad kar sakti hoon! 🌸"
             }
             "thanks" -> {
                 responseText = "You're very welcome!"
@@ -430,7 +430,14 @@ class VanieNlpEngine(private val context: Context) {
                 responseText = "Goodbye! Have a great day!"
             }
             else -> {
-                responseText = "VANIE Engine: I am ready! I can help you turn on flashlight, adjust volume, call contacts, send WhatsApp/SMS, open apps, read notifications, or check battery!"
+                val politeDenials = listOf(
+                    "Aww, mujhe abhi iske baare me nahi pata ji! Main abhi seekh rahi hoon! 🌸✨",
+                    "Yeh jankari mere paas abhi nahi hai, par main jald hi ise samajhna sikh lungi! 💖",
+                    "Oops! Is vishay par mujhe zyada idea nahi hai. Kya main kisi aur chiz me madad karun? 😊",
+                    "Arey, mujhe iske baare me abhi nahi pata! Par main har din nayi baatein sikh rahi hoon! 🚀✨",
+                    "Mafi chahti hoon, yeh mere offline knowledge base me abhi nahi hai ji! 🌸"
+                )
+                responseText = politeDenials.random()
             }
         }
 

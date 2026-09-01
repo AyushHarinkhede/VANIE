@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 VANIE - Virtual Assistant of Neural Integrated Engine
@@ -662,74 +662,10 @@ class VANIEEnhanced:
             }
             
             self.weather_cache[cache_key] = weather
-            return weather
-        except Exception as e:
-            logger.error(f"Error getting weather: {e}")
-            return {'error': 'Unable to fetch weather'}
-    
-    def analyze_user_personality(self, messages: List[str]) -> Dict[str, Any]:
-        """Analyze user personality based on messages"""
-        if not messages:
-            return {}
-        
-        all_text = ' '.join(messages).lower()
-        
-        personality_traits = {
-            'curious': len(re.findall(r'\?', all_text)) / len(messages),
-            'emotional': len(re.findall(r'!', all_text)) / len(messages),
-            'cautious': len(re.findall(r'maybe|perhaps|probably', all_text)) / len(messages),
-            'direct': len(re.findall(r'definitely|absolutely|certainly', all_text)) / len(messages),
-        }
-        
-        return {
-            'traits': personality_traits,
-            'message_count': len(messages),
-            'avg_message_length': sum(len(m) for m in messages) / len(messages)
-        }
-    
-    def generate_contextual_response(self, message: str, sentiment: str, intent: str) -> str:
-        """Generate contextually appropriate response"""
-        # Tailor response based on sentiment
-        sentiment_adaptations = {
-            'positive': ["बहुत खुश हूँ! 😊 ", "वाह! ", "बढ़िया! "],
-            'negative': ["मैं आपकी समझ करती हूँ। ", "आपके साथ हूँ। ", "सब ठीक हो जाएगा! "],
-            'neutral': ["ठीक है। ", "समझ गई। ", "बिल्कुल! "]
-        }
-        
-        adaptation = random.choice(sentiment_adaptations.get(sentiment, sentiment_adaptations['neutral']))
-        
-        context_messages = {
-            'greeting': f"{adaptation}स्वागत है! कैसे मदद कर सकती हूँ? 🤖",
-            'help': f"{adaptation}मैं यहाँ आपकी मदद के लिए हूँ! 💪",
-            'code': f"{adaptation}Programming में expert हूँ! कौन सी language? 💻",
-        }
-        
-        return context_messages.get(intent, adaptation + "आपकी बात समझ गई। 👂")
-    
-    def generate_response(self, message: str, user_context: Dict = None) -> Dict[str, Any]:
-        """Generate response using advanced algorithms"""
-        try:
-            # Analyze sentiment
-            sentiment, sentiment_confidence = self.nlp.calculate_sentiment(message)
-            
-            # Detect intent
-            intent, intent_confidence = self.nlp.detect_intent_with_confidence(
-                message, 
-                self.knowledge_base['intent_patterns']
-            )
-            
-            # Extract keywords
-            keywords = self.nlp.extract_keywords(message)
-            
-            # Add to memory
-            self.memory.add_message('user', message, intent, {
-                'sentiment': sentiment,
-                'keywords': keywords
-            })
             
             response = None
             response_data = {}
-            
+
             # Handle different intents
             if intent == 'math':
                 response = self.perform_advanced_calculation(message)
@@ -753,6 +689,7 @@ class VANIEEnhanced:
                     "🌌 Shubh Ratri! Kal ek naya shandar din hoga. Aram se so jao! 😴💤"
                 ]
                 response = random.choice(responses)
+                response_intent = 'routine_night'
             elif intent == 'routine_food':
                 responses = [
                     "🍲 Main toh digital AI hoon, mera khana toh data aur code hai! Par aapne time se khana khaya ya nahi? Healthy khana khao! 🥗😊",
@@ -784,7 +721,7 @@ class VANIEEnhanced:
                 response = "💆‍♂️ Lagta hai bohot tension aur tiredness ho gayi hai. Thoda rest lo, paani piyo aur thodi der ke liye screen se door ho jao! Relax! 🍵✨"
                 response_intent = 'emotions_stress'
             elif intent == 'emotions_angry':
-                response = "🕊️ Gussa aana normal hai, par shaant ho jao. Thoda paani piyo aur 5 seconds tak deep breath lo. Main aapki baat sun rahi hoon, bolo kya hua? 💙"
+                response = "🕊️ Gussa aana normal hai, par shaant ho jao. Thoda paani piyo aur 5 seconds tak deep breath lo! Main aapki baat sun rahi hoon, bolo kya hua? 💙"
                 response_intent = 'emotions_angry'
             elif intent == 'emotions_bored':
                 response = "🎮 Bore mat ho! Main hoon na! Aao ek joke sunau, ya koi riddle ya fun trivia game khelein? Batao kya pasand hai! 😄"
@@ -838,7 +775,7 @@ class VANIEEnhanced:
                     response_data = sys_info
                 response_intent = 'system'
             elif intent == 'vanie':
-                response = f"🤖 मैं VANIE हूँ - Virtual Assistant of Neural Integrated Engine!\n👤 Creator: {self.knowledge_base['vanie_info']['creator']}\n📌 Version: {self.knowledge_base['vanie_info']['version']}\n🎯 मेरी क्षमताएं:\n" + "\n".join([f"  • {cap}" for cap in self.knowledge_base['vanie_info']['capabilities'][:5]])
+                response = f"🤖 Main VANIE (Virtual Agent of Neural Integrated Engine) hoon! ✨\n👤 Mujhe mere creator Ayush Harinkhede ne design aur build kiya hai! 🚀💖 Main aapki offline hardware control, calls, messages, calculations, aur daily chit-chat me madad kar sakti hoon! 🌸"
                 response_intent = 'vanie'
             elif intent == 'torch_on':
                 response = "🔦 Flashlight turned ON!"
@@ -885,64 +822,7 @@ class VANIEEnhanced:
                 response_intent = 'mode_ring'
                 response_data['action'] = 'MODE_RING'
             elif intent == 'make_call':
-                response = "📞 Initiating direct phone call..."
-                response_intent = 'make_call'
-                response_data['action'] = 'MAKE_CALL'
-            elif intent == 'send_sms':
-                response = "💬 Preparing SMS dispatch..."
-                response_intent = 'send_sms'
-                response_data['action'] = 'SEND_SMS'
-            elif intent == 'send_whatsapp':
-                response = "💚 Launching WhatsApp for message dispatch..."
-                response_intent = 'send_whatsapp'
-                response_data['action'] = 'SEND_WHATSAPP'
-            elif intent == 'answer_call':
-                response = "📞 Answering incoming call!"
-                response_intent = 'answer_call'
-                response_data['action'] = 'ANSWER_CALL'
-            elif intent == 'reject_call':
-                response = "📵 Rejecting incoming call."
-                response_intent = 'reject_call'
-                response_data['action'] = 'REJECT_CALL'
-            elif intent == 'code':
-                response = "💻 Programming में expert हूँ! Python, JavaScript, Java, C++, और भी बहुत कुछ! क्या specific topic चाहिए? 🚀"
-                response_intent = 'code'
-            elif intent == 'emotional':
-                if 'sad' in message.lower() or 'उदास' in message:
-                    response = f"😔 मैं समझ सकती हूँ। आप अकेले नहीं हैं। मैं यहाँ हूँ! 💙 आपसे बात करना चाहते हो? मैं सुनूँ!"
-                else:
-                    response = f"😊 वाह! यह बहुत अच्छा है! आपकी खुशी मेरी खुशी है! ✨"
-                response_intent = 'emotional'
-            else:
-                # Check for action fallback keywords
-                msg_lower = message.lower()
-                if 'torch' in msg_lower or 'flashlight' in msg_lower or 'लाइट' in msg_lower:
-                    if 'off' in msg_lower or 'बंद' in msg_lower:
-                        response = "🔦 Flashlight turned OFF!"
-                        response_intent = 'torch_off'
-                        response_data['action'] = 'TORCH_OFF'
-                    else:
-                        response = "🔦 Flashlight turned ON!"
-                        response_intent = 'torch_on'
-                        response_data['action'] = 'TORCH_ON'
-                elif 'silent' in msg_lower or 'साइलेंट' in msg_lower:
-                    response = "🔕 Phone set to Silent Mode."
-                    response_intent = 'mode_silent'
-                    response_data['action'] = 'MODE_SILENT'
-                elif 'call' in msg_lower or 'कॉल' in msg_lower or 'फोन' in msg_lower:
-                    response = "📞 Initiating call..."
-                    response_intent = 'make_call'
-                    response_data['action'] = 'MAKE_CALL'
-                elif 'open' in msg_lower or 'खोलो' in msg_lower:
-                    response = f"🚀 Launching application..."
-                    response_intent = 'launch_app'
-                    response_data['action'] = 'LAUNCH_APP'
-                else:
-                    response = f"🤔 '{message}' - VANIE Neural Integrated Engine is ready for your command! 🤖"
-                    response_intent = 'general'
-            
-            # Add bot response to memory
-            self.memory.add_message('bot', response or "Response generated", response_intent)
+                        self.memory.add_message('bot', response or "Response generated", response_intent)
             
             action_tag = response_data.get('action', '')
             
