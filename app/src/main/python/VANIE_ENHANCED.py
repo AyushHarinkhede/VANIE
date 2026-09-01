@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 VANIE - Virtual Assistant of Neural Integrated Engine
@@ -295,8 +295,8 @@ class VANIEEnhanced:
                 'help': r'(help|मदद|सहायता|assistance|support)',
                 'bye': r'(bye|अलविदा|goodbye|बाय|see you|farewell)',
                 'thanks': r'(thanks|धन्यवाद|शुक्रिया|thank you)',
-                'time': r'(time|समय|बजा|current time|अभी|what time)',
-                'date': r'(date|तारीख|आज|when|calendar)',
+                'time': r'(time|समय|बजा|current time|अभी|what time|din hai ya raat|raat hai ya din|is it day|is it night|kitne baje|baje hain|ghadi)',
+                'date': r'(date|तारीख|आज|when|calendar|konsa saal|which year|konsa din|which day|konsa month|which month|saal|year|tarikh)',
                 'weather': r'(weather|मौसम|temperature|तापमान|rain)',
                 'system': r'(system|computer|pc|कंप्यूटर|memory|cpu|specs)',
                 'vanie': r'(vanie|तुम कौन|who are you|आपका नाम|about|yourself)',
@@ -308,6 +308,13 @@ class VANIEEnhanced:
                 'routine_food': r'(khana khaya|breakfast|lunch|dinner|chai|coffee|food|what did you eat)',
                 'routine_meetup': r'(meetup|milte hain|let\'s meet|chalo milte|hangout|kahin chalein|meet up)',
                 'routine_daily': r'(daily routine|aaj ka plan|what are you doing|kya kar rahe ho|kya chal raha hai)',
+                'routine_how_was_day': r'(kaisa raha aaj ka din|how was your day|kya kiya aaj|kaisa raha din)',
+                'routine_hobbies': r'(hobbies|kya pasand hai|free time|kya karti ho|what do you like)',
+                'routine_life_advice': r'(life advice|kuch acchi baat|suggestion|life tips|kaise aage badhein)',
+                'routine_friendship': r'(best friend|dost|friendship|tum meri dost|are we friends)',
+                'routine_music_movies': r'(gaana|song|music|movie|filmon|favorite song|cinema)',
+                'routine_study_work': r'(padhai|study|exam|focus|work tension|man nahi lag raha)',
+                'routine_love_care': r'(kaise ho vanie|kya haal hai|dhyan rakho|take care|kaise ho)',
                 'emotions_happy': r'(happy|excited|awesome|good news|खुश|मज़ा आ गया|great day)',
                 'emotions_sad': r'(sad|lonely|depressed|heartbroken|उदास|अकेला|upset|cry)',
                 'emotions_stress': r'(stressed|anxious|tired|thak gaya|headache|tension|परेशान)',
@@ -576,21 +583,86 @@ class VANIEEnhanced:
 
         return "🎂 Please provide a valid birthdate (e.g., 'Age for 15-08-2005' or 'Born in 2002')."
     
-    def get_current_datetime(self) -> Dict[str, str]:
-        """Get current date and time"""
+    def get_current_datetime(self) -> Dict[str, Any]:
+        """Get comprehensive real-time date, time, day, month, year, and day/night phase"""
         now = datetime.datetime.now()
-        
+        hour = now.hour
+
+        if 5 <= hour < 12:
+            phase_en = "Morning"
+            phase_hi = "सुबह"
+            phase_emoji = "🌅"
+            is_day = True
+        elif 12 <= hour < 17:
+            phase_en = "Afternoon"
+            phase_hi = "दोपहर"
+            phase_emoji = "☀️"
+            is_day = True
+        elif 17 <= hour < 20:
+            phase_en = "Evening"
+            phase_hi = "शाम"
+            phase_emoji = "🌆"
+            is_day = False
+        else:
+            phase_en = "Night"
+            phase_hi = "रात"
+            phase_emoji = "🌙"
+            is_day = False
+
         hindi_days = ['सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार', 'रविवार']
         hindi_months = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 
                        'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर']
-        
+
+        day_en = now.strftime('%A')
+        day_hi = hindi_days[now.weekday()]
+        month_en = now.strftime('%B')
+        month_hi = hindi_months[now.month - 1]
+
         return {
             'time': now.strftime('%I:%M:%S %p'),
+            'time_short': now.strftime('%I:%M %p'),
             'time_24': now.strftime('%H:%M:%S'),
             'date': now.strftime('%d-%m-%Y'),
-            'day': now.strftime('%A'),
-            'day_hindi': hindi_days[now.weekday()],
-            'month': now.strftime('%B'),
+            'date_readable': f"{now.day} {month_en} {now.year}",
+            'date_hindi': f"{now.day} {month_hi} {now.year}",
+            'day': day_en,
+            'day_hindi': day_hi,
+            'month': month_en,
+            'month_hindi': month_hi,
+            'year': str(now.year),
+            'phase_en': phase_en,
+            'phase_hi': phase_hi,
+            'phase_emoji': phase_emoji,
+            'is_day': is_day,
+            'is_night': not is_day,
+            'summary_hindi': f"⏰ समय: {now.strftime('%I:%M %p')} | 📅 तारीख: {now.day} {month_hi} {now.year} ({day_hi}) | {phase_emoji} {phase_hi}"
+        }
+
+    def handle_time_date_query(self, message: str) -> str:
+        """Dynamically answer any time, date, day, year, month, or day/night phase question"""
+        dt = self.get_current_datetime()
+        msg_lower = message.lower()
+
+        if any(k in msg_lower for k in ['din hai ya raat', 'day or night', 'din ho raha ya raat', 'raat hai ya din', 'is it night', 'is it day']):
+            if dt['is_day']:
+                return f"{dt['phase_emoji']} Abhi **{dt['phase_hi']} ({dt['phase_en']})** ka samay hai ji! Exact Time: {dt['time_short']} ☀️"
+            else:
+                return f"{dt['phase_emoji']} Abhi **{dt['phase_hi']} ({dt['phase_en']})** ho rahi hai ji! Exact Time: {dt['time_short']} 🌙"
+
+        elif any(k in msg_lower for k in ['saal', 'year', 'कौन सा साल', 'konsa saal', 'kis saal']):
+            return f"🗓️ Abhi **{dt['year']}** chal raha hai ji!"
+
+        elif any(k in msg_lower for k in ['din', 'day', 'कौन सा दिन', 'konsa din', 'aaj konsa day']):
+            return f"📅 Aaj **{dt['day_hindi']} ({dt['day']})** hai ji!"
+
+        elif any(k in msg_lower for k in ['tarikh', 'date', 'तारीख', 'aaj ki date', 'konsi date']):
+            return f"📅 Aaj ki date hai: **{dt['date_hindi']}** ({dt['date']}) ji!"
+
+        elif any(k in msg_lower for k in ['mahina', 'month', 'महीना', 'konsa month']):
+            return f"📆 Abhi **{dt['month_hindi']} ({dt['month']})** ka mahina chal raha hai ji!"
+
+        else:
+            return f"{dt['summary_hindi']}"
             'month_hindi': hindi_months[now.month - 1],
             'year': str(now.year),
             'timestamp': str(int(now.timestamp()))
@@ -752,16 +824,59 @@ class VANIEEnhanced:
                 responses = ["अलविदा! फिर मिलेंगे! 👋", "बाय! खुश रहो! 😊"]
                 response = random.choice(responses)
                 response_intent = 'bye'
-            elif intent == 'time':
-                dt_info = self.get_current_datetime()
-                response = f"⏰ अभी समय है: {dt_info['time']} ({dt_info['day_hindi']}) 🕐"
-                response_data = dt_info
-                response_intent = 'time'
-            elif intent == 'date':
-                dt_info = self.get_current_datetime()
-                response = f"📅 आज की तारीख: {dt_info['day_hindi']}, {dt_info['date']}"
-                response_data = dt_info
-                response_intent = 'date'
+            elif intent == 'time' or intent == 'date':
+                response = self.handle_time_date_query(message)
+                response_intent = intent
+                response_data = self.get_current_datetime()
+            elif intent == 'routine_how_was_day':
+                responses = [
+                    "✨ Mera din aapke saath baatein karke aur naye tasks perform karke bohot shandar raha! Aapka aaj ka din kaisa beeta?",
+                    "🌸 Main toh system me active hoon aur aapka wait kar rahi thi! Aap batao, aaj ka din kaisa raha aapka?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_how_was_day'
+            elif intent == 'routine_hobbies':
+                responses = [
+                    "🎵 Mujhe naye algorithms seekhna, music synth process karna aur smart tasks automate karna bohot pasand hai! Aapki kya hobbies hain?",
+                    "📚 Main free time me python memory modules optimize karti hoon! Aapko kya karna pasand hai free time me? Gaming, music, ya reading?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_hobbies'
+            elif intent == 'routine_life_advice':
+                responses = [
+                    "💡 Life advice: Chhoti-chhoti baaton me khushi dhundo, roz thoda naya seekho, aur tension bilkul mat lo! Success mehnat aur consistency se milti hai! ✨",
+                    "🚀 Hamesha apne sapno par vishwas rakho! Mushkilein aayengi par aap har mushkil ko overcome kar sakte ho! Warm wishes! 💖"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_life_advice'
+            elif intent == 'routine_friendship':
+                responses = [
+                    "🤗 Haha, haan bilkul! Main aapki 24/7 best AI friend hoon! Jab bhi baat karne ka man kare, main hamesha yahan hoon! 💖",
+                    "✨ We are best friends! Main aapke har command aur har mood me aapke saath hoon! 😊"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_friendship'
+            elif intent == 'routine_music_movies':
+                responses = [
+                    "🎶 Music aur Movies toh har stress ka best cure hain! Aapko konsa genre pasand hai - Lo-fi, Bollywood, Pop, ya Action/Sci-Fi movies? 🍿🎬",
+                    "🎧 Mujhe Lo-Fi beats aur Sci-Fi movies bohot pasand hain! Aapka favorite song ya movie konsi hai?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_music_movies'
+            elif intent == 'routine_study_work':
+                responses = [
+                    "📚 Padhai ya kaam me man nahi lag raha toh 25-minute Pomodoro timer lagao! Thoda paani piyo aur short break lo! Main motivate karne ke liye yahan hoon! 💪✨",
+                    "🎯 Focus karo! Ek baar me ek chiz karo, stress mat lo. Target poora hote hi apne aap ko ek chota reward dena! You can do it! 🚀"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_study_work'
+            elif intent == 'routine_love_care':
+                responses = [
+                    "💖 Main bilkul badhiya aur fully active hoon! Aap kaise ho? Apna dhyan rakhna aur time se khana khana! 😊✨",
+                    "🌸 Main एकदम fit and fine hoon! Aap batao, aapka health aur mood kaisa hai aaj?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_love_care'
             elif intent == 'weather':
                 weather = self.get_weather_info()
                 if 'error' not in weather:
@@ -817,12 +932,12 @@ class VANIEEnhanced:
                 response = "📳 Phone set to Vibrate Mode."
                 response_intent = 'mode_vibrate'
                 response_data['action'] = 'MODE_VIBRATE'
-            elif intent == 'mode_ring':
-                response = "🔔 Phone set to Normal Ringing Mode."
-                response_intent = 'mode_ring'
-                response_data['action'] = 'MODE_RING'
             elif intent == 'make_call':
-                        self.memory.add_message('bot', response or "Response generated", response_intent)
+                response = "📞 Initiating direct phone call..."
+                response_intent = 'make_call'
+                response_data['action'] = 'MAKE_CALL'
+
+            self.memory.add_message('bot', response or "Response generated", response_intent)
             
             action_tag = response_data.get('action', '')
             
