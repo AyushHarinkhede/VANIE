@@ -41,7 +41,8 @@ class VanieCallReceiver : BroadcastReceiver() {
         tts = TextToSpeech(context.applicationContext) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 tts?.language = Locale.US
-                tts?.speak("Incoming call from $callerName. Say Hey VANIE Pickup call or Cut call.", TextToSpeech.QUEUE_FLUSH, null, "CALL_ID")
+                val announcement = com.vanie.ai.ui.screens.cleanTextForTts("Incoming call from $callerName. Say Hey VANIE Pickup call or Cut call.")
+                tts?.speak(announcement, TextToSpeech.QUEUE_FLUSH, null, "CALL_ID")
             }
         }
     }

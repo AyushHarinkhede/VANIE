@@ -238,8 +238,11 @@ fun VanieVoiceOverlay(
         if (responseText.isNotBlank() && !isVanieSilent) {
             currentMode = VoiceMode.VANIE_SPEAKING
             performVibration("finish")
-            ttsEngine?.language = Locale.US
-            ttsEngine?.speak(responseText, TextToSpeech.QUEUE_FLUSH, null, "VANIE_CONTINUOUS_VOICE")
+            val spokenTextClean = com.vanie.ai.ui.screens.cleanTextForTts(responseText)
+            if (spokenTextClean.isNotBlank()) {
+                ttsEngine?.language = Locale.US
+                ttsEngine?.speak(spokenTextClean, TextToSpeech.QUEUE_FLUSH, null, "VANIE_CONTINUOUS_VOICE")
+            }
         }
     }
 

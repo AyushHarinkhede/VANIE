@@ -60,9 +60,16 @@ data class ChatMessage(
 )
 
 fun cleanTextForTts(text: String): String {
+    if (text.isBlank()) return ""
     return text
-        .replace(Regex("[\\p{So}\\p{Cn}\\p{Cs}\\p{Co}\\p{Cc}\\uD83C-\\uDBFF\\uDC00-\\uDFFF]+"), "")
+        .replace(Regex("[\\uD83C-\\uDBFF][\\uDC00-\\uDFFF]"), "")
+        .replace(Regex("[\\u2600-\\u27BF]"), "")
+        .replace(Regex("[\\u2300-\\u23FF]"), "")
+        .replace(Regex("[\\u2B00-\\u2BFF]"), "")
+        .replace(Regex("[\\u1F000-\\u1F9FF]"), "")
+        .replace(Regex("[\\p{So}\\p{Cn}\\p{Cs}\\p{Co}\\p{Cc}]"), "")
         .replace(Regex("[*_#`~]"), "")
+        .replace(Regex("\\s+"), " ")
         .trim()
 }
 

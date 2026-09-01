@@ -141,7 +141,10 @@ class VanieVoiceService : Service(), RecognitionListener, TextToSpeech.OnInitLis
     }
 
     private fun speakOut(text: String) {
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "VANIE_SPEECH")
+        val cleanText = com.vanie.ai.ui.screens.cleanTextForTts(text)
+        if (cleanText.isNotBlank()) {
+            tts?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, "VANIE_SPEECH")
+        }
     }
 
     override fun onInit(status: Int) {
