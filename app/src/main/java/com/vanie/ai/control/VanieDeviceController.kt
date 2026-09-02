@@ -254,6 +254,87 @@ class VanieDeviceController(private val context: Context) {
         }
     }
 
+    fun getDetailedBatteryInfo(): String {
+        val iFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = context.registerReceiver(null, iFilter)
+        val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+        val batteryPct = if (level != -1 && scale != -1) (level * 100 / scale.toFloat()).roundToInt() else 50
+        val isCharging = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) == BatteryManager.BATTERY_STATUS_CHARGING
+        val tempTenths = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
+        val tempCelsius = tempTenths / 10f
+        val tech = batteryStatus?.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY) ?: "Li-ion"
+
+        val healthStr = when (batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN)) {
+            BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
+            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheated"
+            BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
+            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over Voltage"
+            else -> "Healthy"
+        }
+
+        return "Battery Level: ${batteryPct}%\nStatus: ${if (isCharging) "Charging ⚡" else "Discharging"}\nHealth: $healthStr\nTemperature: ${String.format("%.1f", tempCelsius)}°C ($tech)"
+    }
+
+    fun getNetworkAndPhoneInfo(): String {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+
+        val activeNetwork = cm.activeNetwork
+        val caps = cm.getNetworkCapabilities(activeNetwork)
+
+        val connectionType = when {
+            caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> "Wi-Fi Network"
+            caps?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "Cellular Mobile Data"
+            else -> "No Active Internet"
+        }
+
+        val operatorName = tm.networkOperatorName.ifBlank { "Mobile Operator" }
+        val simState = if (tm.simState == TelephonyManager.SIM_STATE_READY) "Active SIM" else "No SIM / Disabled"
+
+        return "Connection: $connectionType\nOperator: $operatorName\nSIM Status: $simState"
+    }
+
+    fun getBatteryStatus(): String = getDetailedBatteryInfo()
+
+    fun adjustVolume(increase: Boolean): String {
+        return try {
+            val direction = if (increase) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER
+            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
+            val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val percent = (currentVol * 100) / maxVol
+            "Media volume adjusted to $percent%"
+        } catch (e: Exception) {
+            "Could not adjust volume"
+        }
+    }
+
+    fun muteVolume(): String {
+        return try {
+            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
+            "Media muted"
+        } catch (e: Exception) {
+            "Could not mute volume"
+        }
+    }
+
+    fun openCamera(): Boolean = launchApp("camera")
+    fun openGallery(): Boolean = launchApp("photos")
+    fun openSettings(): Boolean {
+        return try {
+            val intent = Intent(Settings.ACTION_SETTINGS).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    fun openMaps(): Boolean = launchApp("maps")
+    fun openPlayStore(): Boolean = launchApp("store")
+    fun openCalculator(): Boolean = launchApp("calculator")
+}
+
 object VanieAlarmState {
     var pendingHour: Int = -1
     var pendingMinute: Int = 0
@@ -334,86 +415,5 @@ object VanieTaskManager {
         taskList.clear()
         return "🗑️ Sabhi $count tasks clear kar diye gaye hain!"
     }
-}
-
-    fun getDetailedBatteryInfo(): String {
-        val iFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus = context.registerReceiver(null, iFilter)
-        val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
-        val scale = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
-        val batteryPct = if (level != -1 && scale != -1) (level * 100 / scale.toFloat()).roundToInt() else 50
-        val isCharging = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) == BatteryManager.BATTERY_STATUS_CHARGING
-        val tempTenths = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
-        val tempCelsius = tempTenths / 10f
-        val tech = batteryStatus?.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY) ?: "Li-ion"
-
-        val healthStr = when (batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN)) {
-            BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
-            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheated"
-            BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
-            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over Voltage"
-            else -> "Healthy"
-        }
-
-        return "Battery Level: ${batteryPct}%\nStatus: ${if (isCharging) "Charging ⚡" else "Discharging"}\nHealth: $healthStr\nTemperature: ${String.format("%.1f", tempCelsius)}°C ($tech)"
-    }
-
-    fun getNetworkAndPhoneInfo(): String {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-
-        val activeNetwork = cm.activeNetwork
-        val caps = cm.getNetworkCapabilities(activeNetwork)
-
-        val connectionType = when {
-            caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> "Wi-Fi Network"
-            caps?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "Cellular Mobile Data"
-            else -> "No Active Internet"
-        }
-
-        val operatorName = tm.networkOperatorName.ifBlank { "Mobile Operator" }
-        val simState = if (tm.simState == TelephonyManager.SIM_STATE_READY) "Active SIM" else "No SIM / Disabled"
-
-        return "Connection: $connectionType\nOperator: $operatorName\nSIM Status: $simState"
-    }
-
-    fun getBatteryStatus(): String = getDetailedBatteryInfo()
-
-    fun adjustVolume(increase: Boolean): String {
-        return try {
-            val direction = if (increase) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER
-            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
-            val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            val percent = (currentVol * 100) / maxVol
-            "Media volume adjusted to $percent%"
-        } catch (e: Exception) {
-            "Could not adjust volume"
-        }
-    }
-
-    fun muteVolume(): String {
-        return try {
-            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
-            "Media muted"
-        } catch (e: Exception) {
-            "Could not mute volume"
-        }
-    }
-
-    fun openCamera(): Boolean = launchApp("camera")
-    fun openGallery(): Boolean = launchApp("photos")
-    fun openSettings(): Boolean {
-        return try {
-            val intent = Intent(Settings.ACTION_SETTINGS).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
-            context.startActivity(intent)
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-    fun openMaps(): Boolean = launchApp("maps")
-    fun openPlayStore(): Boolean = launchApp("store")
-    fun openCalculator(): Boolean = launchApp("calculator")
 }
 

@@ -253,5 +253,26 @@ class VanieTelephonyController(private val context: Context) {
     fun sendWhatsAppMessage(contactNameOrNumber: String?, messageText: String?) {
         prepareWhatsAppDraft(contactNameOrNumber, messageText)
     }
+
+    fun resolvePhoneNumber(number: String): String? {
+        val contentResolver = context.contentResolver
+        val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
+        val cursor = contentResolver.query(
+            uri,
+            arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME),
+            null,
+            null,
+            null
+        )
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    return it.getString(nameIndex)
+                }
+            }
+        }
+        return null
+    }
 }
 

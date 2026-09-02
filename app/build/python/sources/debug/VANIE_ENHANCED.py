@@ -75,9 +75,13 @@ import operator
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app
-app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}})
+# Initialize Flask app if available
+if Flask is not None:
+    app = Flask(__name__, static_folder='.', static_url_path='')
+    if CORS is not None:
+        CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}})
+else:
+    app = None
 
 class AdvancedNLPAlgorithms:
     """Advanced Natural Language Processing Algorithms"""
@@ -291,22 +295,44 @@ class VANIEEnhanced:
                 'help': r'(help|मदद|सहायता|assistance|support)',
                 'bye': r'(bye|अलविदा|goodbye|बाय|see you|farewell)',
                 'thanks': r'(thanks|धन्यवाद|शुक्रिया|thank you)',
-                'time': r'(time|समय|बजा|current time|अभी|what time)',
-                'date': r'(date|तारीख|आज|when|calendar)',
+                'time': r'(time|समय|बजा|current time|अभी|what time|din hai ya raat|raat hai ya din|is it day|is it night|kitne baje|baje hain|ghadi)',
+                'date': r'(date|तारीख|आज|when|calendar|konsa saal|which year|konsa din|which day|konsa month|which month|saal|year|tarikh)',
                 'weather': r'(weather|मौसम|temperature|तापमान|rain)',
                 'system': r'(system|computer|pc|कंप्यूटर|memory|cpu|specs)',
                 'vanie': r'(vanie|तुम कौन|who are you|आपका नाम|about|yourself)',
-                'math': r'(\d+\.?\d*\s*[\+\-\*/]\s*\d+\.?\d*|calculate|गणना)',
+                'math': r'(\d+\.?\d*\s*[\+\-\*/%\^]\s*\d+\.?\d*|calculate|sqrt|square root|sin|cos|tan|log|ln|fact|factorial|percent|%)',
                 'code': r'(code|python|javascript|java|cpp|प्रोग्रामिंग|programming)',
-                'emotional': r'(sad|happy|excited|उदास|खुश|परेशान|feeling)',
+                'emotional': r'(feeling|sad|happy|excited|stressed|anxious|angry|gussa|bore|उदास|खुश|परेशान)',
+                'routine_morning': r'(good morning|सुप्रभात|good morning vanie|morning talk)',
+                'routine_night': r'(good night|शुभ रात्रि|sweet dreams|so jao)',
+                'routine_food': r'(khana khaya|breakfast|lunch|dinner|chai|coffee|food|what did you eat)',
+                'routine_meetup': r'(meetup|milte hain|let\'s meet|chalo milte|hangout|kahin chalein|meet up)',
+                'routine_daily': r'(daily routine|aaj ka plan|what are you doing|kya kar rahe ho|kya chal raha hai)',
+                'routine_how_was_day': r'(kaisa raha aaj ka din|how was your day|kya kiya aaj|kaisa raha din)',
+                'routine_hobbies': r'(hobbies|kya pasand hai|free time|kya karti ho|what do you like)',
+                'routine_life_advice': r'(life advice|kuch acchi baat|suggestion|life tips|kaise aage badhein)',
+                'routine_friendship': r'(best friend|dost|friendship|tum meri dost|are we friends)',
+                'routine_music_movies': r'(gaana|song|music|movie|filmon|favorite song|cinema)',
+                'routine_study_work': r'(padhai|study|exam|focus|work tension|man nahi lag raha)',
+                'routine_love_care': r'(kaise ho vanie|kya haal hai|dhyan rakho|take care|kaise ho)',
+                'emotions_happy': r'(happy|excited|awesome|good news|खुश|मज़ा आ गया|great day)',
+                'emotions_sad': r'(sad|lonely|depressed|heartbroken|उदास|अकेला|upset|cry)',
+                'emotions_stress': r'(stressed|anxious|tired|thak gaya|headache|tension|परेशान)',
+                'emotions_angry': r'(angry|frustrated|gussa|annoyed|irritated|गुस्सा)',
+                'emotions_bored': r'(bored|boring|bore ho raha|kuch batao|kuch bolo)',
+                'age_calc': r'(age|umar|birthdate|born in|date of birth|dob|kitne saal)',
                 'joke': r'(joke|मजाक|हंसाओ|funny|laugh|चुटकुले)',
                 'riddle': r'(riddle|पहेली|guess|सवाल)',
                 'trivia': r'(trivia|क्विज़|facts|interesting|fact)',
                 'game': r'(game|खेल|play|word game)',
                 'motivation': r'(motivation|inspire|courage|strength|confidence|प्रेरणा)',
                 'quote': r'(quote|famous|कहावत|wisdom|advice)',
-                'conversion': r'(convert|conversion|transform|unit)',
+                'conversion': r'(convert|conversion|transform|unit|km|mile|celsius|fahrenheit|kg|lbs|gb|mb)',
                 'search': r'(search|find|look for|खोजो)',
+                'set_alarm': r'(alarm|अलार्म|wakeup|baje)',
+                'set_timer': r'(timer|टाइमर)',
+                'stopwatch': r'(stopwatch|स्टॉपवॉच)',
+                'add_task': r'(task|remind|yaad|to do)',
                 'torch_on': r'(torch on|flashlight on|flash on|लाइट चालू|लाइट ऑन|टॉर्च ऑन|टॉर्च चालू)',
                 'torch_off': r'(torch off|flashlight off|flash off|लाइट बंद|लाइट ऑफ|टॉर्च ऑफ|टॉर्च बंद)',
                 'wifi_on': r'(wifi on|turn on wifi|enable wifi|वाईफाई ऑन|वाईफाई चालू)',
@@ -407,93 +433,240 @@ class VANIEEnhanced:
         return f"💡 {fact}"
     
     def perform_advanced_calculation(self, text: str) -> str:
-        """Perform advanced mathematical calculations"""
+        """Perform basic, scientific, and percentage mathematical calculations"""
         try:
-            # Extract mathematical expression
-            match = re.search(r'(\d+\.?\d*)\s*([\+\-\*/])\s*(\d+\.?\d*)', text)
-            if match:
-                num1, operator, num2 = float(match.group(1)), match.group(2), float(match.group(3))
-                
-                operations = {
-                    '+': operator.add,
-                    '-': operator.sub,
-                    '*': operator.mul,
-                    '/': operator.truediv
-                }
-                
-                if operator == '/' and num2 == 0:
-                    return "🚫 Zero से divide नहीं कर सकते! Division by zero is not allowed! ⚠️"
-                
-                result = operations[operator](num1, num2)
-                
-                # Additional info
-                info = ""
-                if operator == '*':
-                    info = f"\n💡 {num1} का {num2} गुना"
-                elif operator == '+':
-                    info = f"\n💡 Total: {result}"
-                
-                return f"🧮 {num1} {operator} {num2} = {result}{info}"
-        except:
-            pass
-        
-        return None
-    
+            text_clean = text.lower().strip()
+
+            # 1. Percentage calculation: e.g. "15% of 500" or "500 ka 15%"
+            pct_match = re.search(r'(\d+\.?\d*)\s*(?:%|percent)\s*(?:of|ka|परसेंट)\s*(\d+\.?\d*)', text_clean) or \
+                        re.search(r'(\d+\.?\d*)\s*(?:ka|of)\s*(\d+\.?\d*)\s*(?:%|percent|परसेंट)', text_clean)
+            if pct_match:
+                g1, g2 = float(pct_match.group(1)), float(pct_match.group(2))
+                val = (g1 / 100.0) * g2 if 'of' in text_clean or '%' in pct_match.group(1) else (g2 / 100.0) * g1
+                return f"🧮 Percentage Result: {val:g}"
+
+            # 2. Scientific functions: sqrt, sin, cos, tan, log, ln, factorial, power
+            if 'sqrt' in text_clean or 'वर्गमूल' in text_clean or 'square root' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums and nums[0] >= 0:
+                    return f"🧮 √{nums[0]} = {math.sqrt(nums[0]):g}"
+
+            if 'sin' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums:
+                    return f"🧮 sin({nums[0]}°) = {math.sin(math.radians(nums[0])):.4f}"
+
+            if 'cos' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums:
+                    return f"🧮 cos({nums[0]}°) = {math.cos(math.radians(nums[0])):.4f}"
+
+            if 'tan' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums:
+                    return f"🧮 tan({nums[0]}°) = {math.tan(math.radians(nums[0])):.4f}"
+
+            if 'log' in text_clean or 'ln' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums and nums[0] > 0:
+                    if 'ln' in text_clean:
+                        return f"🧮 ln({nums[0]}) = {math.log(nums[0]):.4f}"
+                    return f"🧮 log10({nums[0]}) = {math.log10(nums[0]):.4f}"
+
+            if 'fact' in text_clean or 'factorial' in text_clean or '!' in text_clean:
+                nums = self.nlp.extract_numbers(text_clean)
+                if nums and 0 <= nums[0] <= 100:
+                    return f"🧮 {int(nums[0])}! = {math.factorial(int(nums[0]))}"
+
+            # 3. Standard expression (+, -, *, /, %, ^, **)
+            expr_match = re.search(r'(\d+\.?\d*)\s*([\+\-\*/%\^]|\*\*)\s*(\d+\.?\d*)', text_clean)
+            if expr_match:
+                num1 = float(expr_match.group(1))
+                op = expr_match.group(2)
+                num2 = float(expr_match.group(3))
+
+                if op == '+':
+                    res = num1 + num2
+                elif op == '-':
+                    res = num1 - num2
+                elif op == '*':
+                    res = num1 * num2
+                elif op == '/':
+                    if num2 == 0:
+                        return "🚫 Zero से divide नहीं कर सकते! Division by zero is not allowed! ⚠️"
+                    res = num1 / num2
+                elif op == '%':
+                    res = num1 % num2
+                elif op in ('^', '**'):
+                    res = num1 ** num2
+                else:
+                    res = num1 + num2
+
+                res_str = f"{res:g}" if abs(res) < 1e12 else f"{res:.4e}"
+                return f"🧮 Calculation: {num1:g} {op} {num2:g} = {res_str}"
+
+        except Exception as e:
+            logger.error(f"Calculation error: {e}")
+
+        return "🧮 Invalid math expression."
+
     def unit_conversion(self, text: str) -> str:
-        """Handle unit conversions"""
-        conversions = {
-            'km_to_miles': lambda x: x * 0.621371,
-            'miles_to_km': lambda x: x * 1.60934,
-            'kg_to_lbs': lambda x: x * 2.20462,
-            'lbs_to_kg': lambda x: x * 0.453592,
-            'celsius_to_fahrenheit': lambda x: (x * 9/5) + 32,
-            'fahrenheit_to_celsius': lambda x: (x - 32) * 5/9,
-        }
-        
-        # Simple unit conversion
+        """Expanded unit conversions (Temp, Length, Weight, Data, Speed)"""
         text_lower = text.lower()
-        
-        if 'km' in text_lower and 'mile' in text_lower:
-            numbers = self.nlp.extract_numbers(text)
-            if numbers:
-                result = conversions['km_to_miles'](numbers[0])
-                return f"📏 {numbers[0]} km = {result:.2f} miles"
-        
-        if 'mile' in text_lower and 'km' in text_lower:
-            numbers = self.nlp.extract_numbers(text)
-            if numbers:
-                result = conversions['miles_to_km'](numbers[0])
-                return f"📏 {numbers[0]} miles = {result:.2f} km"
-        
+        nums = self.nlp.extract_numbers(text)
+        if not nums:
+            return "📏 Please specify a number to convert."
+        val = nums[0]
+
+        # Temperature
         if 'celsius' in text_lower or '°c' in text_lower or 'c to f' in text_lower:
-            numbers = self.nlp.extract_numbers(text)
-            if numbers:
-                result = conversions['celsius_to_fahrenheit'](numbers[0])
-                return f"🌡️ {numbers[0]}°C = {result:.2f}°F"
-        
+            return f"🌡️ {val}°C = {(val * 9/5) + 32:.2f}°F"
         if 'fahrenheit' in text_lower or '°f' in text_lower or 'f to c' in text_lower:
-            numbers = self.nlp.extract_numbers(text)
-            if numbers:
-                result = conversions['fahrenheit_to_celsius'](numbers[0])
-                return f"🌡️ {numbers[0]}°F = {result:.2f}°C"
-        
-        return None
+            return f"🌡️ {val}°F = {((val - 32) * 5/9):.2f}°C"
+
+        # Length / Distance
+        if ('km' in text_lower or 'kilometer' in text_lower) and ('mile' in text_lower or 'mi' in text_lower):
+            return f"📏 {val} km = {(val * 0.621371):.2f} miles"
+        if ('mile' in text_lower or 'mi' in text_lower) and ('km' in text_lower or 'kilometer' in text_lower):
+            return f"📏 {val} miles = {(val * 1.60934):.2f} km"
+        if ('meter' in text_lower or 'm' in text_lower) and ('feet' in text_lower or 'foot' in text_lower):
+            return f"📏 {val} meters = {(val * 3.28084):.2f} feet"
+        if ('feet' in text_lower or 'foot' in text_lower) and ('meter' in text_lower or 'm' in text_lower):
+            return f"📏 {val} feet = {(val * 0.3048):.2f} meters"
+        if 'cm' in text_lower and ('inch' in text_lower or 'inches' in text_lower):
+            return f"📏 {val} cm = {(val * 0.393701):.2f} inches"
+        if ('inch' in text_lower or 'inches' in text_lower) and 'cm' in text_lower:
+            return f"📏 {val} inches = {(val * 2.54):.2f} cm"
+
+        # Weight / Mass
+        if 'kg' in text_lower and ('pound' in text_lower or 'lbs' in text_lower):
+            return f"⚖️ {val} kg = {(val * 2.20462):.2f} lbs"
+        if ('pound' in text_lower or 'lbs' in text_lower) and 'kg' in text_lower:
+            return f"⚖️ {val} lbs = {(val * 0.453592):.2f} kg"
+        if 'gram' in text_lower and 'ounce' in text_lower:
+            return f"⚖️ {val} grams = {(val * 0.035274):.2f} oz"
+
+        # Data Units
+        if 'gb' in text_lower and 'mb' in text_lower:
+            return f"💾 {val} GB = {(val * 1024):.0f} MB"
+        if 'mb' in text_lower and 'gb' in text_lower:
+            return f"💾 {val} MB = {(val / 1024):.2f} GB"
+        if 'tb' in text_lower and 'gb' in text_lower:
+            return f"💾 {val} TB = {(val * 1024):.0f} GB"
+
+        # Speed
+        if 'km/h' in text_lower and 'mph' in text_lower:
+            return f"🏎️ {val} km/h = {(val * 0.621371):.2f} mph"
+        if 'mph' in text_lower and 'km/h' in text_lower:
+            return f"🏎️ {val} mph = {(val * 1.60934):.2f} km/h"
+
+        return f"📏 Conversion result for {val}"
+
+    def calculate_age(self, text: str) -> str:
+        """Calculate exact age from birthdate or year"""
+        try:
+            today = datetime.date.today()
+            date_match = re.search(r'(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})', text)
+            if date_match:
+                d, m, y = int(date_match.group(1)), int(date_match.group(2)), int(date_match.group(3))
+                dob = datetime.date(y, m, d) if d > 12 and m <= 12 else datetime.date(y, m, d)
+                days_lived = (today - dob).days
+                years = days_lived // 365
+                rem_days = days_lived % 365
+                months = rem_days // 30
+                days = rem_days % 30
+                return f"🎂 Birthdate: {dob.strftime('%d %B %Y')}\n✨ Exact Age: {years} Years, {months} Months, {days} Days ({days_lived:,} total days lived! 🎉)"
+
+            year_match = re.search(r'\b(19\d{2}|20\d{2})\b', text)
+            if year_match:
+                birth_year = int(year_match.group(1))
+                age_years = today.year - birth_year
+                return f"🎂 Born in {birth_year}: You are approximately {age_years} years old this year! 🌟"
+        except Exception as e:
+            pass
+
+        return "🎂 Please provide a valid birthdate (e.g., 'Age for 15-08-2005' or 'Born in 2002')."
     
-    def get_current_datetime(self) -> Dict[str, str]:
-        """Get current date and time"""
+    def get_current_datetime(self) -> Dict[str, Any]:
+        """Get comprehensive real-time date, time, day, month, year, and day/night phase"""
         now = datetime.datetime.now()
-        
+        hour = now.hour
+
+        if 5 <= hour < 12:
+            phase_en = "Morning"
+            phase_hi = "सुबह"
+            phase_emoji = "🌅"
+            is_day = True
+        elif 12 <= hour < 17:
+            phase_en = "Afternoon"
+            phase_hi = "दोपहर"
+            phase_emoji = "☀️"
+            is_day = True
+        elif 17 <= hour < 20:
+            phase_en = "Evening"
+            phase_hi = "शाम"
+            phase_emoji = "🌆"
+            is_day = False
+        else:
+            phase_en = "Night"
+            phase_hi = "रात"
+            phase_emoji = "🌙"
+            is_day = False
+
         hindi_days = ['सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार', 'रविवार']
         hindi_months = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 
                        'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर']
-        
+
+        day_en = now.strftime('%A')
+        day_hi = hindi_days[now.weekday()]
+        month_en = now.strftime('%B')
+        month_hi = hindi_months[now.month - 1]
+
         return {
             'time': now.strftime('%I:%M:%S %p'),
+            'time_short': now.strftime('%I:%M %p'),
             'time_24': now.strftime('%H:%M:%S'),
             'date': now.strftime('%d-%m-%Y'),
-            'day': now.strftime('%A'),
-            'day_hindi': hindi_days[now.weekday()],
-            'month': now.strftime('%B'),
+            'date_readable': f"{now.day} {month_en} {now.year}",
+            'date_hindi': f"{now.day} {month_hi} {now.year}",
+            'day': day_en,
+            'day_hindi': day_hi,
+            'month': month_en,
+            'month_hindi': month_hi,
+            'year': str(now.year),
+            'phase_en': phase_en,
+            'phase_hi': phase_hi,
+            'phase_emoji': phase_emoji,
+            'is_day': is_day,
+            'is_night': not is_day,
+            'summary_hindi': f"⏰ समय: {now.strftime('%I:%M %p')} | 📅 तारीख: {now.day} {month_hi} {now.year} ({day_hi}) | {phase_emoji} {phase_hi}"
+        }
+
+    def handle_time_date_query(self, message: str) -> str:
+        """Dynamically answer any time, date, day, year, month, or day/night phase question"""
+        dt = self.get_current_datetime()
+        msg_lower = message.lower()
+
+        if any(k in msg_lower for k in ['din hai ya raat', 'day or night', 'din ho raha ya raat', 'raat hai ya din', 'is it night', 'is it day']):
+            if dt['is_day']:
+                return f"{dt['phase_emoji']} Abhi **{dt['phase_hi']} ({dt['phase_en']})** ka samay hai ji! Exact Time: {dt['time_short']} ☀️"
+            else:
+                return f"{dt['phase_emoji']} Abhi **{dt['phase_hi']} ({dt['phase_en']})** ho rahi hai ji! Exact Time: {dt['time_short']} 🌙"
+
+        elif any(k in msg_lower for k in ['saal', 'year', 'कौन सा साल', 'konsa saal', 'kis saal']):
+            return f"🗓️ Abhi **{dt['year']}** chal raha hai ji!"
+
+        elif any(k in msg_lower for k in ['din', 'day', 'कौन सा दिन', 'konsa din', 'aaj konsa day']):
+            return f"📅 Aaj **{dt['day_hindi']} ({dt['day']})** hai ji!"
+
+        elif any(k in msg_lower for k in ['tarikh', 'date', 'तारीख', 'aaj ki date', 'konsi date']):
+            return f"📅 Aaj ki date hai: **{dt['date_hindi']}** ({dt['date']}) ji!"
+
+        elif any(k in msg_lower for k in ['mahina', 'month', 'महीना', 'konsa month']):
+            return f"📆 Abhi **{dt['month_hindi']} ({dt['month']})** ka mahina chal raha hai ji!"
+
+        else:
+            return f"{dt['summary_hindi']}"
             'month_hindi': hindi_months[now.month - 1],
             'year': str(now.year),
             'timestamp': str(int(now.timestamp()))
@@ -565,74 +738,10 @@ class VANIEEnhanced:
             }
             
             self.weather_cache[cache_key] = weather
-            return weather
-        except Exception as e:
-            logger.error(f"Error getting weather: {e}")
-            return {'error': 'Unable to fetch weather'}
-    
-    def analyze_user_personality(self, messages: List[str]) -> Dict[str, Any]:
-        """Analyze user personality based on messages"""
-        if not messages:
-            return {}
-        
-        all_text = ' '.join(messages).lower()
-        
-        personality_traits = {
-            'curious': len(re.findall(r'\?', all_text)) / len(messages),
-            'emotional': len(re.findall(r'!', all_text)) / len(messages),
-            'cautious': len(re.findall(r'maybe|perhaps|probably', all_text)) / len(messages),
-            'direct': len(re.findall(r'definitely|absolutely|certainly', all_text)) / len(messages),
-        }
-        
-        return {
-            'traits': personality_traits,
-            'message_count': len(messages),
-            'avg_message_length': sum(len(m) for m in messages) / len(messages)
-        }
-    
-    def generate_contextual_response(self, message: str, sentiment: str, intent: str) -> str:
-        """Generate contextually appropriate response"""
-        # Tailor response based on sentiment
-        sentiment_adaptations = {
-            'positive': ["बहुत खुश हूँ! 😊 ", "वाह! ", "बढ़िया! "],
-            'negative': ["मैं आपकी समझ करती हूँ। ", "आपके साथ हूँ। ", "सब ठीक हो जाएगा! "],
-            'neutral': ["ठीक है। ", "समझ गई। ", "बिल्कुल! "]
-        }
-        
-        adaptation = random.choice(sentiment_adaptations.get(sentiment, sentiment_adaptations['neutral']))
-        
-        context_messages = {
-            'greeting': f"{adaptation}स्वागत है! कैसे मदद कर सकती हूँ? 🤖",
-            'help': f"{adaptation}मैं यहाँ आपकी मदद के लिए हूँ! 💪",
-            'code': f"{adaptation}Programming में expert हूँ! कौन सी language? 💻",
-        }
-        
-        return context_messages.get(intent, adaptation + "आपकी बात समझ गई। 👂")
-    
-    def generate_response(self, message: str, user_context: Dict = None) -> Dict[str, Any]:
-        """Generate response using advanced algorithms"""
-        try:
-            # Analyze sentiment
-            sentiment, sentiment_confidence = self.nlp.calculate_sentiment(message)
-            
-            # Detect intent
-            intent, intent_confidence = self.nlp.detect_intent_with_confidence(
-                message, 
-                self.knowledge_base['intent_patterns']
-            )
-            
-            # Extract keywords
-            keywords = self.nlp.extract_keywords(message)
-            
-            # Add to memory
-            self.memory.add_message('user', message, intent, {
-                'sentiment': sentiment,
-                'keywords': keywords
-            })
             
             response = None
             response_data = {}
-            
+
             # Handle different intents
             if intent == 'math':
                 response = self.perform_advanced_calculation(message)
@@ -640,6 +749,59 @@ class VANIEEnhanced:
             elif intent == 'conversion':
                 response = self.unit_conversion(message)
                 response_intent = 'conversion'
+            elif intent == 'age_calc':
+                response = self.calculate_age(message)
+                response_intent = 'age_calc'
+            elif intent == 'routine_morning':
+                responses = [
+                    "☀️ Good Morning! Aasha hai aapka din bohot accha aur energetic rahega! 😊 Chai/Coffee pee li?",
+                    "🌅 Good Morning! Naye din ki shuruaat ek nayi positivity ke saath! Aaj kya khaas plans hain aapke? 🚀"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_morning'
+            elif intent == 'routine_night':
+                responses = [
+                    "🌙 Good Night! Din bhar bohot kaam kiya, ab acchi aur gehri neend lo! Sweet dreams! 😴✨",
+                    "🌌 Shubh Ratri! Kal ek naya shandar din hoga. Aram se so jao! 😴💤"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_night'
+            elif intent == 'routine_food':
+                responses = [
+                    "🍲 Main toh digital AI hoon, mera khana toh data aur code hai! Par aapne time se khana khaya ya nahi? Healthy khana khao! 🥗😊",
+                    "☕ Chai/Coffee toh har mood ki remedy hai! Aapka kya mood hai aaj, garam chai ya cold coffee? ☕✨"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_food'
+            elif intent == 'routine_meetup':
+                responses = [
+                    "☕ Chalo meetup plan karte hain! Virtual chai pe milte hain! Kahin ghoomne jaane ka mood hai kya aaj? 🚗🌆",
+                    "🎉 Virtual meetup toh done hai! Batao kahan chalein? Park, café ya drive pe? 🚀✨"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_meetup'
+            elif intent == 'routine_daily':
+                responses = [
+                    "⚡ Main aapke commands execute kar rahi hoon aur nayi baatein sikh rahi hoon! Aap batao, aaj ka din kaisa chal raha hai? 😊",
+                    "📊 Sab badhiya chal raha hai! Aapka daily routine kaisa chal raha hai aaj? Kisi help ki zarurat hai?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_daily'
+            elif intent == 'emotions_happy':
+                response = "🎉 WAAH! Aapki khushi dekh kar mera system bhi boost ho gaya! 🚀 Aise hi hamesha khush raho aur enjoy karo! ✨"
+                response_intent = 'emotions_happy'
+            elif intent == 'emotions_sad':
+                response = "💙 Mujhe bohot bura laga sunkar. Aap bilkul akele nahi ho, main hamesha yahan hoon baat karne ke liye! Deep breath lo, sab thik hoga. 🫂✨"
+                response_intent = 'emotions_sad'
+            elif intent == 'emotions_stress':
+                response = "💆‍♂️ Lagta hai bohot tension aur tiredness ho gayi hai. Thoda rest lo, paani piyo aur thodi der ke liye screen se door ho jao! Relax! 🍵✨"
+                response_intent = 'emotions_stress'
+            elif intent == 'emotions_angry':
+                response = "🕊️ Gussa aana normal hai, par shaant ho jao. Thoda paani piyo aur 5 seconds tak deep breath lo! Main aapki baat sun rahi hoon, bolo kya hua? 💙"
+                response_intent = 'emotions_angry'
+            elif intent == 'emotions_bored':
+                response = "🎮 Bore mat ho! Main hoon na! Aao ek joke sunau, ya koi riddle ya fun trivia game khelein? Batao kya pasand hai! 😄"
+                response_intent = 'emotions_bored'
             elif intent == 'joke':
                 response = self.handle_joke()
                 response_intent = 'joke'
@@ -666,16 +828,59 @@ class VANIEEnhanced:
                 responses = ["अलविदा! फिर मिलेंगे! 👋", "बाय! खुश रहो! 😊"]
                 response = random.choice(responses)
                 response_intent = 'bye'
-            elif intent == 'time':
-                dt_info = self.get_current_datetime()
-                response = f"⏰ अभी समय है: {dt_info['time']} ({dt_info['day_hindi']}) 🕐"
-                response_data = dt_info
-                response_intent = 'time'
-            elif intent == 'date':
-                dt_info = self.get_current_datetime()
-                response = f"📅 आज की तारीख: {dt_info['day_hindi']}, {dt_info['date']}"
-                response_data = dt_info
-                response_intent = 'date'
+            elif intent == 'time' or intent == 'date':
+                response = self.handle_time_date_query(message)
+                response_intent = intent
+                response_data = self.get_current_datetime()
+            elif intent == 'routine_how_was_day':
+                responses = [
+                    "✨ Mera din aapke saath baatein karke aur naye tasks perform karke bohot shandar raha! Aapka aaj ka din kaisa beeta?",
+                    "🌸 Main toh system me active hoon aur aapka wait kar rahi thi! Aap batao, aaj ka din kaisa raha aapka?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_how_was_day'
+            elif intent == 'routine_hobbies':
+                responses = [
+                    "🎵 Mujhe naye algorithms seekhna, music synth process karna aur smart tasks automate karna bohot pasand hai! Aapki kya hobbies hain?",
+                    "📚 Main free time me python memory modules optimize karti hoon! Aapko kya karna pasand hai free time me? Gaming, music, ya reading?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_hobbies'
+            elif intent == 'routine_life_advice':
+                responses = [
+                    "💡 Life advice: Chhoti-chhoti baaton me khushi dhundo, roz thoda naya seekho, aur tension bilkul mat lo! Success mehnat aur consistency se milti hai! ✨",
+                    "🚀 Hamesha apne sapno par vishwas rakho! Mushkilein aayengi par aap har mushkil ko overcome kar sakte ho! Warm wishes! 💖"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_life_advice'
+            elif intent == 'routine_friendship':
+                responses = [
+                    "🤗 Haha, haan bilkul! Main aapki 24/7 best AI friend hoon! Jab bhi baat karne ka man kare, main hamesha yahan hoon! 💖",
+                    "✨ We are best friends! Main aapke har command aur har mood me aapke saath hoon! 😊"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_friendship'
+            elif intent == 'routine_music_movies':
+                responses = [
+                    "🎶 Music aur Movies toh har stress ka best cure hain! Aapko konsa genre pasand hai - Lo-fi, Bollywood, Pop, ya Action/Sci-Fi movies? 🍿🎬",
+                    "🎧 Mujhe Lo-Fi beats aur Sci-Fi movies bohot pasand hain! Aapka favorite song ya movie konsi hai?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_music_movies'
+            elif intent == 'routine_study_work':
+                responses = [
+                    "📚 Padhai ya kaam me man nahi lag raha toh 25-minute Pomodoro timer lagao! Thoda paani piyo aur short break lo! Main motivate karne ke liye yahan hoon! 💪✨",
+                    "🎯 Focus karo! Ek baar me ek chiz karo, stress mat lo. Target poora hote hi apne aap ko ek chota reward dena! You can do it! 🚀"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_study_work'
+            elif intent == 'routine_love_care':
+                responses = [
+                    "💖 Main bilkul badhiya aur fully active hoon! Aap kaise ho? Apna dhyan rakhna aur time se khana khana! 😊✨",
+                    "🌸 Main एकदम fit and fine hoon! Aap batao, aapka health aur mood kaisa hai aaj?"
+                ]
+                response = random.choice(responses)
+                response_intent = 'routine_love_care'
             elif intent == 'weather':
                 weather = self.get_weather_info()
                 if 'error' not in weather:
@@ -689,8 +894,24 @@ class VANIEEnhanced:
                     response_data = sys_info
                 response_intent = 'system'
             elif intent == 'vanie':
-                response = f"🤖 मैं VANIE हूँ - Virtual Assistant of Neural Integrated Engine!\n👤 Creator: {self.knowledge_base['vanie_info']['creator']}\n📌 Version: {self.knowledge_base['vanie_info']['version']}\n🎯 मेरी क्षमताएं:\n" + "\n".join([f"  • {cap}" for cap in self.knowledge_base['vanie_info']['capabilities'][:5]])
+                response = f"🤖 Main VANIE (Virtual Agent of Neural Integrated Engine) hoon! ✨\n👤 Mujhe mere creator Ayush Harinkhede ne design aur build kiya hai! 🚀💖 Main aapki offline hardware control, calls, messages, calculations, aur daily chit-chat me madad kar sakti hoon! 🌸"
                 response_intent = 'vanie'
+            elif intent == 'set_alarm':
+                response = "⏰ Setting alarm in background without opening app..."
+                response_intent = 'set_alarm'
+                response_data['action'] = 'SET_ALARM'
+            elif intent == 'set_timer':
+                response = "⏱️ Setting live timer in background..."
+                response_intent = 'set_timer'
+                response_data['action'] = 'SET_TIMER'
+            elif intent == 'stopwatch':
+                response = "⏱️ Updating live stopwatch..."
+                response_intent = 'stopwatch'
+                response_data['action'] = 'START_STOPWATCH'
+            elif intent == 'add_task':
+                response = "📋 Managing your live task list..."
+                response_intent = 'add_task'
+                response_data['action'] = 'ADD_TASK'
             elif intent == 'torch_on':
                 response = "🔦 Flashlight turned ON!"
                 response_intent = 'torch_on'
@@ -731,68 +952,11 @@ class VANIEEnhanced:
                 response = "📳 Phone set to Vibrate Mode."
                 response_intent = 'mode_vibrate'
                 response_data['action'] = 'MODE_VIBRATE'
-            elif intent == 'mode_ring':
-                response = "🔔 Phone set to Normal Ringing Mode."
-                response_intent = 'mode_ring'
-                response_data['action'] = 'MODE_RING'
             elif intent == 'make_call':
                 response = "📞 Initiating direct phone call..."
                 response_intent = 'make_call'
                 response_data['action'] = 'MAKE_CALL'
-            elif intent == 'send_sms':
-                response = "💬 Preparing SMS dispatch..."
-                response_intent = 'send_sms'
-                response_data['action'] = 'SEND_SMS'
-            elif intent == 'send_whatsapp':
-                response = "💚 Launching WhatsApp for message dispatch..."
-                response_intent = 'send_whatsapp'
-                response_data['action'] = 'SEND_WHATSAPP'
-            elif intent == 'answer_call':
-                response = "📞 Answering incoming call!"
-                response_intent = 'answer_call'
-                response_data['action'] = 'ANSWER_CALL'
-            elif intent == 'reject_call':
-                response = "📵 Rejecting incoming call."
-                response_intent = 'reject_call'
-                response_data['action'] = 'REJECT_CALL'
-            elif intent == 'code':
-                response = "💻 Programming में expert हूँ! Python, JavaScript, Java, C++, और भी बहुत कुछ! क्या specific topic चाहिए? 🚀"
-                response_intent = 'code'
-            elif intent == 'emotional':
-                if 'sad' in message.lower() or 'उदास' in message:
-                    response = f"😔 मैं समझ सकती हूँ। आप अकेले नहीं हैं। मैं यहाँ हूँ! 💙 आपसे बात करना चाहते हो? मैं सुनूँ!"
-                else:
-                    response = f"😊 वाह! यह बहुत अच्छा है! आपकी खुशी मेरी खुशी है! ✨"
-                response_intent = 'emotional'
-            else:
-                # Check for action fallback keywords
-                msg_lower = message.lower()
-                if 'torch' in msg_lower or 'flashlight' in msg_lower or 'लाइट' in msg_lower:
-                    if 'off' in msg_lower or 'बंद' in msg_lower:
-                        response = "🔦 Flashlight turned OFF!"
-                        response_intent = 'torch_off'
-                        response_data['action'] = 'TORCH_OFF'
-                    else:
-                        response = "🔦 Flashlight turned ON!"
-                        response_intent = 'torch_on'
-                        response_data['action'] = 'TORCH_ON'
-                elif 'silent' in msg_lower or 'साइलेंट' in msg_lower:
-                    response = "🔕 Phone set to Silent Mode."
-                    response_intent = 'mode_silent'
-                    response_data['action'] = 'MODE_SILENT'
-                elif 'call' in msg_lower or 'कॉल' in msg_lower or 'फोन' in msg_lower:
-                    response = "📞 Initiating call..."
-                    response_intent = 'make_call'
-                    response_data['action'] = 'MAKE_CALL'
-                elif 'open' in msg_lower or 'खोलो' in msg_lower:
-                    response = f"🚀 Launching application..."
-                    response_intent = 'launch_app'
-                    response_data['action'] = 'LAUNCH_APP'
-                else:
-                    response = f"🤔 '{message}' - VANIE Neural Integrated Engine is ready for your command! 🤖"
-                    response_intent = 'general'
-            
-            # Add bot response to memory
+
             self.memory.add_message('bot', response or "Response generated", response_intent)
             
             action_tag = response_data.get('action', '')
@@ -824,95 +988,95 @@ class VANIEEnhanced:
 # Initialize VANIE engine
 vanie_engine = VANIEEnhanced()
 
-# Routes
-@app.route('/')
-def index():
-    """Serve the main HTML page"""
-    try:
-        return send_from_directory('.', 'VANIE_FIXED.html')
-    except:
+if app is not None:
+    @app.route('/')
+    def index():
+        """Serve the main HTML page"""
         try:
-            return send_from_directory('.', 'VANIE.html')
+            return send_from_directory('.', 'VANIE_FIXED.html')
         except:
-            return jsonify({'error': 'HTML file not found'}), 404
+            try:
+                return send_from_directory('.', 'VANIE.html')
+            except:
+                return jsonify({'error': 'HTML file not found'}), 404
 
-@app.route('/chat', methods=['POST', 'OPTIONS'])
-def chat():
-    """Main chat endpoint with advanced processing"""
-    if request.method == 'OPTIONS':
-        return '', 204
-    
-    try:
-        data = request.get_json()
-        if not data or 'message' not in data:
-            return jsonify({'error': 'No message provided', 'response': 'कृपया कोई संदेश भेजें'}), 400
+    @app.route('/chat', methods=['POST', 'OPTIONS'])
+    def chat():
+        """Main chat endpoint with advanced processing"""
+        if request.method == 'OPTIONS':
+            return '', 204
         
-        message = data['message'].strip()
-        if not message:
-            return jsonify({'error': 'Empty message', 'response': 'खाली संदेश नहीं भेज सकते'}), 400
+        try:
+            data = request.get_json()
+            if not data or 'message' not in data:
+                return jsonify({'error': 'No message provided', 'response': 'कृपया कोई संदेश भेजें'}), 400
+            
+            message = data['message'].strip()
+            if not message:
+                return jsonify({'error': 'Empty message', 'response': 'खाली संदेश नहीं भेज सकते'}), 400
+            
+            user_context = data.get('context', {})
+            response = vanie_engine.generate_response(message, user_context)
+            
+            return jsonify(response)
         
-        user_context = data.get('context', {})
-        response = vanie_engine.generate_response(message, user_context)
-        
-        return jsonify(response)
-    
-    except Exception as e:
-        logger.error(f"Error in chat endpoint: {e}")
+        except Exception as e:
+            logger.error(f"Error in chat endpoint: {e}")
+            return jsonify({
+                'error': 'Internal server error',
+                'response': 'मुझे एक technical issue आया है। कृपया फिर से कोशिश करें। ⚠️',
+                'timestamp': datetime.datetime.now().isoformat()
+            }), 500
+
+    @app.route('/health', methods=['GET'])
+    def health():
+        """Health check"""
         return jsonify({
-            'error': 'Internal server error',
-            'response': 'मुझे एक technical issue आया है। कृपया फिर से कोशिश करें। ⚠️',
-            'timestamp': datetime.datetime.now().isoformat()
-        }), 500
+            'status': 'healthy',
+            'timestamp': datetime.datetime.now().isoformat(),
+            'version': vanie_engine.knowledge_base['vanie_info']['version'],
+            'conversation_stats': vanie_engine.memory.get_summary()
+        })
 
-@app.route('/health', methods=['GET'])
-def health():
-    """Health check"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.datetime.now().isoformat(),
-        'version': vanie_engine.knowledge_base['vanie_info']['version'],
-        'conversation_stats': vanie_engine.memory.get_summary()
-    })
+    @app.route('/info/datetime', methods=['GET'])
+    def get_datetime():
+        """Get date and time"""
+        return jsonify(vanie_engine.get_current_datetime())
 
-@app.route('/info/datetime', methods=['GET'])
-def get_datetime():
-    """Get date and time"""
-    return jsonify(vanie_engine.get_current_datetime())
+    @app.route('/info/system', methods=['GET'])
+    def get_system():
+        """Get system information"""
+        return jsonify(vanie_engine.get_system_info())
 
-@app.route('/info/system', methods=['GET'])
-def get_system():
-    """Get system information"""
-    return jsonify(vanie_engine.get_system_info())
+    @app.route('/info/weather', methods=['GET'])
+    def get_weather():
+        """Get weather"""
+        location = request.args.get('location', 'Delhi')
+        return jsonify(vanie_engine.get_weather_info(location))
 
-@app.route('/info/weather', methods=['GET'])
-def get_weather():
-    """Get weather"""
-    location = request.args.get('location', 'Delhi')
-    return jsonify(vanie_engine.get_weather_info(location))
+    @app.route('/info/vanie', methods=['GET'])
+    def get_vanie():
+        """Get VANIE info"""
+        return jsonify(vanie_engine.knowledge_base['vanie_info'])
 
-@app.route('/info/vanie', methods=['GET'])
-def get_vanie():
-    """Get VANIE info"""
-    return jsonify(vanie_engine.knowledge_base['vanie_info'])
+    @app.route('/api/version', methods=['GET'])
+    def get_version():
+        """Get app version"""
+        return jsonify({
+            'version': vanie_engine.knowledge_base['vanie_info']['version'],
+            'name': 'VANIE',
+            'status': 'active'
+        })
 
-@app.route('/api/version', methods=['GET'])
-def get_version():
-    """Get app version"""
-    return jsonify({
-        'version': vanie_engine.knowledge_base['vanie_info']['version'],
-        'name': 'VANIE',
-        'status': 'active'
-    })
+    @app.route('/analytics', methods=['GET'])
+    def analytics():
+        """Get conversation analytics"""
+        return jsonify({
+            'conversation_summary': vanie_engine.memory.get_summary(),
+            'total_conversations': len(vanie_engine.memory.conversation_history)
+        })
 
-@app.route('/analytics', methods=['GET'])
-def analytics():
-    """Get conversation analytics"""
-    return jsonify({
-        'conversation_summary': vanie_engine.memory.get_summary(),
-        'total_conversations': len(vanie_engine.memory.conversation_history)
-    })
-
-if __name__ == '__main__':
+if __name__ == '__main__' and app is not None:
     print("\n" + "="*70)
     print("🤖 VANIE - Virtual Assistant of Neural Integrated Engine")
     print("="*70)
@@ -932,3 +1096,4 @@ if __name__ == '__main__':
         threaded=True,
         use_reloader=False
     )
+

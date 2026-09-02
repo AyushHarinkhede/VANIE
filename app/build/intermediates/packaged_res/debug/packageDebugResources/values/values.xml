@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#00052F</color>
+    <color name="ic_launcher_background">#0A1128</color>
     <string name="accessibility_service_description">VANIE Accessibility Service automates hands-free WhatsApp messaging and system voice shortcuts.</string>
     <string name="app_name">VANIE AI</string>
     <style name="Theme.VANIE" parent="android:Theme.Material.Light.NoActionBar">

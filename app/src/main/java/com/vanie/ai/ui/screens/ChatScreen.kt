@@ -11,6 +11,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -34,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -60,18 +64,9 @@ data class ChatMessage(
 )
 
 fun cleanTextForTts(text: String): String {
-    if (text.isBlank()) return ""
-    return text
-        .replace(Regex("[\\uD83C-\\uDBFF][\\uDC00-\\uDFFF]"), "")
-        .replace(Regex("[\\u2600-\\u27BF]"), "")
-        .replace(Regex("[\\u2300-\\u23FF]"), "")
-        .replace(Regex("[\\u2B00-\\u2BFF]"), "")
-        .replace(Regex("[\\u1F000-\\u1F9FF]"), "")
-        .replace(Regex("[\\p{So}\\p{Cn}\\p{Cs}\\p{Co}\\p{Cc}]"), "")
-        .replace(Regex("[*_#`~]"), "")
-        .replace(Regex("\\s+"), " ")
-        .trim()
+    return com.vanie.ai.util.VanieTtsUtils.cleanTextForTts(text)
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -184,9 +179,7 @@ fun ChatScreen(
                             } else {
                                 ttsEngine?.stop()
                                 currentlySpeakingId = msg.id
-                                val cleanText = cleanTextForTts(text)
-                                ttsEngine?.language = Locale.US
-                                ttsEngine?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, msg.id)
+                                com.vanie.ai.util.VanieTtsUtils.speakExpressive(ttsEngine, text, msg.id)
                             }
                         }
                     )
@@ -200,24 +193,15 @@ fun ChatScreen(
             }
         }
 
-        // Floating Liquid Glass Wider Input Action Bar (With Animated Send & Mic Buttons)
+        // Floating Liquid Glass Wider Input Action Bar (Soft Curves without Hard Borders)
         Surface(
-            tonalElevation = 6.dp,
-            shadowElevation = 8.dp,
-            shape = RoundedCornerShape(30.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
-            border = BorderStroke(
-                1.dp,
-                Brush.horizontalGradient(
-                    listOf(
-                        AccentCyan.copy(alpha = 0.5f),
-                        AccentPurple.copy(alpha = 0.5f)
-                    )
-                )
-            ),
+            tonalElevation = 4.dp,
+            shadowElevation = 6.dp,
+            shape = RoundedCornerShape(32.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .padding(horizontal = 10.dp, vertical = 8.dp)
                 .navigationBarsPadding()
         ) {
             Row(
@@ -236,7 +220,7 @@ fun ChatScreen(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
                 ) {
                     Icon(
                         imageVector = Icons.Default.AttachFile,
@@ -267,10 +251,10 @@ fun ChatScreen(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(26.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.45f),
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = {
@@ -295,20 +279,12 @@ fun ChatScreen(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    AccentCyan
-                                )
-                            )
-                        )
-                        .border(1.dp, Color.White.copy(alpha = 0.4f), CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Mic,
                         contentDescription = "Live Voice VANIE",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
 
@@ -332,20 +308,12 @@ fun ChatScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(
-                                            AccentPurple,
-                                            MaterialTheme.colorScheme.primary
-                                        )
-                                    )
-                                )
-                                .border(1.dp, Color.White.copy(alpha = 0.4f), CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Send,
                                 contentDescription = "Send Message",
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -396,31 +364,18 @@ fun GlassmorphicChatBubble(
     ) {
         Surface(
             shape = RoundedCornerShape(
-                topStart = 20.dp,
-                topEnd = 20.dp,
-                bottomStart = if (isUser) 20.dp else 4.dp,
-                bottomEnd = if (isUser) 4.dp else 20.dp
+                topStart = 22.dp,
+                topEnd = 22.dp,
+                bottomStart = if (isUser) 22.dp else 6.dp,
+                bottomEnd = if (isUser) 6.dp else 22.dp
             ),
             color = if (isUser) {
                 MaterialTheme.colorScheme.primaryContainer
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f)
             },
-            tonalElevation = if (isUser) 4.dp else 2.dp,
-            shadowElevation = if (isUser) 2.dp else 1.dp,
-            border = BorderStroke(
-                1.dp,
-                if (isUser) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                } else {
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            AccentCyan.copy(alpha = 0.5f),
-                            AccentPurple.copy(alpha = 0.5f)
-                        )
-                    )
-                }
-            ),
+            tonalElevation = if (isUser) 3.dp else 1.dp,
+            shadowElevation = if (isUser) 2.dp else 0.dp,
             modifier = Modifier.widthIn(max = 310.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
@@ -566,9 +521,8 @@ fun ThinkingIndicator() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-            .border(1.dp, AccentCyan.copy(alpha = 0.5f), RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(22.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f))
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         Image(
@@ -593,4 +547,5 @@ fun ThinkingIndicator() {
         )
     }
 }
+
 

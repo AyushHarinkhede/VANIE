@@ -11,7 +11,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -443,19 +442,10 @@ fun VanieTopAppBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-        tonalElevation = 6.dp,
-        shadowElevation = 6.dp,
-        border = BorderStroke(
-            1.dp,
-            Brush.horizontalGradient(
-                listOf(
-                    AccentCyan.copy(alpha = 0.4f),
-                    AccentPurple.copy(alpha = 0.4f)
-                )
-            )
-        )
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
+        tonalElevation = 4.dp,
+        shadowElevation = 4.dp
     ) {
         TopAppBar(
             title = {
@@ -552,7 +542,7 @@ fun SettingsModalSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
     ) {
         Column(
             modifier = Modifier
@@ -570,8 +560,7 @@ fun SettingsModalSheet(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f)),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
@@ -617,8 +606,7 @@ fun SettingsModalSheet(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, AccentPurple.copy(alpha = 0.3f)),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = "AI Voice & Response Persona", fontWeight = FontWeight.Bold, fontSize = 15.sp)
@@ -662,8 +650,7 @@ fun SettingsModalSheet(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f)),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
             ) {
                 Row(
                     modifier = Modifier
@@ -700,8 +687,7 @@ fun SettingsModalSheet(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, AccentPurple.copy(alpha = 0.3f)),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = "TTS Speech Speed: ${String.format("%.1fx", speechSpeed)}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
@@ -724,6 +710,7 @@ fun SettingsModalSheet(
         }
     }
 }
+
 
 @Composable
 fun AboutDeveloperDialog(onDismiss: () -> Unit, onOpenGithub: () -> Unit, onSendEmail: () -> Unit) {

@@ -13,9 +13,7 @@ import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -238,11 +236,7 @@ fun VanieVoiceOverlay(
         if (responseText.isNotBlank() && !isVanieSilent) {
             currentMode = VoiceMode.VANIE_SPEAKING
             performVibration("finish")
-            val spokenTextClean = com.vanie.ai.ui.screens.cleanTextForTts(responseText)
-            if (spokenTextClean.isNotBlank()) {
-                ttsEngine?.language = Locale.US
-                ttsEngine?.speak(spokenTextClean, TextToSpeech.QUEUE_FLUSH, null, "VANIE_CONTINUOUS_VOICE")
-            }
+            com.vanie.ai.util.VanieTtsUtils.speakExpressive(ttsEngine, responseText, "VANIE_CONTINUOUS_VOICE")
         }
     }
 
@@ -276,17 +270,8 @@ fun VanieVoiceOverlay(
 
                 // Clean Live Subtitle Transcript Display
                 Surface(
-                    shape = RoundedCornerShape(22.dp),
-                    color = Color.White.copy(alpha = 0.06f),
-                    border = BorderStroke(
-                        1.dp,
-                        Brush.horizontalGradient(
-                            listOf(
-                                AccentCyan.copy(alpha = 0.3f),
-                                AccentPurple.copy(alpha = 0.3f)
-                            )
-                        )
-                    ),
+                    shape = RoundedCornerShape(24.dp),
+                    color = Color.White.copy(alpha = 0.07f),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
@@ -342,13 +327,8 @@ fun VanieVoiceOverlay(
                                 if (isUserMuted) {
                                     Color(0xFFFF5252).copy(alpha = 0.25f)
                                 } else {
-                                    AccentCyan.copy(alpha = 0.2f)
+                                    AccentCyan.copy(alpha = 0.25f)
                                 }
-                            )
-                            .border(
-                                1.5.dp,
-                                if (isUserMuted) Color(0xFFFF5252).copy(alpha = 0.6f) else AccentCyan.copy(alpha = 0.6f),
-                                CircleShape
                             )
                     ) {
                         Icon(
@@ -376,13 +356,8 @@ fun VanieVoiceOverlay(
                                 if (isVanieSilent) {
                                     Color(0xFFFF9800).copy(alpha = 0.25f)
                                 } else {
-                                    AccentPurple.copy(alpha = 0.2f)
+                                    AccentPurple.copy(alpha = 0.25f)
                                 }
-                            )
-                            .border(
-                                1.5.dp,
-                                if (isVanieSilent) Color(0xFFFF9800).copy(alpha = 0.6f) else AccentPurple.copy(alpha = 0.6f),
-                                CircleShape
                             )
                     ) {
                         Icon(
@@ -405,8 +380,7 @@ fun VanieVoiceOverlay(
                         modifier = Modifier
                             .size(54.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.12f))
-                            .border(1.5.dp, Color.White.copy(alpha = 0.4f), CircleShape)
+                            .background(Color.White.copy(alpha = 0.14f))
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -421,6 +395,7 @@ fun VanieVoiceOverlay(
             }
         }
     }
+
 }
 
 /**
@@ -500,7 +475,7 @@ fun HyperRealisticFluidWaveVisualizer(
                     path = wavePath,
                     color = color,
                     style = Stroke(
-                        width = (3.5dp * freqMultiplier).toPx(),
+                        width = (3.5.dp * freqMultiplier).toPx(),
                         cap = androidx.compose.ui.graphics.StrokeCap.Round
                     )
                 )
