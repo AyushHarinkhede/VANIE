@@ -37,6 +37,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vanie.ai.control.VanieAlarmState
+import com.vanie.ai.control.VanieStopwatch
+import com.vanie.ai.control.VanieTaskManager
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.core.app.ActivityCompat
@@ -299,20 +302,20 @@ class MainActivity : ComponentActivity() {
                 messages.add(ChatMessage(sender = "vanie", text = "⏰ Alarm set for ${String.format("%02d:%02d", hour, minute)}!"))
             }
             ActionCommand.CONFIRM_ALARM_AM -> {
-                val pendingHour = com.vanie.ai.control.VanieAlarmState.pendingHour
-                val pendingMin = com.vanie.ai.control.VanieAlarmState.pendingMinute
+                val pendingHour = VanieAlarmState.pendingHour
+                val pendingMin = VanieAlarmState.pendingMinute
                 val hour = if (pendingHour == 12) 0 else pendingHour
                 deviceController.setAlarm(hour, pendingMin, "VANIE Alarm")
                 messages.add(ChatMessage(sender = "vanie", text = "⏰ Subah (AM) ka alarm set for ${String.format("%02d:%02d", hour, pendingMin)}!"))
-                com.vanie.ai.control.VanieAlarmState.isWaitingForAmPm = false
+                VanieAlarmState.isWaitingForAmPm = false
             }
             ActionCommand.CONFIRM_ALARM_PM -> {
-                val pendingHour = com.vanie.ai.control.VanieAlarmState.pendingHour
-                val pendingMin = com.vanie.ai.control.VanieAlarmState.pendingMinute
+                val pendingHour = VanieAlarmState.pendingHour
+                val pendingMin = VanieAlarmState.pendingMinute
                 val hour = if (pendingHour == 12) 12 else (pendingHour % 12) + 12
                 deviceController.setAlarm(hour, pendingMin, "VANIE Alarm")
                 messages.add(ChatMessage(sender = "vanie", text = "⏰ Shaam/Raat (PM) ka alarm set for ${String.format("%02d:%02d", hour, pendingMin)}!"))
-                com.vanie.ai.control.VanieAlarmState.isWaitingForAmPm = false
+                VanieAlarmState.isWaitingForAmPm = false
             }
             ActionCommand.SET_TIMER -> {
                 val sec = targetName?.toIntOrNull() ?: 60
@@ -320,27 +323,27 @@ class MainActivity : ComponentActivity() {
                 messages.add(ChatMessage(sender = "vanie", text = "⏱️ Timer set for $sec seconds!"))
             }
             ActionCommand.START_STOPWATCH -> {
-                val res = com.vanie.ai.control.VanieStopwatch.start()
+                val res = VanieStopwatch.start()
                 messages.add(ChatMessage(sender = "vanie", text = res))
             }
             ActionCommand.PAUSE_STOPWATCH -> {
-                val res = com.vanie.ai.control.VanieStopwatch.pause()
+                val res = VanieStopwatch.pause()
                 messages.add(ChatMessage(sender = "vanie", text = res))
             }
             ActionCommand.RESET_STOPWATCH -> {
-                val res = com.vanie.ai.control.VanieStopwatch.reset()
+                val res = VanieStopwatch.reset()
                 messages.add(ChatMessage(sender = "vanie", text = res))
             }
             ActionCommand.ADD_TASK -> {
-                val res = com.vanie.ai.control.VanieTaskManager.addTask(targetName ?: "")
+                val res = VanieTaskManager.addTask(targetName ?: "")
                 messages.add(ChatMessage(sender = "vanie", text = res))
             }
             ActionCommand.SHOW_TASKS -> {
-                val res = com.vanie.ai.control.VanieTaskManager.getTasks()
+                val res = VanieTaskManager.getTasks()
                 messages.add(ChatMessage(sender = "vanie", text = res))
             }
             ActionCommand.CLEAR_TASKS -> {
-                val res = com.vanie.ai.control.VanieTaskManager.clearTasks()
+                val res = VanieTaskManager.clearTasks()
                 messages.add(ChatMessage(sender = "vanie", text = res))
             }
             ActionCommand.BATTERY, ActionCommand.GET_DETAILED_BATTERY -> {
