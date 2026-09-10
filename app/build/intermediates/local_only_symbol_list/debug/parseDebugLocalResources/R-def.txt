@@ -7,6 +7,7 @@ mipmap ic_launcher_foreground
 mipmap ic_launcher_monochrome
 mipmap ic_launcher_round
 mipmap vanie_icon
+mipmap vanie_logo
 string accessibility_service_description
 string app_name
 style Theme.VANIE

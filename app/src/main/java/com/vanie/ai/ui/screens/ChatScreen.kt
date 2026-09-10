@@ -9,11 +9,14 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -99,7 +102,7 @@ fun ChatScreen(
     DisposableEffect(Unit) {
         val tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // TTS ready
+                ttsEngine?.language = Locale.US
             }
         }
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
@@ -193,12 +196,29 @@ fun ChatScreen(
             }
         }
 
-        // Floating Liquid Glass Wider Input Action Bar (Soft Curves without Hard Borders)
+        // Dynamic Animated Typing Container Feedback & Surface Properties
+        val isTyping = textState.isNotBlank()
+        val containerColor by animateColorAsState(
+            targetValue = if (isTyping) {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
+            },
+            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+            label = "inputContainerColor"
+        )
+        val barElevation by animateDpAsState(
+            targetValue = if (isTyping) 8.dp else 4.dp,
+            animationSpec = spring(stiffness = Spring.StiffnessLow),
+            label = "barElevation"
+        )
+
+        // Floating Liquid Glass Redesigned Input Action Bar
         Surface(
-            tonalElevation = 4.dp,
-            shadowElevation = 6.dp,
+            tonalElevation = barElevation,
+            shadowElevation = barElevation,
             shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
+            color = containerColor,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp, vertical = 8.dp)
@@ -207,7 +227,7 @@ fun ChatScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 6.dp, vertical = 4.dp),
+                    .padding(horizontal = 6.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Water Drop Attach File Button
@@ -220,7 +240,7 @@ fun ChatScreen(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
                     Icon(
                         imageVector = Icons.Default.AttachFile,
@@ -231,7 +251,7 @@ fun ChatScreen(
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                // Wider Input Text Field
+                // Redesigned Wider Input Text Field
                 OutlinedTextField(
                     value = textState,
                     onValueChange = {
@@ -245,13 +265,13 @@ fun ChatScreen(
                             text = "Ask VANIE...",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Normal,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
                         )
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(26.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.45f),
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent
@@ -288,14 +308,24 @@ fun ChatScreen(
                     )
                 }
 
-                // Send Button with Smooth Fade & Spring Bouncy Scale Animation
+                // Hyper-Fluid Send Button with Horizontal Spring Expand/Shrink & Bounce Scale Transition
                 AnimatedVisibility(
                     visible = textState.isNotBlank(),
-                    enter = fadeIn(animationSpec = tween(250)) + scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow)),
-                    exit = fadeOut(animationSpec = tween(200)) + scaleOut(animationSpec = spring(stiffness = Spring.StiffnessHigh))
+                    enter = expandHorizontally(
+                        expandFrom = Alignment.End,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)
+                    ) + fadeIn(animationSpec = tween(280)) + scaleIn(
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)
+                    ),
+                    exit = shrinkHorizontally(
+                        shrinkTowards = Alignment.End,
+                        animationSpec = spring(stiffness = Spring.StiffnessMedium)
+                    ) + fadeOut(animationSpec = tween(200)) + scaleOut(
+                        animationSpec = spring(stiffness = Spring.StiffnessHigh)
+                    )
                 ) {
-                    Row {
-                        Spacer(modifier = Modifier.width(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(modifier = Modifier.width(6.dp))
                         IconButton(
                             onClick = {
                                 if (textState.isNotBlank()) {
@@ -391,19 +421,13 @@ fun GlassmorphicChatBubble(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "VANIE",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AccentCyan
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
                                 .background(AccentGreen)
                         )
+
                     }
                 }
 

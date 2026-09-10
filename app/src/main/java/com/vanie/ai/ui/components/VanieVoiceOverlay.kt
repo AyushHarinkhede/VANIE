@@ -13,6 +13,7 @@ import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -99,7 +100,7 @@ fun VanieVoiceOverlay(
     DisposableEffect(context) {
         val tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // TTS ready
+                ttsEngine?.language = Locale.US
             }
         }
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
@@ -107,16 +108,26 @@ fun VanieVoiceOverlay(
                 currentMode = VoiceMode.VANIE_SPEAKING
             }
             override fun onDone(utteranceId: String?) {
-                // Continuous Loop: Auto-restart listening for next command after response finishes!
+                // Continuous Loop: Ignore silent pause chunks (_pause), restart listening for next command after response completes!
+                if (utteranceId != null && utteranceId.endsWith("_pause")) return
+
                 if (isListening && !isUserMuted) {
-                    liveTranscript = ""
-                    startListeningInternal(speechRecognizer)
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        if (isListening && !isUserMuted) {
+                            liveTranscript = ""
+                            startListeningInternal(speechRecognizer)
+                        }
+                    }, 200)
                 }
             }
             override fun onError(utteranceId: String?) {
                 if (isListening && !isUserMuted) {
-                    liveTranscript = ""
-                    startListeningInternal(speechRecognizer)
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        if (isListening && !isUserMuted) {
+                            liveTranscript = ""
+                            startListeningInternal(speechRecognizer)
+                        }
+                    }, 200)
                 }
             }
         })
@@ -126,6 +137,7 @@ fun VanieVoiceOverlay(
             tts.shutdown()
         }
     }
+
 
     // Update Voice Mode based on props
     LaunchedEffect(isThinking, responseText) {

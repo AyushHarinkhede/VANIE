@@ -51,157 +51,94 @@ object VanieTtsUtils {
         val cleanedText = cleanTextForTts(text)
         if (cleanedText.isBlank()) return
 
-        tts.setSpeechRate(speechSpeed)
+        try {
+            // Ensure TTS language is set
+            val langResult = tts.setLanguage(Locale.US)
+            if (langResult == TextToSpeech.LANG_MISSING_DATA || langResult == TextToSpeech.LANG_NOT_SUPPORTED) {
+                tts.setLanguage(Locale.getDefault())
+            }
+            tts.setSpeechRate(speechSpeed)
 
-        // Try SSML if supported by TTS engine (e.g. Google Speech Services)
-        val ssmlSupported = try {
-            val engines = tts.engines
-            val defaultEngine = tts.defaultEngine
-            defaultEngine != null && defaultEngine.contains("google", ignoreCase = true)
-        } catch (e: Exception) {
-            true
-        }
+            // Sentence-by-sentence prosody with punctuation pauses
+            val sentenceRegex = Regex("(?<=[.?!,])\\s+")
+            val chunks = cleanedText.split(sentenceRegex)
 
-        if (ssmlSupported) {
-            val ssmlBuilder = StringBuilder()
-            ssmlBuilder.append("<speak>")
+            if (chunks.size <= 1) {
+                // Single sentence: speak directly with punctuation pitch
+                var pitch = 1.0f
+                if (cleanedText.endsWith("?")) pitch = 1.22f
+                else if (cleanedText.endsWith("!")) pitch = 1.12f
+                tts.setPitch(pitch)
 
-            // Split into sentence tokens while keeping delimiters
-            val pattern = Regex("(?<=[.?!,])|(?=[.?!,])")
-            val parts = cleanedText.split(pattern)
-
-            var currentPhrase = StringBuilder()
-
-            for (part in parts) {
-                when (part.trim()) {
-                    "," -> {
-                        if (currentPhrase.isNotBlank()) {
-                            ssmlBuilder.append(escapeXml(currentPhrase.toString().trim()))
-                            currentPhrase.clear()
-                        }
-                        ssmlBuilder.append("<break time=\"250ms\"/> ")
-                    }
-                    "." -> {
-                        if (currentPhrase.isNotBlank()) {
-                            ssmlBuilder.append(escapeXml(currentPhrase.toString().trim()))
-                            currentPhrase.clear()
-                        }
-                        ssmlBuilder.append("<break time=\"600ms\"/> ")
-                    }
-                    "?" -> {
-                        if (currentPhrase.isNotBlank()) {
-                            ssmlBuilder.append("<prosody pitch=\"+15%\">")
-                            ssmlBuilder.append(escapeXml(currentPhrase.toString().trim()))
-                            ssmlBuilder.append("?</prosody>")
-                            currentPhrase.clear()
-                        }
-                        ssmlBuilder.append("<break time=\"500ms\"/> ")
-                    }
-                    "!" -> {
-                        if (currentPhrase.isNotBlank()) {
-                            ssmlBuilder.append("<prosody volume=\"loud\" pitch=\"+8%\">")
-                            ssmlBuilder.append(escapeXml(currentPhrase.toString().trim()))
-                            ssmlBuilder.append("!</prosody>")
-                            currentPhrase.clear()
-                        }
-                        ssmlBuilder.append("<break time=\"500ms\"/> ")
-                    }
-                    else -> {
-                        currentPhrase.append(part)
-                    }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    tts.speak(cleanedText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                } else {
+                    @Suppress("DEPRECATION")
+                    tts.speak(cleanedText, TextToSpeech.QUEUE_FLUSH, null)
                 }
-            }
-            if (currentPhrase.isNotBlank()) {
-                ssmlBuilder.append(escapeXml(currentPhrase.toString().trim()))
-            }
-            ssmlBuilder.append("</speak>")
-
-            val ssmlString = ssmlBuilder.toString()
-            val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                tts.speak(ssmlString, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-            } else {
-                @Suppress("DEPRECATION")
-                tts.speak(ssmlString, TextToSpeech.QUEUE_FLUSH, null)
-            }
-
-            if (result == TextToSpeech.SUCCESS) {
                 return
             }
-        }
 
-        // Fallback: Sentence-by-sentence queue with pitch and pause modulation
-        speakWithChunkedProsody(tts, cleanedText, utteranceId)
-    }
+            var isFirst = true
+            for ((index, chunk) in chunks.withIndex()) {
+                val trimChunk = chunk.trim()
+                if (trimChunk.isEmpty()) continue
 
-    private fun speakWithChunkedProsody(tts: TextToSpeech, cleanedText: String, utteranceId: String) {
-        // Regex splits text by sentence boundary (. ? ! ,) while keeping punctuation
-        val sentenceRegex = Regex("(?<=[.?!,])\\s+")
-        val chunks = cleanedText.split(sentenceRegex)
+                val queueMode = if (isFirst) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
+                isFirst = false
 
-        var isFirst = true
+                var pitch = 1.0f
+                var silentPauseMs: Long = 350L
 
-        for ((index, chunk) in chunks.withIndex()) {
-            val trimChunk = chunk.trim()
-            if (trimChunk.isEmpty()) continue
-
-            val queueMode = if (isFirst) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-            isFirst = false
-
-            // Adjust Pitch & Volume based on punctuation
-            var pitch = 1.0f
-            var volume = 1.0f
-            var silentPauseMs: Long = 300L
-
-            when {
-                trimChunk.endsWith("?") -> {
-                    pitch = 1.25f // Elevated question tone
-                    silentPauseMs = 500L
+                when {
+                    trimChunk.endsWith("?") -> {
+                        pitch = 1.25f // Elevated question tone
+                        silentPauseMs = 500L
+                    }
+                    trimChunk.endsWith("!") -> {
+                        pitch = 1.14f // Excited/Louder tone
+                        silentPauseMs = 500L
+                    }
+                    trimChunk.endsWith(",") -> {
+                        pitch = 1.0f
+                        silentPauseMs = 250L // Slight pause (halki rukegi)
+                    }
+                    trimChunk.endsWith(".") -> {
+                        pitch = 1.0f
+                        silentPauseMs = 600L // Full stop pause (rukk jayegi)
+                    }
                 }
-                trimChunk.endsWith("!") -> {
-                    pitch = 1.12f // Excited/Louder tone
-                    volume = 1.2f
-                    silentPauseMs = 500L
-                }
-                trimChunk.endsWith(",") -> {
-                    pitch = 1.0f
-                    silentPauseMs = 250L // Slight pause
-                }
-                trimChunk.endsWith(".") -> {
-                    pitch = 1.0f
-                    silentPauseMs = 600L // Full stop pause
+
+                tts.setPitch(pitch)
+                val chunkId = "${utteranceId}_$index"
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    tts.speak(trimChunk, queueMode, null, chunkId)
+                    tts.playSilentUtterance(silentPauseMs, TextToSpeech.QUEUE_ADD, "${chunkId}_pause")
+                } else {
+                    @Suppress("DEPRECATION")
+                    val params = HashMap<String, String>().apply {
+                        put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, chunkId)
+                    }
+                    @Suppress("DEPRECATION")
+                    tts.speak(trimChunk, queueMode, params)
+                    @Suppress("DEPRECATION")
+                    tts.playSilence(silentPauseMs, TextToSpeech.QUEUE_ADD, params)
                 }
             }
-
-            tts.setPitch(pitch)
-
-            val chunkId = "${utteranceId}_chunk_$index"
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val params = Bundle().apply {
-                    putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume.coerceIn(0.1f, 1.0f))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Direct fallback
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    tts.speak(cleanedText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                } else {
+                    @Suppress("DEPRECATION")
+                    tts.speak(cleanedText, TextToSpeech.QUEUE_FLUSH, null)
                 }
-                tts.speak(trimChunk, queueMode, params, chunkId)
-                tts.playSilentUtterance(silentPauseMs, TextToSpeech.QUEUE_ADD, "${chunkId}_pause")
-            } else {
-                @Suppress("DEPRECATION")
-                val params = HashMap<String, String>().apply {
-                    put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, chunkId)
-                    put(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume.coerceIn(0.1f, 1.0f).toString())
-                }
-                @Suppress("DEPRECATION")
-                tts.speak(trimChunk, queueMode, params)
-                @Suppress("DEPRECATION")
-                tts.playSilence(silentPauseMs, TextToSpeech.QUEUE_ADD, params)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
             }
         }
-    }
-
-    private fun escapeXml(input: String): String {
-        return input
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;")
-            .replace("'", "&apos;")
     }
 }

@@ -667,10 +667,6 @@ class VANIEEnhanced:
 
         else:
             return f"{dt['summary_hindi']}"
-            'month_hindi': hindi_months[now.month - 1],
-            'year': str(now.year),
-            'timestamp': str(int(now.timestamp()))
-        }
     
     def get_system_info(self) -> Dict[str, Any]:
         """Get comprehensive system information"""
@@ -738,9 +734,24 @@ class VANIEEnhanced:
             }
             
             self.weather_cache[cache_key] = weather
+            return weather
+        except Exception as e:
+            logger.error(f"Error getting weather: {e}")
+            return {'error': 'Unable to fetch weather info'}
+
+    def generate_response(self, message: str, context: Dict = None) -> Dict[str, Any]:
+        """Generate response based on message intent, sentiment, and algorithms"""
+        try:
+            self.memory.add_message('user', message)
+            sentiment, sentiment_confidence = self.nlp.calculate_sentiment(message)
+            intent, intent_confidence = self.nlp.detect_intent_with_confidence(
+                message, self.knowledge_base['intent_patterns']
+            )
+            keywords = self.nlp.extract_keywords(message)
             
             response = None
             response_data = {}
+
 
             # Handle different intents
             if intent == 'math':
