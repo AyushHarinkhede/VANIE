@@ -1,70 +1,73 @@
-package com.vanie.ai
+﻿package com.vanie.ai
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.provider.MediaStore
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import android.speech.tts.TextToSpeech
+import android.util.Base64
+import android.view.HapticFeedbackConstants
+import android.view.View
+import android.view.Window
+import android.view.WindowManager
+import android.webkit.GeolocationPermissions
+import android.webkit.JavascriptInterface
+import android.webkit.PermissionRequest
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.vanie.ai.control.VanieAlarmState
-import com.vanie.ai.control.VanieStopwatch
-import com.vanie.ai.control.VanieTaskManager
-import androidx.compose.material3.*
-import androidx.compose.ui.Alignment
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
-import com.vanie.ai.accessibility.VanieAccessibilityService
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.vanie.ai.control.VanieDeviceController
 import com.vanie.ai.nlp.ActionCommand
 import com.vanie.ai.nlp.VanieNlpEngine
-import com.vanie.ai.notification.VanieNotificationService
 import com.vanie.ai.python.VaniePythonBridge
 import com.vanie.ai.receiver.VanieCallReceiver
 import com.vanie.ai.service.VanieVoiceService
 import com.vanie.ai.telephony.VanieTelephonyController
-import com.vanie.ai.ui.components.VanieVoiceOverlay
-import com.vanie.ai.ui.screens.ChatMessage
-import com.vanie.ai.ui.screens.ChatScreen
-import com.vanie.ai.ui.screens.PermissionsScreen
-import com.vanie.ai.ui.theme.AccentCyan
-import com.vanie.ai.ui.theme.AccentPurple
-import com.vanie.ai.ui.theme.VANIETheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.OutputStream
+import java.nio.charset.StandardCharsets
+import java.util.Locale
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
+
+    private lateinit var webView: WebView
+    private var uploadMessage: ValueCallback<Array<Uri>>? = null
+    private val FILECHOOSER_RESULTCODE = 1
+    private val PERMISSION_REQUEST_CODE = 100
+    private var isIncognitoActive = false
 
     private lateinit var nlpEngine: VanieNlpEngine
     private lateinit var pythonBridge: VaniePythonBridge
@@ -72,344 +75,206 @@ class MainActivity : ComponentActivity() {
     private lateinit var telephonyController: VanieTelephonyController
     private val callReceiver = VanieCallReceiver()
 
+    private var textToSpeech: TextToSpeech? = null
+    private var speechRecognizer: SpeechRecognizer? = null
+    private var isTtsReady = false
+
     private val requiredPermissions = arrayOf(
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.CAMERA,
         Manifest.permission.CALL_PHONE,
         Manifest.permission.READ_CONTACTS,
         Manifest.permission.SEND_SMS,
-        Manifest.permission.READ_PHONE_STATE
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.VIBRATE
     )
 
+    @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Hardware Acceleration for maximum 120Hz-165Hz performance
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+        )
+
+        setContentView(R.layout.activity_main)
+
+        // Enable edge-to-edge transparent status bar and navigation bar
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val win: Window = window
+            win.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            win.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            val uiOptions = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
+            win.decorView.systemUiVisibility = uiOptions
+            win.statusBarColor = Color.TRANSPARENT
+            win.navigationBarColor = Color.TRANSPARENT
+        }
+
+        enableHighRefreshRate()
 
         nlpEngine = VanieNlpEngine(this)
         pythonBridge = VaniePythonBridge(this)
         deviceController = VanieDeviceController(this)
         telephonyController = VanieTelephonyController(this)
+        textToSpeech = TextToSpeech(this, this)
 
         requestRequiredPermissions()
         startVoiceService()
 
-        setContent {
-            val systemDark = isSystemInDarkTheme()
-            var isDarkTheme by remember { mutableStateOf(systemDark) }
+        webView = findViewById(R.id.webView)
+        webView.isSoundEffectsEnabled = false
+        webView.isHapticFeedbackEnabled = false
 
-            VANIETheme(darkTheme = isDarkTheme) {
-                var isVoiceOverlayVisible by remember { mutableStateOf(false) }
-                var isMenuExpanded by remember { mutableStateOf(false) }
-                var isAboutDialogOpen by remember { mutableStateOf(false) }
-                var isSettingsSheetOpen by remember { mutableStateOf(false) }
-                var isThinking by remember { mutableStateOf(false) }
-                var lastSpokenText by remember { mutableStateOf("") }
-                var clearAnimationTrigger by remember { mutableIntStateOf(0) }
+        // Enable Hardware Accelerated GPU rendering layer
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        webView.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
+        webView.overScrollMode = View.OVER_SCROLL_NEVER
 
-                val messages = remember {
-                    mutableStateListOf(
-                        ChatMessage(
-                            sender = "vanie",
-                            text = "Hello! I am VANIE (Virtual Agent of Neural Integrated Engine).\nYour offline AI Assistant with hardware control, calling & messaging!\nSay 'Hey VANIE' to activate!"
-                        )
-                    )
+        // Optimized WebSettings for high FPS JS rendering & data persistence
+        val webSettings = webView.settings
+        webSettings.javaScriptEnabled = true
+        webSettings.domStorageEnabled = true
+        webSettings.databaseEnabled = true
+        webSettings.allowFileAccess = true
+        webSettings.allowContentAccess = true
+        webSettings.allowFileAccessFromFileURLs = true
+        webSettings.allowUniversalAccessFromFileURLs = true
+        try {
+            val dbPath = applicationContext.getDir("databases", Context.MODE_PRIVATE).path
+            webSettings.databasePath = dbPath
+        } catch (ignored: Exception) {}
+        webSettings.loadWithOverviewMode = true
+        webSettings.useWideViewPort = true
+        webSettings.cacheMode = WebSettings.LOAD_DEFAULT
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            webSettings.offscreenPreRaster = true
+        }
+
+        // Handle external URLs
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                if (url != null && (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:") || url.startsWith("tel:"))) {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    return true
                 }
+                view?.loadUrl(url ?: "")
+                return true
+            }
+        }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                ) {
-                    // ChatScreen fills full screen edge-to-edge
-                    ChatScreen(
-                        messages = messages,
-                        isThinking = isThinking,
-                        clearAnimationTrigger = clearAnimationTrigger,
-                        onSendMessage = { text ->
-                            messages.add(ChatMessage(sender = "user", text = text))
-                            isThinking = true
-                            lifecycleScope.launch(Dispatchers.IO) {
-                                val pyResult = pythonBridge.processWithPython(text)
-                                val responseText = pyResult.responseText
-                                kotlinx.coroutines.delay(500)
-                                withContext(Dispatchers.Main) {
-                                    isThinking = false
-                                    messages.add(ChatMessage(sender = "vanie", text = responseText))
-                                    executeAction(pyResult.actionCommand, pyResult.targetName, pyResult.messageBody, messages)
-                                }
-                            }
-                        },
-                        onMicClick = {
-                            isVoiceOverlayVisible = true
-                        }
-                    )
+        // Handle FileChooser & Permissions
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+                webView: WebView?,
+                filePathCallback: ValueCallback<Array<Uri>>?,
+                fileChooserParams: FileChooserParams?
+            ): Boolean {
+                uploadMessage?.onReceiveValue(null)
+                uploadMessage = filePathCallback
 
-                    // Floating Liquid Glass Top App Bar
-                    VanieTopAppBar(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .statusBarsPadding()
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        onSettingsClick = {
-                            com.vanie.ai.util.VanieHaptics.performClick(this@MainActivity)
-                            isSettingsSheetOpen = true
-                        },
-                        onMenuClick = {
-                            com.vanie.ai.util.VanieHaptics.performClick(this@MainActivity)
-                            isMenuExpanded = true
-                        },
-                        isMenuExpanded = isMenuExpanded,
-                        onDismissMenu = { isMenuExpanded = false },
-                        isDarkTheme = isDarkTheme,
-                        onToggleTheme = {
-                            com.vanie.ai.util.VanieHaptics.performClick(this@MainActivity)
-                            isDarkTheme = !isDarkTheme
-                        },
-                        onClearChat = {
-                            com.vanie.ai.util.VanieHaptics.performSuccess(this@MainActivity)
-                            messages.clear()
-                            messages.add(
-                                ChatMessage(
-                                    sender = "vanie",
-                                    text = "Hello! I am VANIE (Virtual Agent of Neural Integrated Engine).\nYour offline AI Assistant with hardware control, calling & messaging!\nSay 'Hey VANIE' to activate!"
-                                )
-                            )
-                            clearAnimationTrigger += 1
-                            isMenuExpanded = false
-                        },
-                        onOpenAbout = {
-                            com.vanie.ai.util.VanieHaptics.performClick(this@MainActivity)
-                            isMenuExpanded = false
-                            isAboutDialogOpen = true
-                        }
-                    )
-
-                    // Masterpiece Live Voice Overlay Bottom Sheet
-                    VanieVoiceOverlay(
-                        isListening = isVoiceOverlayVisible,
-                        spokenText = lastSpokenText,
-                        isThinking = isThinking,
-                        responseText = lastSpokenText,
-                        onResultText = { voiceText ->
-                            messages.add(ChatMessage(sender = "user", text = voiceText))
-                            isThinking = true
-                            lifecycleScope.launch(Dispatchers.IO) {
-                                val pyResult = pythonBridge.processWithPython(voiceText)
-                                val responseText = pyResult.responseText
-                                kotlinx.coroutines.delay(500)
-                                withContext(Dispatchers.Main) {
-                                    isThinking = false
-                                    lastSpokenText = responseText
-                                    messages.add(ChatMessage(sender = "vanie", text = responseText))
-                                    executeAction(pyResult.actionCommand, pyResult.targetName, pyResult.messageBody, messages)
-                                }
-                            }
-                        },
-                        onDismiss = {
-                            isVoiceOverlayVisible = false
-                            lastSpokenText = ""
-                        }
-                    )
-
-                    // Settings Modal Sheet
-                    if (isSettingsSheetOpen) {
-                        SettingsModalSheet(
-                            onDismiss = { isSettingsSheetOpen = false },
-                            currentPersona = nlpEngine.activePersona,
-                            onPersonaSelected = { nlpEngine.activePersona = it },
-                            onRequestPermissions = { requestRequiredPermissions() }
-                        )
+                val intent = fileChooserParams?.createIntent()
+                try {
+                    if (intent != null) {
+                        startActivityForResult(intent, FILECHOOSER_RESULTCODE)
                     }
+                } catch (e: ActivityNotFoundException) {
+                    uploadMessage = null
+                    return false
+                }
+                return true
+            }
 
-                    // About Developer Dialog
-                    if (isAboutDialogOpen) {
-                        AboutDeveloperDialog(
-                            onDismiss = { isAboutDialogOpen = false },
-                            onOpenGithub = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AyushHarinkhede"))
-                                startActivity(intent)
-                            },
-                            onSendEmail = {
-                                val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:ayushharinkhere2005@gmail.com"))
-                                startActivity(intent)
-                            }
-                        )
+            override fun onPermissionRequest(request: PermissionRequest?) {
+                if (isIncognitoActive) {
+                    runOnUiThread {
+                        try {
+                            request?.deny()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
+                    return
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    super.onPermissionRequest(request)
                 }
             }
+
+            override fun onGeolocationPermissionsShowPrompt(
+                origin: String?,
+                callback: GeolocationPermissions.Callback?
+            ) {
+                if (isIncognitoActive) {
+                    callback?.invoke(origin, false, false)
+                    return
+                }
+                super.onGeolocationPermissionsShowPrompt(origin, callback)
+            }
+        }
+
+        // Register custom JavaScript interface for VANIE AI & Mr.NodeMan UI
+        webView.addJavascriptInterface(AndroidInterface(), "AndroidApp")
+
+        // Load the local HTML file from assets
+        webView.loadUrl("file:///android_asset/index.html")
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = textToSpeech?.setLanguage(Locale.US)
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                textToSpeech?.setLanguage(Locale.getDefault())
+            }
+            textToSpeech?.setPitch(1.0f)
+            textToSpeech?.setSpeechRate(1.0f)
+            isTtsReady = true
         }
     }
 
-    private fun executeAction(
-        action: ActionCommand,
-        targetName: String?,
-        messageBody: String?,
-        messages: MutableList<ChatMessage>
-    ) {
-        when (action) {
-            ActionCommand.TORCH_ON -> deviceController.setTorchMode(true)
-            ActionCommand.TORCH_OFF -> deviceController.setTorchMode(false)
-            ActionCommand.WIFI_ON, ActionCommand.WIFI_OFF -> deviceController.openWifiSettings()
-            ActionCommand.BLUETOOTH_ON -> {
-                val res = deviceController.setBluetoothMode(true)
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.BLUETOOTH_OFF -> {
-                val res = deviceController.setBluetoothMode(false)
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.DND_ON -> deviceController.setDoNotDisturb(true)
-            ActionCommand.DND_OFF -> deviceController.setDoNotDisturb(false)
-            ActionCommand.MODE_SILENT -> deviceController.setRingerMode(android.media.AudioManager.RINGER_MODE_SILENT)
-            ActionCommand.MODE_VIBRATE -> deviceController.setRingerMode(android.media.AudioManager.RINGER_MODE_VIBRATE)
-            ActionCommand.MODE_RING -> deviceController.setRingerMode(android.media.AudioManager.RINGER_MODE_NORMAL)
-            ActionCommand.LOCATION_INFO -> {
-                deviceController.openLocationSettings()
-                messages.add(ChatMessage(sender = "vanie", text = "Opening Location & GPS settings..."))
-            }
-            ActionCommand.MAKE_CALL -> {
-                val res = telephonyController.makeCall(targetName)
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.SEND_WHATSAPP_CALL -> {
-                val res = telephonyController.makeWhatsAppCall(targetName)
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.SEND_SMS -> {
-                telephonyController.sendSms(targetName, messageBody)
-                messages.add(ChatMessage(sender = "vanie", text = "Sent SMS to ${targetName ?: "contact"}"))
-            }
-            ActionCommand.SEND_WHATSAPP -> {
-                val res = telephonyController.prepareWhatsAppDraft(targetName, messageBody)
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.CONFIRM_SEND_DRAFT -> {
-                val res = telephonyController.confirmAndSendPendingDraft()
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.ANSWER_CALL -> callReceiver.answerCall(this)
-            ActionCommand.REJECT_CALL -> callReceiver.cutCall(this)
-            ActionCommand.BRIGHTNESS -> {
-                val percent = targetName?.toIntOrNull() ?: 75
-                deviceController.setScreenBrightness(percent)
-                messages.add(ChatMessage(sender = "vanie", text = "Screen brightness adjusted to ${percent}%"))
-            }
-            ActionCommand.ALARM, ActionCommand.SET_ALARM -> {
-                val parts = targetName?.split(":")
-                val hour = parts?.getOrNull(0)?.toIntOrNull() ?: 7
-                val minute = parts?.getOrNull(1)?.toIntOrNull() ?: 0
-                deviceController.setAlarm(hour, minute, "VANIE Alarm")
-                messages.add(ChatMessage(sender = "vanie", text = "⏰ Alarm set for ${String.format("%02d:%02d", hour, minute)}!"))
-            }
-            ActionCommand.CONFIRM_ALARM_AM -> {
-                val pendingHour = VanieAlarmState.pendingHour
-                val pendingMin = VanieAlarmState.pendingMinute
-                val hour = if (pendingHour == 12) 0 else pendingHour
-                deviceController.setAlarm(hour, pendingMin, "VANIE Alarm")
-                messages.add(ChatMessage(sender = "vanie", text = "⏰ Subah (AM) ka alarm set for ${String.format("%02d:%02d", hour, pendingMin)}!"))
-                VanieAlarmState.isWaitingForAmPm = false
-            }
-            ActionCommand.CONFIRM_ALARM_PM -> {
-                val pendingHour = VanieAlarmState.pendingHour
-                val pendingMin = VanieAlarmState.pendingMinute
-                val hour = if (pendingHour == 12) 12 else (pendingHour % 12) + 12
-                deviceController.setAlarm(hour, pendingMin, "VANIE Alarm")
-                messages.add(ChatMessage(sender = "vanie", text = "⏰ Shaam/Raat (PM) ka alarm set for ${String.format("%02d:%02d", hour, pendingMin)}!"))
-                VanieAlarmState.isWaitingForAmPm = false
-            }
-            ActionCommand.SET_TIMER -> {
-                val sec = targetName?.toIntOrNull() ?: 60
-                deviceController.setTimer(sec, "VANIE Timer")
-                messages.add(ChatMessage(sender = "vanie", text = "⏱️ Timer set for $sec seconds!"))
-            }
-            ActionCommand.START_STOPWATCH -> {
-                val res = VanieStopwatch.start()
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.PAUSE_STOPWATCH -> {
-                val res = VanieStopwatch.pause()
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.RESET_STOPWATCH -> {
-                val res = VanieStopwatch.reset()
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.ADD_TASK -> {
-                val res = VanieTaskManager.addTask(targetName ?: "")
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.SHOW_TASKS -> {
-                val res = VanieTaskManager.getTasks()
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.CLEAR_TASKS -> {
-                val res = VanieTaskManager.clearTasks()
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.BATTERY, ActionCommand.GET_DETAILED_BATTERY -> {
-                val status = deviceController.getDetailedBatteryInfo()
-                messages.add(ChatMessage(sender = "vanie", text = status))
-            }
-            ActionCommand.GET_NETWORK_INFO -> {
-                val info = deviceController.getNetworkAndPhoneInfo()
-                messages.add(ChatMessage(sender = "vanie", text = info))
-            }
-            ActionCommand.NOTIFICATION_READ -> {
-                val notifs = VanieNotificationService.getUnreadNotificationsSummary()
-                messages.add(ChatMessage(sender = "vanie", text = "$notifs"))
-            }
-            ActionCommand.VOLUME_UP -> {
-                val res = deviceController.adjustVolume(true)
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.VOLUME_DOWN -> {
-                val res = deviceController.adjustVolume(false)
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.VOLUME_MUTE -> {
-                val res = deviceController.muteVolume()
-                messages.add(ChatMessage(sender = "vanie", text = res))
-            }
-            ActionCommand.OPEN_CAMERA -> {
-                deviceController.openCamera()
-                messages.add(ChatMessage(sender = "vanie", text = "Opening Camera..."))
-            }
-            ActionCommand.OPEN_GALLERY -> {
-                deviceController.openGallery()
-                messages.add(ChatMessage(sender = "vanie", text = "Opening Gallery..."))
-            }
-            ActionCommand.OPEN_SETTINGS -> {
-                deviceController.openSettings()
-                messages.add(ChatMessage(sender = "vanie", text = "Opening System Settings..."))
-            }
-            ActionCommand.OPEN_MAPS -> {
-                deviceController.openMaps()
-                messages.add(ChatMessage(sender = "vanie", text = "Opening Maps..."))
-            }
-            ActionCommand.OPEN_PLAYSTORE -> {
-                deviceController.openPlayStore()
-                messages.add(ChatMessage(sender = "vanie", text = "Opening Play Store..."))
-            }
-            ActionCommand.OPEN_CALCULATOR -> {
-                deviceController.openCalculator()
-                messages.add(ChatMessage(sender = "vanie", text = "Opening Calculator..."))
-            }
-            ActionCommand.LAUNCH_APP -> {
-                if (targetName != null) {
-                    val launched = deviceController.launchApp(targetName)
-                    val msg = if (launched) "Launched $targetName" else "Could not launch app '$targetName'"
-                    messages.add(ChatMessage(sender = "vanie", text = msg))
+    private fun enableHighRefreshRate() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                val window = window
+                val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    display
+                } else {
+                    @Suppress("DEPRECATION")
+                    windowManager.defaultDisplay
                 }
-            }
-            else -> {}
+                if (display != null) {
+                    val supportedModes = display.supportedModes
+                    var maxMode = display.mode
+                    var maxRate = maxMode.refreshRate
+                    for (mode in supportedModes) {
+                        if (mode.refreshRate > maxRate) {
+                            maxRate = mode.refreshRate
+                            maxMode = mode
+                        }
+                    }
+                    val params = window.attributes
+                    params.preferredDisplayModeId = maxMode.modeId
+                    window.attributes = params
+                }
+            } catch (ignored: Exception) {}
         }
     }
 
     private fun requestRequiredPermissions() {
-        val missingPermissions = requiredPermissions.filter {
+        val permissionsToRequest = requiredPermissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (missingPermissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, missingPermissions.toTypedArray(), 101)
+        if (permissionsToRequest.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, permissionsToRequest.toTypedArray(), PERMISSION_REQUEST_CODE)
         }
     }
 
@@ -425,333 +290,466 @@ class MainActivity : ComponentActivity() {
             e.printStackTrace()
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun VanieTopAppBar(
-    modifier: Modifier = Modifier,
-    onSettingsClick: () -> Unit,
-    onMenuClick: () -> Unit,
-    isMenuExpanded: Boolean,
-    onDismissMenu: () -> Unit,
-    isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit,
-    onClearChat: () -> Unit,
-    onOpenAbout: () -> Unit
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
-        tonalElevation = 4.dp,
-        shadowElevation = 4.dp
-    ) {
-        TopAppBar(
-            title = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 4.dp)
-                ) {
-                    // VANIE Cutout Logo (Pure logo image without background box or circle)
-                    Image(
-                        painter = painterResource(id = R.drawable.vanie),
-                        contentDescription = "VANIE Cutout Logo",
-                        modifier = Modifier.size(46.dp)
-                    )
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == FILECHOOSER_RESULTCODE) {
+            if (uploadMessage == null) return
+            var results: Array<Uri>? = null
+            if (resultCode == RESULT_OK && data != null) {
+                val dataString = data.dataString
+                val clipData = data.clipData
+                if (clipData != null) {
+                    results = Array(clipData.itemCount) { i -> clipData.getItemAt(i).uri }
                 }
-            },
-            actions = {
-                // 1. Settings Icon
-                IconButton(onClick = onSettingsClick) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.primary)
+                if (dataString != null) {
+                    results = arrayOf(Uri.parse(dataString))
                 }
+            }
+            uploadMessage?.onReceiveValue(results)
+            uploadMessage = null
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
 
-                // 2. More Options Icon (⋮)
-                Box {
-                    IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+    override fun onBackPressed() {
+        if (::webView.isInitialized) {
+            webView.evaluateJavascript("if(window.handleSystemBack) { window.handleSystemBack(); } else { history.back(); }", null)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    override fun onDestroy() {
+        if (textToSpeech != null) {
+            textToSpeech?.stop()
+            textToSpeech?.shutdown()
+        }
+        if (speechRecognizer != null) {
+            speechRecognizer?.destroy()
+        }
+        super.onDestroy()
+    }
+
+    // Native Interface exposing operations to JavaScript
+    inner class AndroidInterface {
+
+        // â”€â”€ Ultra-crisp Native Haptic Feedback â”€â”€
+        @JavascriptInterface
+        fun performHaptic(type: String?) {
+            runOnUiThread {
+                try {
+                    val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                    if (vibrator == null || !vibrator.hasVibrator()) return@runOnUiThread
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        var effectId = -1
+                        when (type?.lowercase()) {
+                            "light", "tap", "selection" -> effectId = VibrationEffect.EFFECT_CLICK
+                            "medium", "impact", "navigation" -> effectId = VibrationEffect.EFFECT_DOUBLE_CLICK
+                            "heavy", "modal", "button" -> effectId = VibrationEffect.EFFECT_HEAVY_CLICK
+                            "tick", "clock", "countdown" -> effectId = VibrationEffect.EFFECT_TICK
+                        }
+
+                        if (effectId != -1) {
+                            try {
+                                vibrator.vibrate(VibrationEffect.createPredefined(effectId))
+                                return@runOnUiThread
+                            } catch (ignored: Exception) {}
+                        }
                     }
-                    DropdownMenu(
-                        expanded = isMenuExpanded,
-                        onDismissRequest = onDismissMenu
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("Dark Mode")
-                                    Switch(
-                                        checked = isDarkTheme,
-                                        onCheckedChange = {
-                                            onToggleTheme()
-                                        }
-                                    )
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        when (type?.lowercase()) {
+                            "success" -> vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 15, 35, 20), intArrayOf(0, 200, 0, 255), -1))
+                            "error", "delete", "danger" -> vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 25, 35, 25, 35, 40), intArrayOf(0, 220, 0, 220, 0, 255), -1))
+                            "heavy", "modal", "button" -> vibrator.vibrate(VibrationEffect.createOneShot(26, VibrationEffect.DEFAULT_AMPLITUDE))
+                            "medium", "impact", "navigation" -> vibrator.vibrate(VibrationEffect.createOneShot(16, 200))
+                            "tick", "clock" -> vibrator.vibrate(VibrationEffect.createOneShot(8, 140))
+                            else -> vibrator.vibrate(VibrationEffect.createOneShot(12, 180))
+                        }
+                    } else {
+                        @Suppress("DEPRECATION")
+                        when (type?.lowercase()) {
+                            "success" -> vibrator.vibrate(longArrayOf(0, 15, 35, 20), -1)
+                            "error", "delete" -> vibrator.vibrate(longArrayOf(0, 25, 35, 25, 35, 40), -1)
+                            "heavy", "modal" -> vibrator.vibrate(25)
+                            "medium", "navigation" -> vibrator.vibrate(16)
+                            "tick" -> vibrator.vibrate(8)
+                            else -> vibrator.vibrate(12)
+                        }
+                    }
+                } catch (e: Exception) {
+                    try {
+                        webView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING)
+                    } catch (ignored: Exception) {}
+                }
+            }
+        }
+
+        // â”€â”€ VANIE Neural AI Processing Bridge â”€â”€
+        @JavascriptInterface
+        fun processAI(query: String) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val pyResult = pythonBridge.processWithPython(query)
+                    val responseText = pyResult.responseText
+
+                    // Execute corresponding hardware or telephony actions
+                    withContext(Dispatchers.Main) {
+                        executeAction(pyResult.actionCommand, pyResult.targetName, pyResult.messageBody)
+                        
+                        // Speak out loud via TTS
+                        if (isTtsReady) {
+                            textToSpeech?.speak(responseText, TextToSpeech.QUEUE_FLUSH, null, "VanieResponse")
+                        }
+
+                        // Dispatch JSON back to WebView
+                        val json = JsonObject()
+                        json.addProperty("responseText", responseText)
+                        json.addProperty("intent", pyResult.intent)
+                        json.addProperty("confidence", pyResult.confidence)
+                        json.addProperty("actionCommand", pyResult.actionCommand.name)
+
+                        val gson = Gson()
+                        val jsonString = gson.toJson(json)
+                        val safeJson = jsonString.replace("'", "\\'")
+                        webView.evaluateJavascript("window.onVanieAIResponse('$safeJson');", null)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    withContext(Dispatchers.Main) {
+                        val fallback = "I processed your command offline with zero latency."
+                        val json = JsonObject()
+                        json.addProperty("responseText", fallback)
+                        webView.evaluateJavascript("window.onVanieAIResponse('${json.toString()}');", null)
+                    }
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun speakText(text: String?) {
+            if (!text.isNullOrBlank() && isTtsReady) {
+                runOnUiThread {
+                    textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "VanieManualSpeak")
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun stopSpeaking() {
+            runOnUiThread {
+                textToSpeech?.stop()
+            }
+        }
+
+        @JavascriptInterface
+        fun startVoiceListening() {
+            runOnUiThread {
+                try {
+                    if (SpeechRecognizer.isRecognitionAvailable(this@MainActivity)) {
+                        speechRecognizer?.destroy()
+                        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this@MainActivity)
+                        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                        }
+                        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+                            override fun onReadyForSpeech(params: Bundle?) {}
+                            override fun onBeginningOfSpeech() {}
+                            override fun onRmsChanged(rmsdB: Float) {}
+                            override fun onBufferReceived(buffer: ByteArray?) {}
+                            override fun onEndOfSpeech() {}
+                            override fun onError(error: Int) {
+                                runOnUiThread {
+                                    Toast.makeText(this@MainActivity, "Voice timeout, please try again", Toast.LENGTH_SHORT).show()
                                 }
-                            },
-                            onClick = {
-                                onToggleTheme()
-                            },
-                            leadingIcon = { Icon(Icons.Default.Brightness4, contentDescription = null) }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Clear Chat History") },
-                            onClick = onClearChat,
-                            leadingIcon = { Icon(Icons.Default.DeleteSweep, contentDescription = null) }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Privacy Policy & Terms") },
-                            onClick = { onDismissMenu() },
-                            leadingIcon = { Icon(Icons.Default.Security, contentDescription = null) }
-                        )
-                        HorizontalDivider()
-                        DropdownMenuItem(
-                            text = { Text("About Developer") },
-                            onClick = onOpenAbout,
-                            leadingIcon = { Icon(Icons.Default.Code, contentDescription = null) }
-                        )
+                            }
+                            override fun onResults(results: Bundle?) {
+                                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                                if (!matches.isNullOrEmpty()) {
+                                    val recognized = matches[0]
+                                    runOnUiThread {
+                                        val safe = recognized.replace("'", "\\'")
+                                        webView.evaluateJavascript("window.handleVoiceResult('$safe');", null)
+                                    }
+                                }
+                            }
+                            override fun onPartialResults(partialResults: Bundle?) {}
+                            override fun onEvent(eventType: Int, params: Bundle?) {}
+                        })
+                        speechRecognizer?.startListening(intent)
+                    } else {
+                        Toast.makeText(this@MainActivity, "Speech recognition not available", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        // â”€â”€ Hardware Controls â”€â”€
+        @JavascriptInterface
+        fun toggleTorch(enable: Boolean): Boolean {
+            return deviceController.setTorchMode(enable)
+        }
+
+        @JavascriptInterface
+        fun setBrightness(percent: Int): Boolean {
+            return deviceController.setScreenBrightness(percent)
+        }
+
+        @JavascriptInterface
+        fun getBatteryLevel(): String {
+            return deviceController.getDetailedBatteryInfo()
+        }
+
+        @JavascriptInterface
+        fun setAudioMode(mode: String): Boolean {
+            return when (mode.lowercase()) {
+                "silent" -> deviceController.setRingerMode(AudioManager.RINGER_MODE_SILENT)
+                "vibrate" -> deviceController.setRingerMode(AudioManager.RINGER_MODE_VIBRATE)
+                "dnd" -> deviceController.setDoNotDisturb(true)
+                else -> {
+                    deviceController.setDoNotDisturb(false)
+                    deviceController.setRingerMode(AudioManager.RINGER_MODE_NORMAL)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun openWifiSettings() {
+            deviceController.openWifiSettings()
+        }
+
+        @JavascriptInterface
+        fun openBluetoothSettings() {
+            deviceController.openBluetoothSettings()
+        }
+
+        @JavascriptInterface
+        fun launchApp(appName: String): Boolean {
+            return deviceController.launchApp(appName)
+        }
+
+        @JavascriptInterface
+        fun setAlarm(hour: Int, min: Int, label: String?): Boolean {
+            return deviceController.setAlarm(hour, min, label ?: "VANIE Alarm")
+        }
+
+        @JavascriptInterface
+        fun setTimer(seconds: Int, label: String?): Boolean {
+            return deviceController.setTimer(seconds, label ?: "VANIE Timer")
+        }
+
+        @JavascriptInterface
+        fun makePhoneCall(contactOrNumber: String?): String {
+            return telephonyController.makeCall(contactOrNumber)
+        }
+
+        @JavascriptInterface
+        fun sendSms(number: String, message: String): String {
+            telephonyController.sendSms(number, message)
+            return "SMS queued for $number"
+        }
+
+        @JavascriptInterface
+        fun sendWhatsAppMessage(contact: String, message: String): String {
+            return telephonyController.prepareWhatsAppDraft(contact, message)
+        }
+
+        // â”€â”€ Native Persistent Flash Disk Key-Value Storage â”€â”€
+        @JavascriptInterface
+        fun saveData(key: String?, value: String?): Boolean {
+            if (key == null) return false
+            return try {
+                val prefs: SharedPreferences = getSharedPreferences("vanie_native_store", Context.MODE_PRIVATE)
+                val committed = prefs.edit().putString(key, value).commit()
+                try {
+                    val storeDir = File(filesDir, "vanie_data")
+                    if (!storeDir.exists()) storeDir.mkdirs()
+                    val file = File(storeDir, "store_" + Math.abs(key.hashCode()) + ".dat")
+                    FileOutputStream(file).use { fos ->
+                        if (value != null) {
+                            fos.write(value.toByteArray(StandardCharsets.UTF_8))
+                        } else {
+                            file.delete()
+                        }
+                    }
+                } catch (ignored: Exception) {}
+                committed
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        @JavascriptInterface
+        fun loadData(key: String?): String? {
+            if (key == null) return null
+            return try {
+                val prefs: SharedPreferences = getSharedPreferences("vanie_native_store", Context.MODE_PRIVATE)
+                val value = prefs.getString(key, null)
+                if (value != null) return value
+
+                val storeDir = File(filesDir, "vanie_data")
+                val file = File(storeDir, "store_" + Math.abs(key.hashCode()) + ".dat")
+                if (file.exists()) {
+                    FileInputStream(file).use { fis ->
+                        val bytes = ByteArray(file.length().toInt())
+                        fis.read(bytes)
+                        return String(bytes, StandardCharsets.UTF_8)
                     }
                 }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                scrolledContainerColor = Color.Transparent
-            )
-        )
+                null
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        // â”€â”€ Direct File Exporter â”€â”€
+        @JavascriptInterface
+        fun exportFile(filename: String, base64Data: String, mimeType: String) {
+            runOnUiThread {
+                try {
+                    val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val values = ContentValues().apply {
+                            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                        }
+                        val resolver: ContentResolver = contentResolver
+                        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                        if (uri != null) {
+                            resolver.openOutputStream(uri)?.use { os ->
+                                os.write(bytes)
+                                Toast.makeText(this@MainActivity, "File saved to Downloads: $filename", Toast.LENGTH_LONG).show()
+                                return@runOnUiThread
+                            }
+                        }
+                    } else {
+                        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                        if (!dir.exists()) dir.mkdirs()
+                        val file = File(dir, filename)
+                        FileOutputStream(file).use { fos ->
+                            fos.write(bytes)
+                            Toast.makeText(this@MainActivity, "File saved to Downloads: $filename", Toast.LENGTH_LONG).show()
+                            return@runOnUiThread
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                // Fallback share intent
+                triggerShareIntent(filename, base64Data, mimeType)
+            }
+        }
+
+        @JavascriptInterface
+        fun openExternalUrl(url: String) {
+            runOnUiThread {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this@MainActivity, "Could not open link: $url", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun setScreenCaptureProtection(enable: Boolean) {
+            runOnUiThread {
+                try {
+                    isIncognitoActive = enable
+                    if (enable) {
+                        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun isScreenCaptureProtected(): Boolean {
+            return try {
+                (window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE) != 0
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        @JavascriptInterface
+        fun exitApp() {
+            runOnUiThread {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    finishAndRemoveTask()
+                } else {
+                    finish()
+                }
+            }
+        }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SettingsModalSheet(
-    onDismiss: () -> Unit,
-    currentPersona: String,
-    onPersonaSelected: (String) -> Unit,
-    onRequestPermissions: () -> Unit
-) {
-    val context = LocalContext.current
-    var isVoiceEnabled by remember { mutableStateOf(VanieVoiceService.isVoiceEnabled(context)) }
-    var speechSpeed by remember { mutableFloatStateOf(1.0f) }
-    var selectedPersona by remember { mutableStateOf(currentPersona) }
-    var isSetupExpanded by remember { mutableStateOf(false) }
+    private fun triggerShareIntent(filename: String, base64Data: String, mimeType: String) {
+        try {
+            val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+            val tempDir = File(cacheDir, "shared_exports")
+            if (!tempDir.exists()) tempDir.mkdirs()
+            val tempFile = File(tempDir, filename)
+            FileOutputStream(tempFile).use { it.write(bytes) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+            val contentUri = FileProvider.getUriForFile(this, "$packageName.provider", tempFile)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(shareIntent, "Save or share $filename"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Export ready: $filename", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun executeAction(
+        action: ActionCommand,
+        targetName: String?,
+        messageBody: String?
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = AccentCyan
-            )
-
-            // Setup & Permissions Option
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Shield, contentDescription = null, tint = AccentCyan)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Setup & Permissions", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                        }
-                        IconButton(onClick = { isSetupExpanded = !isSetupExpanded }) {
-                            Icon(
-                                imageVector = if (isSetupExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = "Toggle Setup"
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Manage system permissions for voice commands, calling, messaging, and hardware control.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = { onRequestPermissions() },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Text("Grant Required Permissions")
-                    }
-
-                    if (isSetupExpanded) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        PermissionsScreen(onRequestPermissions = onRequestPermissions)
-                    }
-                }
+        when (action) {
+            ActionCommand.TORCH_ON -> deviceController.setTorchMode(true)
+            ActionCommand.TORCH_OFF -> deviceController.setTorchMode(false)
+            ActionCommand.WIFI_ON, ActionCommand.WIFI_OFF -> deviceController.openWifiSettings()
+            ActionCommand.BLUETOOTH_ON -> deviceController.setBluetoothMode(true)
+            ActionCommand.BLUETOOTH_OFF -> deviceController.setBluetoothMode(false)
+            ActionCommand.DND_ON -> deviceController.setDoNotDisturb(true)
+            ActionCommand.DND_OFF -> deviceController.setDoNotDisturb(false)
+            ActionCommand.MODE_SILENT -> deviceController.setRingerMode(AudioManager.RINGER_MODE_SILENT)
+            ActionCommand.MODE_VIBRATE -> deviceController.setRingerMode(AudioManager.RINGER_MODE_VIBRATE)
+            ActionCommand.MODE_RING -> deviceController.setRingerMode(AudioManager.RINGER_MODE_NORMAL)
+            ActionCommand.LAUNCH_APP -> if (targetName != null) deviceController.launchApp(targetName)
+            ActionCommand.SET_ALARM -> deviceController.setAlarm(7, 0, "VANIE Alarm")
+            ActionCommand.SET_TIMER -> deviceController.setTimer(300, "VANIE Timer")
+            ActionCommand.GET_DETAILED_BATTERY -> {
+                val info = deviceController.getDetailedBatteryInfo()
+                Toast.makeText(this, info, Toast.LENGTH_LONG).show()
             }
-
-            // AI Persona & Voice Settings Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "AI Voice & Response Persona", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = selectedPersona == "default",
-                            onClick = {
-                                selectedPersona = "default"
-                                onPersonaSelected("default")
-                            },
-                            label = { Text("Default") },
-                            shape = CircleShape
-                        )
-                        FilterChip(
-                            selected = selectedPersona == "cyberpunk",
-                            onClick = {
-                                selectedPersona = "cyberpunk"
-                                onPersonaSelected("cyberpunk")
-                            },
-                            label = { Text("Cyberpunk") },
-                            shape = CircleShape
-                        )
-                        FilterChip(
-                            selected = selectedPersona == "hinglish",
-                            onClick = {
-                                selectedPersona = "hinglish"
-                                onPersonaSelected("hinglish")
-                            },
-                            label = { Text("Hinglish") },
-                            shape = CircleShape
-                        )
-                    }
-                }
+            ActionCommand.GET_NETWORK_INFO -> {
+                val info = deviceController.getNetworkAndPhoneInfo()
+                Toast.makeText(this, info, Toast.LENGTH_LONG).show()
             }
-
-            // Voice Listener Toggle Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Voice Wake-Word Listener (\"Hey VANIE\")",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = if (isVoiceEnabled) "Background wake-word detection is Active" else "Disabled to save battery",
-                            fontSize = 12.sp,
-                            color = AccentCyan
-                        )
-                    }
-
-                    Switch(
-                        checked = isVoiceEnabled,
-                        onCheckedChange = { enabled ->
-                            isVoiceEnabled = enabled
-                            VanieVoiceService.setVoiceEnabled(context, enabled)
-                        }
-                    )
-                }
-            }
-
-            // Speech Speed Slider
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "TTS Speech Speed: ${String.format("%.1fx", speechSpeed)}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    Slider(
-                        value = speechSpeed,
-                        onValueChange = { speechSpeed = it },
-                        valueRange = 0.5f..2.0f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            Button(
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Save & Close Settings")
-            }
+            ActionCommand.CALL_CONTACT -> if (targetName != null) telephonyController.makeCall(targetName)
+            ActionCommand.SEND_SMS -> if (targetName != null) telephonyController.sendSms(targetName, messageBody)
+            ActionCommand.SEND_WHATSAPP -> if (targetName != null) telephonyController.sendWhatsAppMessage(targetName, messageBody)
+            else -> {}
         }
     }
 }
-
-
-@Composable
-fun AboutDeveloperDialog(onDismiss: () -> Unit, onOpenGithub: () -> Unit, onSendEmail: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(24.dp),
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // VANIE Cutout Logo (Pure logo image without background box or circle)
-                Image(
-                    painter = painterResource(id = R.drawable.vanie),
-                    contentDescription = "VANIE Cutout Logo",
-                    modifier = Modifier.size(36.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text("About Developer", fontWeight = FontWeight.Bold)
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("VANIE - Virtual Agent of Neural Integrated Engine", fontWeight = FontWeight.Bold, color = AccentCyan)
-                Text("Created by Ayush Harinkhede", fontWeight = FontWeight.SemiBold)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text("Email: ayushharinkhere2005@gmail.com", fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-                Text("GitHub: AyushHarinkhede", fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-            }
-        },
-        confirmButton = {
-            Button(onClick = onOpenGithub, shape = CircleShape) {
-                Icon(Icons.Default.Code, contentDescription = null)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("GitHub")
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onSendEmail, shape = CircleShape) {
-                Icon(Icons.Default.Email, contentDescription = null)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Email")
-            }
-        }
-    )
-}
-

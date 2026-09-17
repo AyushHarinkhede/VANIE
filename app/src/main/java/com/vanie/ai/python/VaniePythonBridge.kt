@@ -99,13 +99,14 @@ class VaniePythonBridge(private val context: Context) {
             "MODE_SILENT" -> return ActionCommand.MODE_SILENT
             "MODE_VIBRATE" -> return ActionCommand.MODE_VIBRATE
             "MODE_RING" -> return ActionCommand.MODE_RING
-            "MAKE_CALL" -> return ActionCommand.MAKE_CALL
+            "MAKE_CALL", "CALL_CONTACT" -> return ActionCommand.MAKE_CALL
             "SEND_SMS" -> return ActionCommand.SEND_SMS
             "SEND_WHATSAPP" -> return ActionCommand.SEND_WHATSAPP
             "ANSWER_CALL" -> return ActionCommand.ANSWER_CALL
             "REJECT_CALL" -> return ActionCommand.REJECT_CALL
-            "BRIGHTNESS" -> return ActionCommand.BRIGHTNESS
-            "ALARM" -> return ActionCommand.ALARM
+            "BRIGHTNESS", "SET_BRIGHTNESS" -> return ActionCommand.BRIGHTNESS
+            "ALARM", "SET_ALARM" -> return ActionCommand.SET_ALARM
+            "TIMER", "SET_TIMER" -> return ActionCommand.SET_TIMER
             "BATTERY" -> return ActionCommand.BATTERY
             "NOTIFICATION_READ" -> return ActionCommand.NOTIFICATION_READ
             "LAUNCH_APP" -> return ActionCommand.LAUNCH_APP

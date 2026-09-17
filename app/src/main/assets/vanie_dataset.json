@@ -1,102 +1,128 @@
 {
-  "version": "3.0-ENHANCED",
+  "version": "3.5-ULTRA",
   "name": "VANIE - Virtual Agent of Neural Integrated Engine",
+  "creator": {
+    "name": "Ayush Harinkhede",
+    "email": "ayushharinkhere2005@gmail.com",
+    "github": "https://github.com/AyushHarinkhede"
+  },
   "intents": {
-    "greeting": "(नमस्ते|hello|hi|hey|कैसे हो|what's up|greetings|welcome)",
-    "help": "(help|मदद|सहायता|assistance|support)",
-    "bye": "(bye|अलविदा|goodbye|बाय|see you|farewell)",
-    "thanks": "(thanks|धन्यवाद|शुक्रिया|thank you)",
-    "time": "(time|समय|बजा|current time|अभी|what time)",
-    "date": "(date|तारीख|आज|when|calendar)",
-    "weather": "(weather|मौसम|temperature|तापमान|rain)",
-    "system": "(system|computer|pc|कंप्यूटर|memory|cpu|specs)",
-    "vanie": "(vanie|तुम कौन|who are you|आपका नाम|about|yourself)",
-    "math": "(\\d+\\.?\\d*\\s*[\\+\\-\\*/]\\s*\\d+\\.?\\d*|calculate|गणना)",
-    "code": "(code|python|javascript|java|cpp|प्रोग्रामिंग|programming)",
-    "emotional": "(sad|happy|excited|उदास|खुश|परेशान|feeling)",
-    "joke": "(joke|मजाक|हंसाओ|funny|laugh|चुटकुले)",
-    "riddle": "(riddle|पहेली|guess|सवाल)",
-    "trivia": "(trivia|क्विज़|facts|interesting|fact)",
-    "game": "(game|खेल|play|word game)",
-    "motivation": "(motivation|inspire|courage|strength|confidence|प्रेरणा)",
-    "quote": "(quote|famous|कहावत|wisdom|advice)",
-    "conversion": "(convert|conversion|transform|unit)",
-    "search": "(search|find|look for|खोजो)",
-    "torch_on": "(torch on|flashlight on|flash on|लाइट चालू|लाइट ऑन|टॉर्च ऑन|टॉर्च चालू)",
-    "torch_off": "(torch off|flashlight off|flash off|लाइट बंद|लाइट ऑफ|टॉर्च ऑफ|टॉर्च बंद)",
-    "wifi_on": "(wifi on|turn on wifi|enable wifi|वाईफाई ऑन|वाईफाई चालू)",
-    "wifi_off": "(wifi off|turn off wifi|disable wifi|वाईफाई ऑफ|वाईफाई बंद)",
-    "bluetooth_on": "(bluetooth on|turn on bluetooth|enable bluetooth|ब्लूटूथ ऑन|ब्लूटूथ चालू)",
-    "bluetooth_off": "(bluetooth off|turn off bluetooth|disable bluetooth|ब्लूटूथ ऑफ|ब्लूटूथ बंद)",
-    "dnd_on": "(dnd on|do not disturb on|डीएनडी चालू|डिस्टर्ब न करें)",
-    "dnd_off": "(dnd off|do not disturb off|डीएनडी बंद)",
-    "mode_silent": "(silent mode|phone silent|साइलेंट मोड|साइलेंट करो)",
-    "mode_vibrate": "(vibrate mode|phone vibrate|वाइब्रेट मोड|वाइब्रेट करो)",
-    "mode_ring": "(ring mode|normal mode|रिंग मोड|रिंगर ऑन)",
-    "make_call": "(call|make a call|dial|फोन करो|कॉल करो|कॉल लगाओ)",
-    "send_sms": "(text|send text|send sms|message|मैसेज करो|एसएमएस भेजो)",
-    "send_whatsapp": "(whatsapp|send whatsapp|व्हाट्सएप करो|व्हाट्सएप मैसेज)",
-    "answer_call": "(pickup call|receive call|answer call|कॉल उठाओ|कॉल पिकअप|पिकअप करो)",
-    "reject_call": "(cut call|hangup|reject call|end call|कॉल काटो|कॉल कट|कॉल रिजेक्ट)"
+    "torch_on": "\\b(torch on|flashlight on|flash on|turn on torch|turn on flashlight|light on|à¤²à¤¾à¤‡à¤Ÿ à¤šà¤¾à¤²à¥‚|à¤²à¤¾à¤‡à¤Ÿ à¤‘à¤¨|à¤Ÿà¥‰à¤°à¥à¤š à¤‘à¤¨|à¤Ÿà¥‰à¤°à¥à¤š à¤šà¤¾à¤²à¥‚|light jalao|torch jalao)\\b",
+    "torch_off": "\\b(torch off|flashlight off|flash off|turn off torch|turn off flashlight|light off|à¤²à¤¾à¤‡à¤Ÿ à¤¬à¤‚à¤¦|à¤²à¤¾à¤‡à¤Ÿ à¤‘à¤«|à¤Ÿà¥‰à¤°à¥à¤š à¤‘à¤«|à¤Ÿà¥‰à¤°à¥à¤š à¤¬à¤‚à¤¦|light band karo|torch band karo)\\b",
+    "wifi_on": "\\b(wifi on|turn on wifi|enable wifi|à¤µà¤¾à¤ˆà¤«à¤¾à¤ˆ à¤‘à¤¨|à¤µà¤¾à¤ˆà¤«à¤¾à¤ˆ à¤šà¤¾à¤²à¥‚|wifi chalu karo)\\b",
+    "wifi_off": "\\b(wifi off|turn off wifi|disable wifi|à¤µà¤¾à¤ˆà¤«à¤¾à¤ˆ à¤‘à¤«|à¤µà¤¾à¤ˆà¤«à¤¾à¤ˆ à¤¬à¤‚à¤¦|wifi band karo)\\b",
+    "bluetooth_on": "\\b(bluetooth on|turn on bluetooth|enable bluetooth|à¤¬à¥à¤²à¥‚à¤Ÿà¥‚à¤¥ à¤‘à¤¨|à¤¬à¥à¤²à¥‚à¤Ÿà¥‚à¤¥ à¤šà¤¾à¤²à¥‚|bluetooth chalu karo)\\b",
+    "bluetooth_off": "\\b(bluetooth off|turn off bluetooth|disable bluetooth|à¤¬à¥à¤²à¥‚à¤Ÿà¥‚à¤¥ à¤‘à¤«|à¤¬à¥à¤²à¥‚à¤Ÿà¥‚à¤¥ à¤¬à¤‚à¤¦|bluetooth band karo)\\b",
+    "brightness": "\\b(brightness|screen light|display light|à¤¬à¥à¤°à¤¾à¤‡à¤Ÿà¤¨à¥‡à¤¸|à¤°à¥‹à¤¶à¤¨à¥€|chamkila)\\b",
+    "dnd_on": "\\b(dnd on|do not disturb on|silent phone|à¤¡à¥€à¤à¤¨à¤¡à¥€ à¤šà¤¾à¤²à¥‚|à¤¡à¤¿à¤¸à¥à¤Ÿà¤°à¥à¤¬ à¤¨ à¤•à¤°à¥‡à¤‚|dnd chalu karo)\\b",
+    "dnd_off": "\\b(dnd off|do not disturb off|à¤¡à¥€à¤à¤¨à¤¡à¥€ à¤¬à¤‚à¤¦|dnd band karo)\\b",
+    "mode_silent": "\\b(silent mode|phone silent|à¤¸à¤¾à¤‡à¤²à¥‡à¤‚à¤Ÿ à¤®à¥‹à¤¡|à¤¸à¤¾à¤‡à¤²à¥‡à¤‚à¤Ÿ à¤•à¤°à¥‹)\\b",
+    "mode_vibrate": "\\b(vibrate mode|phone vibrate|à¤µà¤¾à¤‡à¤¬à¥à¤°à¥‡à¤Ÿ à¤®à¥‹à¤¡|à¤µà¤¾à¤‡à¤¬à¥à¤°à¥‡à¤Ÿ à¤•à¤°à¥‹)\\b",
+    "mode_ring": "\\b(ring mode|normal mode|sound mode|à¤°à¤¿à¤‚à¤— à¤®à¥‹à¤¡|à¤°à¤¿à¤‚à¤—à¤° à¤‘à¤¨)\\b",
+    "battery_status": "\\b(battery|charging|charge|battery kitni hai|battery percentage|à¤¬à¥ˆà¤Ÿà¤°à¥€|à¤šà¤¾à¤°à¥à¤œà¤¿à¤‚à¤—)\\b",
+    "make_call": "\\b(call|make a call|dial|phone karo|call lagao|call karo|à¤«à¥‹à¤¨ à¤•à¤°à¥‹|à¤•à¥‰à¤² à¤•à¤°à¥‹|à¤•à¥‰à¤² à¤²à¤—à¤¾à¤“|baat karao)\\b",
+    "send_whatsapp": "\\b(whatsapp|send whatsapp|whatsapp message|à¤µà¥à¤¹à¤¾à¤Ÿà¥à¤¸à¤à¤ª à¤•à¤°à¥‹|à¤µà¥à¤¹à¤¾à¤Ÿà¥à¤¸à¤à¤ª à¤®à¥ˆà¤¸à¥‡à¤œ|whatsapp bhejo)\\b",
+    "send_sms": "\\b(text message|send text|send sms|sms bhejo|message bhejo|à¤®à¥ˆà¤¸à¥‡à¤œ à¤•à¤°à¥‹|à¤à¤¸à¤à¤®à¤à¤¸ à¤­à¥‡à¤œà¥‹)\\b",
+    "app_launch": "\\b(open youtube|open whatsapp|open camera|open chrome|open settings|open clock|open map|open maps|open gmail|open play store|launch|kholo|à¤–à¥‹à¤²à¥‹)\\b",
+    "set_alarm": "\\b(set alarm|alarm lagao|wake me up|à¤…à¤²à¤¾à¤°à¥à¤®|alarm)\\b",
+    "set_timer": "\\b(set timer|timer lagao|start timer|à¤Ÿà¤¾à¤‡à¤®à¤°|timer)\\b",
+    "time": "\\b(time|samay|baja|current time|abhi kya time|kitne baje|baje hain|ghadi|à¤¸à¤®à¤¯|à¤˜à¥œà¥€)\\b",
+    "date": "\\b(date|tarikh|aaj konsi date|today date|calendar|konsa saal|which year|konsa din|which day|konsa month|which month|saal|year|à¤¤à¤¾à¤°à¥€à¤–|à¤†à¤œ)\\b",
+    "day_night_phase": "\\b(din hai ya raat|raat hai ya din|day or night|is it night|is it day|din ho raha ya raat)\\b",
+    "age_calc": "\\b(age|umar|birthdate|born in|date of birth|dob|kitne saal|à¤‰à¤®à¥à¤°|à¤†à¤¯à¥)\\b",
+    "math": "(\\d+\\.?\\d*\\s*[\\+\\-\\*/%\\^]\\s*\\d+\\.?\\d*|calculate|sqrt|square root|sin\\(|cos\\(|tan\\(|log\\(|ln\\(|fact\\(|factorial|percent|% of|\\+|-|\\*|/|divide|multiply)",
+    "conversion": "\\b(convert|conversion|transform|unit|km to mile|celsius to fahrenheit|kg to lbs|gb to mb|speed conversion|à¤‡à¤•à¤¾à¤ˆ)\\b",
+    "weather": "\\b(weather|temperature|mausam|aaj ka mausam|rain|barish|mosam|à¤¤à¤¾à¤ªà¤®à¤¾à¤¨|à¤®à¥Œà¤¸à¤®)\\b",
+    "system_specs": "\\b(system|cpu|ram|memory|specs|specs info|hardware info|computer info)\\b",
+    "vanie_identity": "\\b(who are you|tum kaun ho|aap kaun ho|your name|apka naam|tell me about yourself|about vanie|what is vanie|creator|who made you|tumhe kisne banaya|ayush kaun hai|ayush harinkhede)\\b",
+    "capabilities": "\\b(what can you do|tum kya kar sakti ho|features|help|commands|madad|capabilities|kya kya karti ho)\\b",
+    "greeting": "\\b(hello|hi|hey|namaste|namaskar|pranam|good morning|good afternoon|good evening|good night|kya haal|wassup|what's up|à¤¨à¤®à¤¸à¥à¤¤à¥‡|à¤¹à¥‡à¤²à¥‹|à¤¹à¤¾à¤¯|à¤¸à¥à¤ªà¥à¤°à¤­à¤¾à¤¤|à¤¶à¥à¤­ à¤°à¤¾à¤¤à¥à¤°à¤¿)\\b",
+    "how_are_you": "\\b(kaise ho|kya haal hai|how are you|how do you do|sab theek|kaisa chal raha hai|sab kushal)\\b",
+    "compliment": "\\b(you are smart|you are awesome|you are great|tum bohot acchi ho|love you|shandar ho|intelligent|best ai)\\b",
+    "thanks": "\\b(thanks|thank you|dhanyawad|shukriya|bohot shukriya|à¤§à¤¨à¥à¤¯à¤µà¤¾à¤¦|à¤¶à¥à¤•à¥à¤°à¤¿à¤¯à¤¾)\\b",
+    "bye": "\\b(bye|goodbye|alvida|phir milenge|see you|take care|à¤¬à¤¾à¤¯|à¤…à¤²à¤µà¤¿à¤¦à¤¾)\\b",
+    "food_tea": "\\b(khana khaya|lunch kar liya|dinner kiya|breakfast|chai pee li|coffee|tea|chai|food)\\b",
+    "friendship": "\\b(best friend|kya tum meri dost ho|are we friends|dosti karogi|friend banogi)\\b",
+    "hobbies": "\\b(hobbies|tumhe kya pasand hai|free time me kya karti ho|what do you like)\\b",
+    "music_movies": "\\b(favorite song|gaana|music suno|movie|cinema|favorite movie|filmon)\\b",
+    "study_work": "\\b(padhai|study|exam|focus|work stress|man nahi lag raha|productivity|motivation)\\b",
+    "emotions_happy": "\\b(happy|excited|awesome|good news|bohot khush|khush hoon|maza aa gaya|party)\\b",
+    "emotions_sad": "\\b(sad|lonely|depressed|heartbroken|udas hoon|dukhi hoon|mood off|cry|rone ka man)\\b",
+    "emotions_stressed": "\\b(stressed|tired|thak gaya|headache|tension|pareshan hoon|bahut thakan)\\b",
+    "emotions_angry": "\\b(angry|gussa|gussa aa raha hai|irritated|frustrated|naraz hoon)\\b",
+    "emotions_bored": "\\b(bored|bore ho raha hoon|boring|kuch bolo|kuch sunao|timepass)\\b",
+    "joke": "\\b(joke|chutkula|hanso|hansi|funny|joke sunao|à¤šà¥ à¤Ÿà¤•à¥ à¤²à¤¾|à¤®à¤œà¤¾à¤•)\\b",
+    "riddle": "\\b(riddle|paheli|bujho|paheliyan|à¤ªà¤¹à¥‡à¤²à¥€)\\b",
+    "trivia": "\\b(trivia|quiz|sawal|question pucho|gk question|à¤•à¥ à¤µà¤¿à¤œà¤¼)\\b",
+    "motivation": "\\b(motivation|motivational|inspire|motivational quote|quote|thought|courage|honsla|himmat|suvichar|à¤¸à¥ à¤µà¤¿à¤šà¤¾à¤°|à¤ªà¥ à¤°à¥‡à¤°à¤£à¤¾)\\b",
+    "fun_fact": "\\b(fun fact|fact|kya aap jante ho|interesting fact|kuch naya batao|à¤°à¥‹à¤šà¤• à¤¤à¤¥à¥ à¤¯)\\b",
+    "science_space": "\\b(space|universe|black hole|mars|moon|sun|solar system|physics|einstein|gravity|chandrayaan|nasa|isro)\\b",
+    "tech_ai": "\\b(artificial intelligence|machine learning|deep learning|neural network|python|kotlin|android|chatgpt|llm|robot)\\b"
   },
   "jokes": [
-    {"joke": "Why did the Python programmer go broke? Because he lost his class!"},
-    {"joke": "How many programmers does it take to change a light bulb? None, that's a hardware problem!"},
-    {"joke": "Why do programmers prefer dark mode? Because light attracts bugs!"},
-    {"joke": "क्या आप जानते हैं? AI को भी कभी-कभी hang हो जाता है... जब उसे अपने सॉकेट का पता न चले! 😄"},
-    {"joke": "एक आदमी ने डॉक्टर से पूछा: मेरा कंप्यूटर सिर्फ फिल्मों में काम करता है। डॉक्टर बोला: यह तो perfectly normal है! 😂"}
+    {"joke": "Why did the Python programmer go broke? Because he lost his class and had no inheritance! ðŸ  ðŸ’¸"},
+    {"joke": "How many programmers does it take to change a light bulb? None, that's a hardware problem! ðŸ’¡"},
+    {"joke": "Why do programmers prefer dark mode? Because light attracts bugs! ðŸ›"},
+    {"joke": "Ek programmer doctor ke paas gaya. Doctor bola: 'Aapko rest ki zarurat hai.' Programmer: 'Doctor saab, bas ek loop complete kar loon!' ðŸ˜‚"},
+    {"joke": "There are 10 types of people in the world: Those who understand binary, and those who don't! ðŸ¤–"}
   ],
   "riddles": [
-    {"riddle": "मेरे पास चेहरा तो है पर मुझे देखा नहीं जा सकता। मैं कौन हूँ?", "answer": "mirror"},
-    {"riddle": "What has keys but no locks?", "answer": "keyboard"},
-    {"riddle": "जो चीज जितनी अधिक हटाते हो, वह उतनी बड़ी हो जाती है। यह क्या है?", "answer": "hole"},
-    {"riddle": "मेरे बिना आप नहीं रह सकते, पर मुझे कभी देखते नहीं। मैं कौन हूँ?", "answer": "air"}
+    {"riddle": "Mere paas keys hain par lock koi nahi khulta, space hai par kamra koi nahi. Main kaun hoon?", "answer": "keyboard"},
+    {"riddle": "Main jitna zyada badhta hoon, utna hi kam aap dekh pate hain. Main kaun hoon?", "answer": "andhera"},
+    {"riddle": "Ek aisi cheez jo jitni zyada nikalo, utni hi badi hoti jati hai?", "answer": "gaddha"},
+    {"riddle": "Mere paas gala hai par sir nahi, haath hain par ungliyan nahi. Main kaun hoon?", "answer": "shirt"}
   ],
   "quotes": [
-    "बड़ेसपने देखो, मेहनत करो और सफलता निश्चित है! 💪",
-    "हर असफलता आपको एक नई सीख सिखाती है। आगे बढ़ते रहो! 🚀",
-    "आपकी क्षमता से कहीं अधिक आप कर सकते हो। खुद पर विश्वास करो! 🌟",
-    "The only way to do great work is to love what you do. - Steve Jobs",
-    "Success is not final, failure is not fatal. - Winston Churchill",
-    "जो आज करते हो, कल का परिणाम निर्धारित करता है।"
+    "Koshish aakhri saans tak karni chahiye, ya toh lakshya milega ya anubhav! ðŸ’ªðŸš€",
+    "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt âœ¨",
+    "Rukna mat, thakna mat! Aapki mehnat ka har ek pal kal aapki sabse badi kamyabi banega! ðŸ”¥",
+    "The only way to do great work is to love what you do. - Steve Jobs ðŸŒŸ",
+    "Success is not final, failure is not fatal: it is the courage to continue that counts. ðŸ†"
   ],
   "facts": [
-    "क्या आप जानते हैं? पहला computer ENIAC था जो 30 टन वजन का था! 🖥️",
-    "दुनिया का पहला SMS 1992 में भेजा गया था।",
-    "Internet हर सेकंड 100,000 Gbps डेटा transmit करता है!",
-    "Python का नाम 'Monty Python' के नाम पर रखा गया था।",
-    "Artificial Intelligence का field 1956 में शुरू हुआ था।"
+    "Human DNA ka 50% banana (kele) ke DNA se match karta hai! ðŸŒðŸ§¬",
+    "Honey (Shehad) kabhi kharab nahi hota! 3000 saal purane Egyptian tombs me mila honey bhi safe tha! ðŸ¯",
+    "Octopus ke 3 dil (hearts) aur 9 dimaag (brains) hote hain, aur unka khoon neela (blue) hota hai! ðŸ™",
+    "Duniya ka pehla computer mouse 1964 me lakdi (wood) ka banaya gaya tha! ðŸ–±ï¸",
+    "Python programming language ka naam British comedy show 'Monty Python's Flying Circus' par rakha gaya tha! ðŸ"
   ],
   "trivia": [
     {
-      "question": "Python किस साल में बनाया गया था?",
+      "question": "Python kis saal me release hua tha?",
       "options": ["1989", "1991", "1995", "2000"],
       "answer": "1991"
     },
     {
-      "question": "AI का full form क्या है?",
+      "question": "AI ka full form kya hai?",
       "options": ["Automated Intelligence", "Artificial Intelligence", "Advanced Information", "Adaptive Interface"],
       "answer": "Artificial Intelligence"
     },
     {
-      "question": "Internet का inventor कौन था?",
+      "question": "Internet ka inventor kaun tha?",
       "options": ["Steve Jobs", "Tim Berners-Lee", "Bill Gates", "Linus Torvalds"],
       "answer": "Tim Berners-Lee"
+    },
+    {
+      "question": "Sound ki speed air me kitni hoti hai?",
+      "options": ["100 m/s", "343 m/s", "500 m/s", "1000 m/s"],
+      "answer": "343 m/s"
     }
   ],
   "sentiment": {
     "positive": {
       "good": 2, "great": 3, "excellent": 3, "amazing": 3, "wonderful": 3,
-      "perfect": 3, "love": 2, "like": 1, "happy": 2, "excited": 2,
+      "perfect": 3, "love": 3, "like": 1, "happy": 2, "excited": 2,
       "awesome": 3, "fantastic": 3, "brilliant": 3, "beautiful": 2,
-      "best": 3, "nice": 1, "cool": 1, "interesting": 1, "fun": 1,
-      "खुश": 2, "शानदार": 3, "बढ़िया": 2, "अच्छा": 1, "सुंदर": 2
+      "best": 3, "nice": 1, "cool": 1, "interesting": 1, "fun": 2,
+      "khush": 2, "shandar": 3, "badhiya": 2, "accha": 1, "sunder": 2,
+      "à¤–à¥à¤¶": 2, "à¤¶à¤¾à¤¨à¤¦à¤¾à¤°": 3, "à¤¬à¤¢à¤¼à¤¿à¤¯à¤¾": 2, "à¤…à¤šà¥à¤›à¤¾": 1, "à¤¸à¥à¤‚à¤¦à¤°": 2
     },
     "negative": {
       "bad": 2, "terrible": 3, "awful": 3, "horrible": 3, "hate": 3,
-      "dislike": 2, "sad": 2, "upset": 2, "angry": 2, "frustrated": 2,
-      "worst": 3, "poor": 2, "boring": 1, "stupid": 2, "annoying": 2,
-      "बुरा": 2, "भयानक": 3, "दुःख": 2, "गुस्सा": 2, "परेशान": 2
+      "dislike": 2, "sad": 2, "upset": 2, "angry": 3, "frustrated": 2,
+      "worst": 3, "poor": 2, "boring": 2, "stupid": 2, "annoying": 2,
+      "bura": 2, "bhayanak": 3, "dukh": 2, "gussa": 3, "pareshan": 2,
+      "à¤¬à¥à¤°à¤¾": 2, "à¤­à¤¯à¤¾à¤¨à¤•": 3, "à¤¦à¥à¤ƒà¤–": 2, "à¤—à¥à¤¸à¥à¤¸à¤¾": 3, "à¤ªà¤°à¥‡à¤¶à¤¾à¤¨": 2
     }
   }
 }
