@@ -746,7 +746,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 val info = deviceController.getNetworkAndPhoneInfo()
                 Toast.makeText(this, info, Toast.LENGTH_LONG).show()
             }
-            ActionCommand.CALL_CONTACT -> if (targetName != null) telephonyController.makeCall(targetName)
+            ActionCommand.MAKE_CALL -> if (targetName != null) telephonyController.makeCall(targetName)
             ActionCommand.SEND_SMS -> if (targetName != null) telephonyController.sendSms(targetName, messageBody)
             ActionCommand.SEND_WHATSAPP -> if (targetName != null) telephonyController.sendWhatsAppMessage(targetName, messageBody)
             else -> {}
