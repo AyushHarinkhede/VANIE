@@ -41,35 +41,39 @@ class VanieTelephonyController(private val context: Context) {
         val cleanQuery = query.trim().lowercase()
         if (cleanQuery.isBlank()) return ContactResolutionResult.NoMatch
 
-        val contentResolver = context.contentResolver
-        val cursor = contentResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            arrayOf(
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER
-            ),
-            "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?",
-            arrayOf("%$query%"),
-            null
-        )
-
         val contactsList = mutableListOf<ResolvedContact>()
-        cursor?.use {
-            val idIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
-            val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-            val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+        try {
+            val contentResolver = context.contentResolver
+            val cursor = contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?",
+                arrayOf("%$query%"),
+                null
+            )
 
-            while (it.moveToNext()) {
-                val id = if (idIndex != -1) it.getString(idIndex) else ""
-                val name = if (nameIndex != -1) it.getString(nameIndex) ?: "" else ""
-                val number = if (numberIndex != -1) it.getString(numberIndex) ?: "" else ""
-                if (name.isNotBlank() && number.isNotBlank()) {
-                    if (contactsList.none { c -> c.name.equals(name, ignoreCase = true) && c.number == number }) {
-                        contactsList.add(ResolvedContact(id, name, number))
+            cursor?.use {
+                val idIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+                while (it.moveToNext()) {
+                    val id = if (idIndex != -1) it.getString(idIndex) else ""
+                    val name = if (nameIndex != -1) it.getString(nameIndex) ?: "" else ""
+                    val number = if (numberIndex != -1) it.getString(numberIndex) ?: "" else ""
+                    if (name.isNotBlank() && number.isNotBlank()) {
+                        if (contactsList.none { c -> c.name.equals(name, ignoreCase = true) && c.number == number }) {
+                            contactsList.add(ResolvedContact(id, name, number))
+                        }
                     }
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
 
         if (contactsList.isEmpty()) {
@@ -255,22 +259,26 @@ class VanieTelephonyController(private val context: Context) {
     }
 
     fun resolvePhoneNumber(number: String): String? {
-        val contentResolver = context.contentResolver
-        val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
-        val cursor = contentResolver.query(
-            uri,
-            arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME),
-            null,
-            null,
-            null
-        )
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
-                if (nameIndex != -1) {
-                    return it.getString(nameIndex)
+        try {
+            val contentResolver = context.contentResolver
+            val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
+            val cursor = contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
+                    if (nameIndex != -1) {
+                        return it.getString(nameIndex)
+                    }
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return null
     }

@@ -1,4 +1,4 @@
-﻿package com.vanie.ai
+package com.vanie.ai
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -79,15 +79,21 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var speechRecognizer: SpeechRecognizer? = null
     private var isTtsReady = false
 
-    private val requiredPermissions = arrayOf(
-        Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.CAMERA,
-        Manifest.permission.CALL_PHONE,
-        Manifest.permission.READ_CONTACTS,
-        Manifest.permission.SEND_SMS,
-        Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.VIBRATE
-    )
+    private fun getRequiredPermissions(): Array<String> {
+        val list = mutableListOf(
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.CAMERA,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.VIBRATE
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            list.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        return list.toTypedArray()
+    }
 
     @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -270,7 +276,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun requestRequiredPermissions() {
-        val permissionsToRequest = requiredPermissions.filter {
+        val permissionsToRequest = getRequiredPermissions().filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
         if (permissionsToRequest.isNotEmpty()) {
@@ -278,7 +284,26 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            val audioIndex = permissions.indexOf(Manifest.permission.RECORD_AUDIO)
+            if (audioIndex != -1 && grantResults.getOrNull(audioIndex) == PackageManager.PERMISSION_GRANTED) {
+                if (VanieVoiceService.isVoiceEnabled(this)) {
+                    startVoiceService()
+                }
+            }
+        }
+    }
+
     private fun startVoiceService() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
         try {
             val serviceIntent = Intent(this, VanieVoiceService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -387,7 +412,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             }
         }
 
-        // â”€â”€ VANIE Neural AI Processing Bridge â”€â”€
+        // ── VANIE Neural AI Processing Bridge ──
         @JavascriptInterface
         fun processAI(query: String) {
             lifecycleScope.launch(Dispatchers.IO) {
@@ -397,11 +422,19 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                     // Execute corresponding hardware or telephony actions
                     withContext(Dispatchers.Main) {
-                        executeAction(pyResult.actionCommand, pyResult.targetName, pyResult.messageBody)
+                        try {
+                            executeAction(pyResult.actionCommand, pyResult.targetName, pyResult.messageBody)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                         
                         // Speak out loud via TTS
                         if (isTtsReady) {
-                            textToSpeech?.speak(responseText, TextToSpeech.QUEUE_FLUSH, null, "VanieResponse")
+                            try {
+                                textToSpeech?.speak(responseText, TextToSpeech.QUEUE_FLUSH, null, "VanieResponse")
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                         }
 
                         // Dispatch JSON back to WebView
@@ -413,8 +446,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                         val gson = Gson()
                         val jsonString = gson.toJson(json)
-                        val safeJson = jsonString.replace("'", "\\'")
-                        webView.evaluateJavascript("window.onVanieAIResponse('$safeJson');", null)
+                        webView.evaluateJavascript("window.onVanieAIResponse($jsonString);", null)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -422,7 +454,9 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         val fallback = "I processed your command offline with zero latency."
                         val json = JsonObject()
                         json.addProperty("responseText", fallback)
-                        webView.evaluateJavascript("window.onVanieAIResponse('${json.toString()}');", null)
+                        val gson = Gson()
+                        val jsonString = gson.toJson(json)
+                        webView.evaluateJavascript("window.onVanieAIResponse($jsonString);", null)
                     }
                 }
             }
@@ -432,7 +466,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         fun speakText(text: String?) {
             if (!text.isNullOrBlank() && isTtsReady) {
                 runOnUiThread {
-                    textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "VanieManualSpeak")
+                    try {
+                        textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "VanieManualSpeak")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }
         }
@@ -440,13 +478,22 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         @JavascriptInterface
         fun stopSpeaking() {
             runOnUiThread {
-                textToSpeech?.stop()
+                try {
+                    textToSpeech?.stop()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
 
         @JavascriptInterface
         fun startVoiceListening() {
             runOnUiThread {
+                if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this@MainActivity, "Microphone permission required for voice input", Toast.LENGTH_SHORT).show()
+                    requestRequiredPermissions()
+                    return@runOnUiThread
+                }
                 try {
                     if (SpeechRecognizer.isRecognitionAvailable(this@MainActivity)) {
                         speechRecognizer?.destroy()
@@ -472,8 +519,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                                 if (!matches.isNullOrEmpty()) {
                                     val recognized = matches[0]
                                     runOnUiThread {
-                                        val safe = recognized.replace("'", "\\'")
-                                        webView.evaluateJavascript("window.handleVoiceResult('$safe');", null)
+                                        val jsonEscaped = Gson().toJson(recognized)
+                                        webView.evaluateJavascript("window.handleVoiceResult($jsonEscaped);", null)
                                     }
                                 }
                             }
@@ -482,10 +529,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         })
                         speechRecognizer?.startListening(intent)
                     } else {
-                        Toast.makeText(this@MainActivity, "Speech recognition not available", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "Speech recognition not available on this device", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    Toast.makeText(this@MainActivity, "Speech recognition error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -724,32 +772,48 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         targetName: String?,
         messageBody: String?
     ) {
-        when (action) {
-            ActionCommand.TORCH_ON -> deviceController.setTorchMode(true)
-            ActionCommand.TORCH_OFF -> deviceController.setTorchMode(false)
-            ActionCommand.WIFI_ON, ActionCommand.WIFI_OFF -> deviceController.openWifiSettings()
-            ActionCommand.BLUETOOTH_ON -> deviceController.setBluetoothMode(true)
-            ActionCommand.BLUETOOTH_OFF -> deviceController.setBluetoothMode(false)
-            ActionCommand.DND_ON -> deviceController.setDoNotDisturb(true)
-            ActionCommand.DND_OFF -> deviceController.setDoNotDisturb(false)
-            ActionCommand.MODE_SILENT -> deviceController.setRingerMode(AudioManager.RINGER_MODE_SILENT)
-            ActionCommand.MODE_VIBRATE -> deviceController.setRingerMode(AudioManager.RINGER_MODE_VIBRATE)
-            ActionCommand.MODE_RING -> deviceController.setRingerMode(AudioManager.RINGER_MODE_NORMAL)
-            ActionCommand.LAUNCH_APP -> if (targetName != null) deviceController.launchApp(targetName)
-            ActionCommand.SET_ALARM -> deviceController.setAlarm(7, 0, "VANIE Alarm")
-            ActionCommand.SET_TIMER -> deviceController.setTimer(300, "VANIE Timer")
-            ActionCommand.GET_DETAILED_BATTERY -> {
-                val info = deviceController.getDetailedBatteryInfo()
-                Toast.makeText(this, info, Toast.LENGTH_LONG).show()
+        try {
+            when (action) {
+                ActionCommand.TORCH_ON -> deviceController.setTorchMode(true)
+                ActionCommand.TORCH_OFF -> deviceController.setTorchMode(false)
+                ActionCommand.WIFI_ON, ActionCommand.WIFI_OFF -> deviceController.openWifiSettings()
+                ActionCommand.BLUETOOTH_ON -> deviceController.setBluetoothMode(true)
+                ActionCommand.BLUETOOTH_OFF -> deviceController.setBluetoothMode(false)
+                ActionCommand.DND_ON -> deviceController.setDoNotDisturb(true)
+                ActionCommand.DND_OFF -> deviceController.setDoNotDisturb(false)
+                ActionCommand.MODE_SILENT -> deviceController.setRingerMode(AudioManager.RINGER_MODE_SILENT)
+                ActionCommand.MODE_VIBRATE -> deviceController.setRingerMode(AudioManager.RINGER_MODE_VIBRATE)
+                ActionCommand.MODE_RING -> deviceController.setRingerMode(AudioManager.RINGER_MODE_NORMAL)
+                ActionCommand.LAUNCH_APP -> if (targetName != null) deviceController.launchApp(targetName)
+                ActionCommand.SET_ALARM -> deviceController.setAlarm(7, 0, "VANIE Alarm")
+                ActionCommand.SET_TIMER -> deviceController.setTimer(300, "VANIE Timer")
+                ActionCommand.GET_DETAILED_BATTERY -> {
+                    val info = deviceController.getDetailedBatteryInfo()
+                    Toast.makeText(this, info, Toast.LENGTH_LONG).show()
+                }
+                ActionCommand.GET_NETWORK_INFO -> {
+                    val info = deviceController.getNetworkAndPhoneInfo()
+                    Toast.makeText(this, info, Toast.LENGTH_LONG).show()
+                }
+                ActionCommand.MAKE_CALL -> if (targetName != null) telephonyController.makeCall(targetName)
+                ActionCommand.SEND_SMS -> if (targetName != null) telephonyController.sendSms(targetName, messageBody)
+                ActionCommand.SEND_WHATSAPP -> if (targetName != null) telephonyController.sendWhatsAppMessage(targetName, messageBody)
+                ActionCommand.SEND_WHATSAPP_CALL -> if (targetName != null) telephonyController.makeWhatsAppCall(targetName)
+                ActionCommand.CONFIRM_SEND_DRAFT -> telephonyController.confirmAndSendPendingDraft()
+                ActionCommand.LOCATION_INFO -> deviceController.openLocationSettings()
+                ActionCommand.VOLUME_UP -> deviceController.adjustVolume(true)
+                ActionCommand.VOLUME_DOWN -> deviceController.adjustVolume(false)
+                ActionCommand.VOLUME_MUTE -> deviceController.muteVolume()
+                ActionCommand.OPEN_CAMERA -> deviceController.openCamera()
+                ActionCommand.OPEN_GALLERY -> deviceController.openGallery()
+                ActionCommand.OPEN_SETTINGS -> deviceController.openSettings()
+                ActionCommand.OPEN_MAPS -> deviceController.openMaps()
+                ActionCommand.OPEN_PLAYSTORE -> deviceController.openPlayStore()
+                ActionCommand.OPEN_CALCULATOR -> deviceController.openCalculator()
+                else -> {}
             }
-            ActionCommand.GET_NETWORK_INFO -> {
-                val info = deviceController.getNetworkAndPhoneInfo()
-                Toast.makeText(this, info, Toast.LENGTH_LONG).show()
-            }
-            ActionCommand.MAKE_CALL -> if (targetName != null) telephonyController.makeCall(targetName)
-            ActionCommand.SEND_SMS -> if (targetName != null) telephonyController.sendSms(targetName, messageBody)
-            ActionCommand.SEND_WHATSAPP -> if (targetName != null) telephonyController.sendWhatsAppMessage(targetName, messageBody)
-            else -> {}
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

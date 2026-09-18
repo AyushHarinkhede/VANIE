@@ -1,6 +1,7 @@
-package com.vanie.ai.python
+﻿package com.vanie.ai.python
 
 import android.content.Context
+import android.util.Log
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
@@ -21,14 +22,15 @@ class VaniePythonBridge(private val context: Context) {
         if (!isInitialized) {
             try {
                 if (!Python.isStarted()) {
-                    Python.start(AndroidPlatform(context))
+                    Python.start(AndroidPlatform(context.applicationContext))
                 }
                 val py = Python.getInstance()
                 val module = py.getModule("VANIE_ENHANCED")
                 vanieEnginePy = module.get("vanie_engine")
                 isInitialized = true
-            } catch (e: Exception) {
-                e.printStackTrace()
+                Log.d("VaniePythonBridge", "Python engine and VANIE_ENHANCED module initialized successfully.")
+            } catch (e: Throwable) {
+                Log.e("VaniePythonBridge", "Python Bridge init failed: ${e.message}", e)
                 isInitialized = false
             }
         }
@@ -65,8 +67,8 @@ class VaniePythonBridge(private val context: Context) {
             } else {
                 fallbackResult(input)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (e: Throwable) {
+            Log.e("VaniePythonBridge", "Error executing python processWithPython: ${e.message}", e)
             fallbackResult(input)
         }
     }
@@ -164,4 +166,3 @@ class VaniePythonBridge(private val context: Context) {
         return nlpFallbackEngine.processMessage(input)
     }
 }
-

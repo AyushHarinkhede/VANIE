@@ -12,7 +12,11 @@ class VanieNotificationService : NotificationListenerService() {
 
         fun getUnreadNotificationsSummary(): String {
             val service = instance ?: return "Notification listener permission is not enabled."
-            val notifications = service.activeNotifications
+            val notifications = try {
+                service.activeNotifications
+            } catch (e: Exception) {
+                null
+            }
             if (notifications.isNullOrEmpty()) {
                 return "You have no unread notifications right now."
             }

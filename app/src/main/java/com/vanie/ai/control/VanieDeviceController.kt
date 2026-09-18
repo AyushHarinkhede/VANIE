@@ -19,18 +19,22 @@ import kotlin.math.roundToInt
 
 class VanieDeviceController(private val context: Context) {
 
-    private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
+    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+    private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
 
     fun setTorchMode(enabled: Boolean): Boolean {
+        val cm = cameraManager ?: run {
+            Toast.makeText(context, "Camera service not available", Toast.LENGTH_SHORT).show()
+            return false
+        }
         return try {
-            val cameraId = cameraManager.cameraIdList.firstOrNull { id ->
-                cameraManager.getCameraCharacteristics(id)
+            val cameraId = cm.cameraIdList.firstOrNull { id ->
+                cm.getCameraCharacteristics(id)
                     .get(android.hardware.camera2.CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
             }
             if (cameraId != null) {
-                cameraManager.setTorchMode(cameraId, enabled)
+                cm.setTorchMode(cameraId, enabled)
                 Toast.makeText(context, if (enabled) "Torch Turned ON" else "Torch Turned OFF", Toast.LENGTH_SHORT).show()
                 true
             } else {
@@ -107,8 +111,9 @@ class VanieDeviceController(private val context: Context) {
     }
 
     fun setRingerMode(mode: Int): Boolean {
+        val am = audioManager ?: return false
         return try {
-            audioManager.ringerMode = mode
+            am.ringerMode = mode
             val modeName = when (mode) {
                 AudioManager.RINGER_MODE_SILENT -> "Silent Mode"
                 AudioManager.RINGER_MODE_VIBRATE -> "Vibrate Mode"
@@ -125,7 +130,8 @@ class VanieDeviceController(private val context: Context) {
 
     fun setDoNotDisturb(enable: Boolean): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!notificationManager.isNotificationPolicyAccessGranted) {
+            val nm = notificationManager ?: return false
+            if (!nm.isNotificationPolicyAccessGranted) {
                 val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
@@ -140,7 +146,7 @@ class VanieDeviceController(private val context: Context) {
                 } else {
                     NotificationManager.INTERRUPTION_FILTER_ALL
                 }
-                notificationManager.setInterruptionFilter(filter)
+                nm.setInterruptionFilter(filter)
                 Toast.makeText(context, if (enable) "DND Activated" else "DND Disabled", Toast.LENGTH_SHORT).show()
                 true
             } catch (e: Exception) {
@@ -277,33 +283,38 @@ class VanieDeviceController(private val context: Context) {
     }
 
     fun getNetworkAndPhoneInfo(): String {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
 
-        val activeNetwork = cm.activeNetwork
-        val caps = cm.getNetworkCapabilities(activeNetwork)
+            val activeNetwork = cm?.activeNetwork
+            val caps = cm?.getNetworkCapabilities(activeNetwork)
 
-        val connectionType = when {
-            caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> "Wi-Fi Network"
-            caps?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "Cellular Mobile Data"
-            else -> "No Active Internet"
+            val connectionType = when {
+                caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> "Wi-Fi Network"
+                caps?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "Cellular Mobile Data"
+                else -> "No Active Internet"
+            }
+
+            val operatorName = tm?.networkOperatorName?.ifBlank { "Mobile Operator" } ?: "Mobile Operator"
+            val simState = if (tm?.simState == TelephonyManager.SIM_STATE_READY) "Active SIM" else "No SIM / Disabled"
+
+            "Connection: $connectionType\nOperator: $operatorName\nSIM Status: $simState"
+        } catch (e: Exception) {
+            "Network: Active\nOperator: Mobile Operator"
         }
-
-        val operatorName = tm.networkOperatorName.ifBlank { "Mobile Operator" }
-        val simState = if (tm.simState == TelephonyManager.SIM_STATE_READY) "Active SIM" else "No SIM / Disabled"
-
-        return "Connection: $connectionType\nOperator: $operatorName\nSIM Status: $simState"
     }
 
     fun getBatteryStatus(): String = getDetailedBatteryInfo()
 
     fun adjustVolume(increase: Boolean): String {
+        val am = audioManager ?: return "Audio service not available"
         return try {
             val direction = if (increase) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER
-            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
-            val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            val percent = (currentVol * 100) / maxVol
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
+            val currentVol = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+            val maxVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val percent = if (maxVol > 0) (currentVol * 100) / maxVol else 50
             "Media volume adjusted to $percent%"
         } catch (e: Exception) {
             "Could not adjust volume"
@@ -311,8 +322,9 @@ class VanieDeviceController(private val context: Context) {
     }
 
     fun muteVolume(): String {
+        val am = audioManager ?: return "Audio service not available"
         return try {
-            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
             "Media muted"
         } catch (e: Exception) {
             "Could not mute volume"

@@ -26,6 +26,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
+        android:name=".VanieApplication"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
